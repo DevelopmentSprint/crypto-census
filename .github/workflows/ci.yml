@@ -12,14 +12,34 @@ permissions:
   contents: read
 
 jobs:
+  # ---------------------------------------------------------------------------------------------
+  # Conformance matrix. This list is the single source of truth for "supported": every row is
+  # built and tested on every push and pull request, and README.md / docs/CONFORMANCE.md mirror it.
+  # Ratchet rule: rows are only ever added. Removing one requires a deprecation announced in
+  # CHANGELOG.md first (see docs/CONFORMANCE.md).
+  # ---------------------------------------------------------------------------------------------
   build:
-    name: JDK ${{ matrix.java }} / ${{ matrix.os }}
+    name: JDK ${{ matrix.java }} ${{ matrix.distribution }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        java: ['17', '21', '25']
+        include:
+          # Eclipse Temurin (HotSpot) on Linux: every LTS from the bytecode target, plus the
+          # current and previous feature releases
+          - { os: ubuntu-latest, distribution: temurin, java: '17' }
+          - { os: ubuntu-latest, distribution: temurin, java: '21' }
+          - { os: ubuntu-latest, distribution: temurin, java: '25' }
+          - { os: ubuntu-latest, distribution: temurin, java: '26' }
+          - { os: ubuntu-latest, distribution: temurin, java: '27' }
+          # Windows: oldest and newest LTS, and the newest release
+          - { os: windows-latest, distribution: temurin, java: '17' }
+          - { os: windows-latest, distribution: temurin, java: '25' }
+          - { os: windows-latest, distribution: temurin, java: '27' }
+          # IBM Semeru (OpenJ9 VM, OpenJCEPlus provider): what WebSphere Liberty runs on
+          - { os: ubuntu-latest, distribution: semeru, java: '17' }
+          - { os: ubuntu-latest, distribution: semeru, java: '21' }
+          - { os: ubuntu-latest, distribution: semeru, java: '25' }
     steps:
       # Actions are pinned to full commit SHAs; tags can be moved.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -27,18 +47,58 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
-          distribution: temurin
+          distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.java }}
           cache: maven
       # JDK 21+ also runs the "quality" profile: Spotless, Checkstyle, Error Prone, javac -Werror,
       # PMD, CPD, SpotBugs/FindSecBugs and JaCoCo coverage floors. JDK 17 runs tests and Enforcer
-      # (the analyzers themselves need JDK 21 to run).
+      # (the analyzers themselves need JDK 21 to run). Tests include the conformance ITs: the
+      # agent in child JVMs of this JDK, next to the OpenTelemetry Java agent and in embedded
+      # Tomcat.
       - name: Build, test and analyze
         run: ./mvnw -B -ntp verify
       - name: Upload demo CBOM
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: cbom-jdk${{ matrix.java }}-${{ matrix.os }}
+          name: cbom-jdk${{ matrix.java }}-${{ matrix.distribution }}-${{ matrix.os }}
           path: census-demo/target/cryptocensus/cbom.json
           if-no-files-found: ignore
+
+  # Application servers in containers (Docker is preinstalled on GitHub's Ubuntu runners):
+  # Open Liberty on IBM Semeru and WildFly, images pinned by digest in AppServerIT.
+  app-servers:
+    name: App servers (Open Liberty on Semeru, WildFly) / ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Conformance in Open Liberty and WildFly
+        run: ./mvnw -B -ntp -P app-servers -pl census-app-servers -am verify
+
+  # Early warning, not a gate: the next JDK's early-access build. Expected to fail when it moves
+  # past the class file version the bundled Byte Buddy knows (AgentIT then also checks that the
+  # agent says so and works with experimental=true). The static analyzers are skipped: they lag
+  # behind new JDKs and say nothing about the agent. Bump java-version when that JDK goes GA and
+  # joins the matrix above.
+  early-access:
+    name: JDK 28-ea temurin / ubuntu-latest (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '28-ea'
+          cache: maven
+      - name: Build and test without static analysis
+        run: ./mvnw -B -ntp verify -P '!quality'

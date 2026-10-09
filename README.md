@@ -25,6 +25,61 @@ code that used it.
 
 Apache 2.0. No paid tier. No server to run.
 
+## Compatibility
+
+The agent is compiled for Java 17 bytecode. It is **verified on every row below on every push and
+pull request**; the matrix in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) is the source of
+truth, and [docs/CONFORMANCE.md](docs/CONFORMANCE.md) lists which test proves what.
+
+| JDK         | Eclipse Temurin (HotSpot) | IBM Semeru (OpenJ9 VM, OpenJCEPlus) |
+|-------------|---------------------------|-------------------------------------|
+| 17 LTS      | Linux, Windows            | Linux                               |
+| 21 LTS      | Linux                     | Linux                               |
+| 25 LTS      | Linux, Windows            | Linux                               |
+| 26          | Linux                     |                                     |
+| 27          | Linux, Windows            |                                     |
+| 28 (early access) | Linux, *advisory*   |                                     |
+
+| Runs with                       | Verified version                    | On                                   |
+|---------------------------------|-------------------------------------|--------------------------------------|
+| Embedded Tomcat (HTTPS)         | 11.0.26                             | every JDK row above                  |
+| Open Liberty                    | 26.0.0.8 (container image)          | IBM Semeru 25                        |
+| WildFly                         | 41.0.1.Final (container image)      | Temurin 21                           |
+| OpenTelemetry Java agent        | 2.31.1, either `-javaagent` order   | every JDK row above, also with Tomcat |
+
+**What a row means.** "Verified" rows are gates: the full build (unit tests, the agent in child JVMs
+with TLS, the APM-agent and Tomcat conformance tests, the Maven plugin's Invoker builds) must pass, and
+the conformance tests' CBOMs must show zero instrumentation errors and no instrumentation gaps. The
+early-access row is an early warning only: it runs on the next JDK's EA build and may fail without
+blocking anything. Each verified row tests a specific version; newer patch releases of the same JDK,
+server or agent are expected to work but are proven only once CI runs on them.
+
+**The ratchet.** Once a combination is in the matrix it is tested on every build and stays there.
+Removing one requires an explicit deprecation, announced in [CHANGELOG.md](CHANGELOG.md) at least one
+release before the row goes. See [docs/CONFORMANCE.md](docs/CONFORMANCE.md#adding-and-removing-rows).
+
+**Not supported:**
+
+- **Java 8 and 11.** The agent's class files target Java 17; an older JVM cannot load the agent class
+  and, as with any `-javaagent` whose premain class fails to load, refuses to start. (This also rules
+  out WebSphere traditional on IBM Java 8.)
+- **GraalVM native images.** A native image has no bytecode to instrument and no `java.lang.instrument`;
+  Java agents cannot run there at all. GraalVM's JVM mode is a HotSpot JDK, but it is not in the matrix.
+- **Dynamic attach on JDK 21+** works (the jar has an `Agent-Class`) but is not in the matrix, and the
+  JVM prints a warning when an agent is loaded into a running JVM
+  ([JEP 451](https://openjdk.org/jeps/451)); a future JDK will refuse it unless the JVM is started with
+  `-XX:+EnableDynamicAgentLoading`. Use `-javaagent`.
+- **JDKs newer than the matrix.** The bundled Byte Buddy (1.18.14) reads class files up to Java 27. On
+  a newer JDK the agent instruments nothing; the CBOM says so (`cryptocensus:transformErrors`,
+  `cryptocensus:missingTargets`) and `check` fails the build as incomplete. Opt in to Byte Buddy's
+  best-effort parsing with the agent option `experimental=true` or `-Dnet.bytebuddy.experimental=true`.
+
+Other OpenJDK builds (Oracle, Azul, Corretto, Red Hat, Microsoft), FIPS-mode JVMs and other app
+servers or APM agents are not in the matrix. Provider frames from IBM's providers (IBMJCE, IBMJCEFIPS,
+OpenJCEPlus), SunPKCS11 (including NSS-based FIPS mode), SunMSCAPI, Bouncy Castle (including BC-FIPS
+and BCJSSE), ACCP, Conscrypt, wolfCrypt and the Luna, nShield and AWS CloudHSM providers are
+recognized for call-site attribution.
+
 ## Why
 
 Regulators are asking banks and other critical infrastructure for a **cryptographic inventory** as the
@@ -80,6 +135,7 @@ mvn verify -Dcensus.failOn=quantum-vulnerable
 | `failOnUnknown`               | `true`   | Fail on assets the policy cannot judge (unrecognized, or key strength not observable) |
 | `failOnMissingData`           | `true`   | Fail when tests ran but no agent data exists (agent never attached)     |
 | `failOnIncompleteCollection`  | `true`   | Fail when the agent reports instrumentation errors, dropped assets, or calls still running at shutdown |
+| `failOnMissingTargets`        | `false`  | Fail on an instrumentation gap (a JDK class the agent always instruments was absent, not transformed, or had none of the expected methods); otherwise a warning |
 | `allow`                       |          | Algorithms accepted regardless of risk                                  |
 | `ignoreJdkInternal`           | `false`  | Ignore assets with no application frame (jar verification, PKIX)       |
 
@@ -101,6 +157,17 @@ mvn verify -Dcensus.failOn=quantum-vulnerable
 The run directory is bound to the current build (Maven project context), so neither a POM property
 nor evidence from an earlier build can satisfy `check`. Running `prepare-agent` again before Failsafe
 keeps the unit-test results.
+
+`check` also reports what became of the JDK classes the agent always instruments (`Cipher`,
+`Signature`, ..., `sun.security.ssl.SSLSessionImpl`), merged over all test JVMs:
+
+- **never loaded** by any test JVM (for example no test used TLS): logged as information;
+- **instrumentation gap**: the class does not exist in this JDK (renamed or removed), was loaded but
+  never transformed, or was transformed but none of the expected methods exist. Uses of it were not
+  observed. This is a **warning** by default, because an unfamiliar JDK build can legitimately lack a
+  JDK-internal class such as `SSLSessionImpl`; set `failOnMissingTargets=true` to fail instead. (A
+  target that *failed* to transform also counts as an instrumentation error, which fails the build
+  through `failOnIncompleteCollection`.)
 
 Not detected (by design or not yet):
 
@@ -142,6 +209,7 @@ The CBOM is written when the JVM exits.
 | `maxAssets` | `500`                    | Distinct assets kept; beyond this observations are dropped, counted, and fail `check` as incomplete |
 | `maxSites`  | `50`                     | Call sites kept per asset; beyond this they fold into `<overflow>` (counted; `check` warns) |
 | `debug`     | `false`                  | Log instrumentation errors                                           |
+| `experimental` | `false`               | Let Byte Buddy parse class files newer than it supports (a JDK newer than the [matrix](#compatibility)); `-Dnet.bytebuddy.experimental=true` does the same. Recorded as `cryptocensus:byteBuddyExperimental` |
 
 Option values are percent-decoded: write `,` `=` `%` and spaces in paths as `%2C` `%3D` `%25` `%20`
 (the Maven plugin does this for you).
@@ -166,7 +234,9 @@ outermost JCA call is counted, so `Cipher.init` delegating to another overload i
 
 Each event is attributed to the **first application frame** on the stack (decided by class loader,
 not package name), plus the JDK subsystem it went *via*: `jsse`, `jar-verification`,
-`pki-validation`, `secure-random`.
+`pki-validation`, `secure-random`. Frames of JCA providers are skipped by package, whichever class
+loader defined them (OpenJCEPlus on Semeru and HSM vendors' providers are not JDK classes), and
+Bouncy Castle's TLS stack (BCJSSE) counts as `via jsse`.
 
 Algorithm names are **canonicalized** through the provider that served the call
 (`Provider.getService(type, name).getAlgorithm()`), so any alias or OID the provider accepts
@@ -229,9 +299,13 @@ cryptography is reported as quantum-vulnerable.
   files around.
 - **Fails open, reports honestly.** If the agent cannot start, it logs one line and the application
   runs normally; if anything went wrong while recording, the CBOM says so (`cryptocensus:transformErrors`,
-  `recordingFailures`, `dropped`).
+  `recordingFailures`, `dropped`), and so does a JDK class it could not instrument
+  (`cryptocensus:missingTargets`, also printed on stderr).
 - **Installs once.** A repeated `-javaagent` or attach is ignored.
-- Compiled for **Java 17**. CI runs 17, 21 and 25 on Linux and Windows; also tested locally on 23.
+- **Coexists with other agents.** Verified next to the OpenTelemetry Java agent (in either order),
+  Open Liberty's bootstrap agent and WildFly's JBoss Modules agent.
+- Compiled for **Java 17**; runs on the JDKs, vendors and servers listed under
+  [Compatibility](#compatibility).
 
 ## Known limitations
 
@@ -252,7 +326,16 @@ cryptography is reported as quantum-vulnerable.
   an EC key (only its size), and a DSA key's subgroup size N (only the modulus L), so the N conditions
   of SP 800-131A Table 2 are not assessed.
 - **Shutdown boundary.** Collection ends when the agent's shutdown hook runs; crypto performed by other
-  shutdown hooks may be missed.
+  shutdown hooks may be missed. In containers, stop the server gracefully (`docker stop` sends
+  SIGTERM); a killed JVM writes no CBOM.
+- **Third-party provider keys.** Keys generated by providers other than the JDK's own (OpenJCEPlus on
+  Semeru, HSM providers) are never exported, so their sizes are often not observed: an AES key stays
+  `acceptable` (AES has no weak sizes), an HMAC or public key becomes `unknown`.
+- **JDK internals.** TLS sessions are observed through `sun.security.ssl.SSLSessionImpl`, a
+  JSSE-internal class. A JDK that renames it (or any other fixed target) is reported as an
+  instrumentation gap rather than silently losing TLS observations; see `failOnMissingTargets`.
+- **Dynamic attach** ([JEP 451](https://openjdk.org/jeps/451)): attaching to a running JDK 21+ prints a
+  warning, and classes already used before the attach are only observed from then on.
 - **CDS warning (JDK 17+).** Like other agents that extend the bootstrap class path (OpenTelemetry's,
   for example), the JVM prints `Sharing is only supported for boot loader classes because bootstrap
   classpath has been appended`. It is harmless; class-data sharing stays on for JDK classes.
@@ -269,7 +352,7 @@ cryptography is reported as quantum-vulnerable.
 - Periodic and on-demand CBOM flush (JMX) for long-running servers
 - Sampling mode and benchmarks for production use
 - Keystore and truststore inventory (certificates, key sizes, expiry)
-- Conformance matrix across app servers (WildFly, Open Liberty, Tomcat) and JDK vendors
+- More conformance rows: FIPS-mode JVMs (RHEL NSS, Semeru FIPS), further APM agents, macOS
 
 ## Building
 
@@ -281,14 +364,18 @@ Modules:
 
 - `census-core`: model, canonical names, risk policy, CBOM read/write. Zero runtime dependencies;
   output is validated against the official CycloneDX 1.6 schema in tests.
-- `census-agent`: the `-javaagent` (shaded jar), with integration tests that run real JVMs.
+- `census-agent`: the `-javaagent` (shaded jar), with integration tests that run real JVMs, including
+  the conformance tests with the OpenTelemetry Java agent and embedded Tomcat.
 - `census-maven-plugin`: `prepare-agent` and `check` goals, with Maven Invoker tests for argLine
   composition, odd paths, missing data and failure modes.
 - `census-demo`: a toy payments service that runs the plugin on itself.
+- `census-app-servers`: Open Liberty and WildFly in containers; only with `-P app-servers` (needs
+  Docker, skipped without it), never published.
 
 ## Code quality
 
 Every build on JDK 21+ runs a strict static analysis suite; every tool fails the build on any finding.
+(The advisory early-access CI job turns it off with `-P '!quality'`: the analyzers lag behind new JDKs.)
 
 | Stage | Tool | What it enforces |
 |---|---|---|
