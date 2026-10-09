@@ -199,6 +199,13 @@ public final class Installer {
         partial.reset(inst, AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
       }
       System.err.println(PREFIX + "instrumentation failed; agent disabled: " + t);
+      // Disabled for good: release the agent jar (kept open only while advice may still be needed),
+      // so no file handle leaks; on Windows an open handle also keeps the jar from being deleted.
+      try {
+        locator.close();
+      } catch (IOException e) {
+        System.err.println(PREFIX + "could not close the agent jar: " + e);
+      }
       return;
     }
 
