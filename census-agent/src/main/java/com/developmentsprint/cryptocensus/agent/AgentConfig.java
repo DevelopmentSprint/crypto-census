@@ -4,13 +4,13 @@ import com.developmentsprint.cryptocensus.core.Escapes;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Agent options, passed as {@code -javaagent:census-agent.jar=key=value,key=value}.
@@ -34,6 +34,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * </ul>
  */
 final class AgentConfig {
+
+  /** Unguessable names, so nobody can pre-create a file or directory we are about to write. */
+  private static final SecureRandom RANDOM = new SecureRandom();
 
   private static final Set<String> KEYS =
       Set.of("output", "dir", "app", "summary", "tls", "maxAssets", "maxSites", "debug");
@@ -67,7 +70,7 @@ final class AgentConfig {
               "cbom-"
                   + ProcessHandle.current().pid()
                   + "-"
-                  + Long.toHexString(ThreadLocalRandom.current().nextLong() & Long.MAX_VALUE)
+                  + Long.toHexString(RANDOM.nextLong() & Long.MAX_VALUE)
                   + ".json")
           : Paths.get(options.getOrDefault("output", "cryptocensus-cbom.json"));
     } catch (InvalidPathException e) {
@@ -80,7 +83,10 @@ final class AgentConfig {
     Map<String, String> options = new LinkedHashMap<>();
     List<String> warnings = new ArrayList<>();
     if (args != null && !args.isBlank()) {
-      for (String pair : args.split(",")) {
+      for (String pair : args.split(",", -1)) {
+        if (pair.isBlank()) {
+          continue; // tolerate stray commas such as a trailing one
+        }
         String[] kv = pair.split("=", 2);
         String key = kv[0].trim();
         if (kv.length != 2 || key.isEmpty()) {
@@ -107,9 +113,15 @@ final class AgentConfig {
   private static boolean bool(
       Map<String, String> options, String key, boolean dflt, List<String> warnings) {
     String v = options.get(key);
-    if (v == null) return dflt;
-    if (v.equalsIgnoreCase("true")) return true;
-    if (v.equalsIgnoreCase("false")) return false;
+    if (v == null) {
+      return dflt;
+    }
+    if ("true".equalsIgnoreCase(v)) {
+      return true;
+    }
+    if ("false".equalsIgnoreCase(v)) {
+      return false;
+    }
     warnings.add("option '" + key + "' must be true or false, got '" + v + "'; using " + dflt);
     return dflt;
   }
@@ -117,10 +129,14 @@ final class AgentConfig {
   private static int positiveInt(
       Map<String, String> options, String key, int dflt, List<String> warnings) {
     String v = options.get(key);
-    if (v == null) return dflt;
+    if (v == null) {
+      return dflt;
+    }
     try {
       int n = Integer.parseInt(v);
-      if (n > 0) return n;
+      if (n > 0) {
+        return n;
+      }
     } catch (NumberFormatException ignored) {
       // fall through
     }

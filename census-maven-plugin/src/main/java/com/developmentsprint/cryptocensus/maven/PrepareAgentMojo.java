@@ -2,11 +2,12 @@ package com.developmentsprint.cryptocensus.maven;
 
 import com.developmentsprint.cryptocensus.core.Escapes;
 import java.io.File;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
@@ -28,6 +29,9 @@ import org.apache.maven.project.MavenProject;
  */
 @Mojo(name = "prepare-agent", defaultPhase = LifecyclePhase.INITIALIZE, threadSafe = true)
 public class PrepareAgentMojo extends AbstractMojo {
+
+  /** Unguessable names, so nobody can pre-create a file or directory we are about to write. */
+  private static final SecureRandom RANDOM = new SecureRandom();
 
   static final String AGENT_KEY = "com.developmentsprint:census-agent";
 
@@ -131,21 +135,24 @@ public class PrepareAgentMojo extends AbstractMojo {
    */
   private File runDirectory() throws MojoExecutionException {
     Object existing = project.getContextValue(RUN_DIR_CONTEXT);
-    if (existing != null) return new File(existing.toString());
+    if (existing != null) {
+      return new File(existing.toString());
+    }
     try {
       java.nio.file.Files.createDirectories(destDir.toPath());
       for (int attempt = 0; attempt < 5; attempt++) {
         File candidate =
             new File(
                 destDir,
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+                LocalDateTime.now(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
                     + "-"
-                    + Long.toHexString(ThreadLocalRandom.current().nextLong() & Long.MAX_VALUE));
+                    + Long.toHexString(RANDOM.nextLong() & Long.MAX_VALUE));
         try {
           java.nio.file.Files.createDirectory(candidate.toPath());
           return candidate;
         } catch (java.nio.file.FileAlreadyExistsException collision) {
-          // try another name
+          getLog().debug("Run directory " + candidate + " already exists; trying another name");
         }
       }
     } catch (java.io.IOException e) {

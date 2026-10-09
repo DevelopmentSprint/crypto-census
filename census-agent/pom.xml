@@ -17,6 +17,12 @@
         Ships as a single self-contained jar; Byte Buddy is shaded and relocated.
     </description>
 
+    <properties>
+        <!-- coverage floors (unit tests only: the integration tests run the shaded agent in a child JVM, whose relocated classes JaCoCo cannot map back); raise when coverage rises, never lower -->
+        <jacoco.minimum.line>0.30</jacoco.minimum.line>
+        <jacoco.minimum.branch>0.38</jacoco.minimum.branch>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.developmentsprint</groupId>

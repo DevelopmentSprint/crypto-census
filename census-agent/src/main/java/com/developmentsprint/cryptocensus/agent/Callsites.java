@@ -63,7 +63,8 @@ final class Callsites {
 
   static Occurrence attribute(Iterator<Frame> frames) {
     String via = null;
-    while (frames.hasNext()) {
+    Frame application = null;
+    while (application == null && frames.hasNext()) {
       Frame f = frames.next();
       String c = f.className;
       if (isAgent(c)) {
@@ -76,12 +77,16 @@ final class Callsites {
         continue;
       }
       if (isPlatform(f)) {
-        if (via == null) via = subsystem(c);
-        continue;
+        if (via == null) {
+          via = subsystem(c);
+        }
+      } else {
+        application = f;
       }
-      return new Occurrence(c, f.methodName, f.line, via);
     }
-    return new Occurrence(Occurrence.JDK_LOCATION, null, -1, via);
+    return application == null
+        ? new Occurrence(Occurrence.JDK_LOCATION, null, -1, via)
+        : new Occurrence(application.className, application.methodName, application.line, via);
   }
 
   private static boolean isAgent(String c) {
@@ -89,7 +94,7 @@ final class Callsites {
   }
 
   private static boolean isSecureRandom(String c) {
-    return c.equals("java.security.SecureRandom")
+    return "java.security.SecureRandom".equals(c)
         || c.startsWith("sun.security.provider.SecureRandom")
         || c.startsWith("sun.security.provider.NativePRNG")
         || c.startsWith("sun.security.provider.SeedGenerator")
@@ -117,7 +122,7 @@ final class Callsites {
   private static boolean isPlatform(Frame f) {
     if (f.type != null) {
       ClassLoader loader = f.type.getClassLoader();
-      return loader == null || loader == PLATFORM;
+      return loader == null || loader.equals(PLATFORM);
     }
     String c = f.className;
     return c.startsWith("java.")
@@ -128,17 +133,27 @@ final class Callsites {
   }
 
   private static String subsystem(String c) {
-    if (c.startsWith("sun.security.ssl.") || c.startsWith("javax.net.ssl.")) return "jsse";
+    if (c.startsWith("sun.security.ssl.") || c.startsWith("javax.net.ssl.")) {
+      return "jsse";
+    }
     if (c.startsWith("java.util.jar.")
         || c.startsWith("sun.security.util.SignatureFileVerifier")
         || c.startsWith("sun.security.util.ManifestEntryVerifier")
-        || c.startsWith("sun.security.pkcs.")) return "jar-verification";
+        || c.startsWith("sun.security.pkcs.")) {
+      return "jar-verification";
+    }
     if (c.startsWith("sun.security.provider.certpath.")
         || c.startsWith("sun.security.validator.")
-        || c.startsWith("sun.security.x509.")) return "pki-validation";
-    if (c.startsWith("java.util.Random")) return "secure-random";
+        || c.startsWith("sun.security.x509.")) {
+      return "pki-validation";
+    }
+    if (c.startsWith("java.util.Random")) {
+      return "secure-random";
+    }
     // reflection, lambdas and thread plumbing say nothing about which subsystem was involved
-    if (c.startsWith("java.lang.") || c.startsWith("jdk.internal.reflect.")) return null;
+    if (c.startsWith("java.lang.") || c.startsWith("jdk.internal.reflect.")) {
+      return null;
+    }
     return c;
   }
 }

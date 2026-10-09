@@ -31,7 +31,7 @@ class PrepareAgentMojoTest {
   }
 
   @Test
-  void replacesAQuotedEarlierOption() {
+  void replacesQuotedEarlierOption() {
     String quoted = "\"-javaagent:/my repo/census-agent-0.1.0.jar=dir=/t/run1\"";
     assertThat(PrepareAgentMojo.append("-Xmx1g " + quoted, AGENT2)).isEqualTo("-Xmx1g " + AGENT2);
   }

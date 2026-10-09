@@ -21,22 +21,35 @@ public record Occurrence(String location, String symbol, int line, String via) {
   /** Used when a CBOM component carries no occurrence evidence. */
   public static final Occurrence UNKNOWN = new Occurrence("<unknown>", null, -1, null);
 
+  /** Validates and normalizes: truncates long names, maps blank symbol/via to null. */
   public Occurrence {
     Objects.requireNonNull(location, "location");
     location = Names.truncate(location);
     symbol = Names.truncate(symbol);
     via = Names.truncate(via);
-    if (line < -1) line = -1;
-    if (symbol != null && symbol.isBlank()) symbol = null;
-    if (via != null && via.isBlank()) via = null;
+    if (line < -1) {
+      line = -1;
+    }
+    if (symbol != null && symbol.isBlank()) {
+      symbol = null;
+    }
+    if (via != null && via.isBlank()) {
+      via = null;
+    }
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder(location);
-    if (symbol != null) sb.append('.').append(symbol);
-    if (line >= 0) sb.append(':').append(line);
-    if (via != null) sb.append(" (via ").append(via).append(')');
+    if (symbol != null) {
+      sb.append('.').append(symbol);
+    }
+    if (line >= 0) {
+      sb.append(':').append(line);
+    }
+    if (via != null) {
+      sb.append(" (via ").append(via).append(')');
+    }
     return sb.toString();
   }
 }

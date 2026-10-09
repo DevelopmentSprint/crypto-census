@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
  * getAlgorithm()} returns whatever the caller passed in. The policy must see one spelling,
  * otherwise an alias silently becomes "unknown" and passes every enforcement threshold.
  */
+// The OID table (1.3.101.112, ...) looks like dotted-quad IP addresses to PMD; none of these are
+// IPs.
+@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 public final class Names {
 
   /**
@@ -103,13 +106,17 @@ public final class Names {
    * normalized ({@code SHA-256withRSA -> SHA256withRSA}).
    */
   public static String canonical(Primitive primitive, String algorithm) {
-    if (algorithm == null) return null;
+    if (algorithm == null) {
+      return null;
+    }
     // strip whitespace from the whole string first: truncating first could cut "AES/   ...ECB" down
     // to "AES/E"
     String a = truncate(algorithm.replaceAll("\\s+", ""));
     String oid = a.regionMatches(true, 0, "OID.", 0, 4) ? a.substring(4) : a;
     String resolved = OIDS.get(oid);
-    if (resolved != null) a = resolved;
+    if (resolved != null) {
+      a = resolved;
+    }
 
     if (primitive == Primitive.MESSAGE_DIGEST) {
       return DIGESTS.getOrDefault(a.toUpperCase(Locale.ROOT), a);
@@ -126,12 +133,16 @@ public final class Names {
 
   /** Applies {@link #canonical} to each part of a {@code alg/mode/padding} transformation. */
   public static String transformation(String transformation) {
-    if (transformation == null) return null;
+    if (transformation == null) {
+      return null;
+    }
     // limit 3: the padding may itself contain '/' (OAEPWithSHA-512/256AndMGF1Padding)
     String[] parts = truncate(transformation.replaceAll("\\s+", "")).split("/", 3);
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < parts.length; i++) {
-      if (i > 0) sb.append('/');
+      if (i > 0) {
+        sb.append('/');
+      }
       sb.append(i == 0 ? canonical(Primitive.CIPHER, parts[i]) : parts[i]);
     }
     return sb.toString();
@@ -143,11 +154,15 @@ public final class Names {
    * two different names could collide in a {@code bom-ref}.
    */
   public static String truncate(String s) {
-    if (s == null) return null;
+    if (s == null) {
+      return null;
+    }
     String t = s;
     if (t.length() > MAX_LENGTH) {
       int end = MAX_LENGTH;
-      if (Character.isHighSurrogate(t.charAt(end - 1))) end--;
+      if (Character.isHighSurrogate(t.charAt(end - 1))) {
+        end--;
+      }
       t = t.substring(0, end);
     }
     return wellFormed(t);
@@ -168,8 +183,10 @@ public final class Names {
                   && i > 0
                   && Character.isHighSurrogate(s.charAt(i - 1)));
       if (lone) {
-        if (sb == null) sb = new StringBuilder(s.substring(0, i));
-        sb.append('\uFFFD');
+        if (sb == null) {
+          sb = new StringBuilder(s.substring(0, i));
+        }
+        sb.append('\uFFFD'); // U+FFFD REPLACEMENT CHARACTER
       } else if (sb != null) {
         sb.append(c);
       }

@@ -70,6 +70,19 @@ class JsonTest {
     assertThatThrownBy(() -> Json.parse(input)).isInstanceOf(IllegalArgumentException.class);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"0", "-0", "7", "-12", "0.5", "1.25", "1e5", "1E+5", "2.5e-3", "-0.0"})
+  void numberValidatorAcceptsRfc8259Numbers(String n) {
+    assertThat(Json.isJsonNumber(n)).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"", "-", "--1", "+1", "01", "1.", ".5", "1e", "1e+", "1.e5", "0x10", "1-"})
+  void numberValidatorRejectsEverythingElse(String n) {
+    assertThat(Json.isJsonNumber(n)).isFalse();
+  }
+
   @Test
   void parsesValidNumbers() {
     assertThat(Json.parse("[0, -1, 12, 1.5, -2.5e3, 1E2]"))

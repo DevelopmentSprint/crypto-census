@@ -52,9 +52,9 @@ public final class CryptoWorkload {
     signer.sign();
 
     // X25519 key agreement: quantum-vulnerable
-    KeyPairGenerator xGen = KeyPairGenerator.getInstance("X25519");
-    KeyPair alice = xGen.generateKeyPair();
-    KeyPair bob = xGen.generateKeyPair();
+    KeyPairGenerator x25519Gen = KeyPairGenerator.getInstance("X25519");
+    KeyPair alice = x25519Gen.generateKeyPair();
+    KeyPair bob = x25519Gen.generateKeyPair();
     KeyAgreement ka = KeyAgreement.getInstance("XDH");
     ka.init(alice.getPrivate());
     ka.doPhase(bob.getPublic(), true);

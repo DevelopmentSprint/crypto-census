@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<ruleset name="crypto-census"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>
+        PMD's curated quickstart set, plus the full security, multithreading and error-prone
+        categories. Every exclusion below says why; prefer fixing code over adding one.
+    </description>
+
+    <rule ref="rulesets/java/quickstart.xml">
+        <!-- Also part of quickstart; see the multithreading reference below for the reason. -->
+        <exclude name="AvoidUsingVolatile"/>
+        <!-- Targets hot-path SLF4J-style logging; ours is a handful of Maven Log calls per build. -->
+        <exclude name="GuardLogStatement"/>
+    </rule>
+    <rule ref="category/java/security.xml"/>
+
+    <rule ref="category/java/multithreading.xml">
+        <!-- Flags every HashMap/LinkedHashMap; ours are method-local and never shared across threads.
+             Shared state (Inventory, Recorder) already uses ConcurrentHashMap / atomics. -->
+        <exclude name="UseConcurrentHashMap"/>
+        <!-- J2EE-era rule: the agent must register a JVM shutdown hook, which is a Thread. -->
+        <exclude name="DoNotUseThreads"/>
+        <!-- volatile is the correct publication mechanism for our flags (see Recorder's admission protocol). -->
+        <exclude name="AvoidUsingVolatile"/>
+        <!-- Style preference; a synchronized static method is the clearest one-time-init guard here. -->
+        <exclude name="AvoidSynchronizedAtMethodLevel"/>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml">
+        <!-- CycloneDX field names ("name", "type", "components") read better inline than as constants. -->
+        <exclude name="AvoidDuplicateLiterals"/>
+        <!-- Policy thresholds are named constants already; remaining literals are parser indices. -->
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <!-- Parsers reset state to null deliberately (e.g. "no subsystem seen yet"). -->
+        <exclude name="NullAssignment"/>
+        <!-- Records and enums expose a field through an accessor of the same name by design. -->
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="AvoidFieldNameMatchingTypeName"/>
+        <!-- J2EE-era rule: we inspect a class's *defining* loader on purpose; the context loader would be wrong. -->
+        <exclude name="UseProperClassLoader"/>
+    </rule>
+
+    <!-- Allow the idioms `while ((n = in.read(buf)) > 0)` and `++count > LIMIT`, nothing else. -->
+    <rule ref="category/java/errorprone.xml/AssignmentInOperand">
+        <properties>
+            <property name="allowWhile" value="true"/>
+            <property name="allowIncrementDecrement" value="true"/>
+        </properties>
+    </rule>
+</ruleset>

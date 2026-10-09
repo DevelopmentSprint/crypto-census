@@ -69,10 +69,14 @@ class InventoryTest {
   }
 
   @Test
-  void truncationNeverSplitsASurrogatePair() {
+  void truncationNeverSplitsSurrogatePairs() {
     // regression: a split emoji became '?' in UTF-8 and collided with a real '?' in bom-refs
     CryptoAsset emoji =
-        CryptoAsset.of(Primitive.MESSAGE_DIGEST, "SHA-256", 0, "A".repeat(255) + "\uD83D\uDE00");
+        CryptoAsset.of(
+            Primitive.MESSAGE_DIGEST,
+            "SHA-256",
+            0,
+            "A".repeat(255) + "\uD83D\uDE00"); // emoji, a surrogate pair
     CryptoAsset question =
         CryptoAsset.of(Primitive.MESSAGE_DIGEST, "SHA-256", 0, "A".repeat(255) + "?");
     assertThat(Character.isHighSurrogate(emoji.provider().charAt(emoji.provider().length() - 1)))
@@ -88,7 +92,8 @@ class InventoryTest {
         .hasMessageContaining("Malformed");
     org.assertj.core.api.Assertions.assertThatThrownBy(() -> Escapes.decode("a%FFb"))
         .hasMessageContaining("UTF-8");
-    org.assertj.core.api.Assertions.assertThatThrownBy(() -> Escapes.decode("a%\uFF11\uFF12"))
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> Escapes.decode("a%１２")) // full-width digits one and two
         .hasMessageContaining("Malformed");
     assertThat(Escapes.decode("%252C")).isEqualTo("%2C"); // single pass: no double decoding
   }

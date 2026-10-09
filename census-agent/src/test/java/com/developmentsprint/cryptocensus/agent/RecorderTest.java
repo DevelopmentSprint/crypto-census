@@ -81,26 +81,13 @@ class RecorderTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation")
   void resolvesFullTransformationAliases() {
     // regression: only the part before '/' was resolved, so a provider alias for a whole
     // transformation was reported under the vendor name and judged unknown
     Provider vendor =
-        new Provider("Vendor", "1.0", "test") {
-          {
-            putService(
-                new Service(
-                    this,
-                    "Cipher",
-                    "AES/CBC/PKCS5Padding",
-                    "unused.Impl",
-                    List.of("VendorAES/CBC/PKCS5Padding"),
-                    null));
-            putService(
-                new Service(
-                    this, "Cipher", "AES/GCM", "unused.Impl", List.of("VendorAES/GCM"), null));
-          }
-        };
+        new AliasProvider("Vendor")
+            .cipher("AES/CBC/PKCS5Padding", "VendorAES/CBC/PKCS5Padding")
+            .cipher("AES/GCM", "VendorAES/GCM");
     assertThat(Recorder.resolveTransformation(vendor, "VendorAES/CBC/PKCS5Padding"))
         .isEqualTo("AES/CBC/PKCS5Padding");
     assertThat(Recorder.resolveTransformation(vendor, "VendorAES/GCM/NoPadding"))
@@ -113,17 +100,10 @@ class RecorderTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation")
   void rebuildsFromTheCanonicalServiceShape() {
     // round 4: canonical "AES" registered under the alias "VendorAES/CBC" -> mode comes from the
     // request
-    Provider vendor =
-        new Provider("Vendor2", "1.0", "test") {
-          {
-            putService(
-                new Service(this, "Cipher", "AES", "unused.Impl", List.of("VendorAES/CBC"), null));
-          }
-        };
+    Provider vendor = new AliasProvider("Vendor2").cipher("AES", "VendorAES/CBC");
     assertThat(Recorder.resolveTransformation(vendor, "VendorAES/CBC/PKCS5Padding"))
         .isEqualTo("AES/CBC/PKCS5Padding");
     // padding names may contain '/'
@@ -131,5 +111,19 @@ class RecorderTest {
             Recorder.resolveTransformation(
                 Security.getProvider("SunJCE"), "RSA/ECB/OAEPWithSHA-512/256AndMGF1Padding"))
         .isEqualTo("RSA/ECB/OAEPWithSHA-512/256AndMGF1Padding");
+  }
+
+  /** Registers cipher aliases only; its services are looked up, never instantiated. */
+  private static final class AliasProvider extends Provider {
+    private static final long serialVersionUID = 1L;
+
+    AliasProvider(String name) {
+      super(name, "1.0", "test");
+    }
+
+    AliasProvider cipher(String algorithm, String... aliases) {
+      putService(new Service(this, "Cipher", algorithm, "unused.Impl", List.of(aliases), null));
+      return this;
+    }
   }
 }

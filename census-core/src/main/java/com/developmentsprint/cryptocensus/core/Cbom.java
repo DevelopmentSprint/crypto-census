@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.core;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,6 +13,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -23,7 +25,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Reads and writes inventories as CycloneDX 1.6 Cryptography Bills of Materials.
@@ -34,6 +35,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * can be merged back into one inventory.
  */
 public final class Cbom {
+
+  /** Unguessable names, so nobody can pre-create a file we are about to write. */
+  private static final SecureRandom RANDOM = new SecureRandom();
 
   public static final String SPEC_VERSION = "1.6";
   public static final String TOOL_NAME = "crypto-census";
@@ -73,13 +77,28 @@ public final class Cbom {
    * @param component name of the application or module being described
    * @param properties extra key/value pairs recorded as metadata properties (JVM version, ...)
    */
-  public record Metadata(String component, Map<String, String> properties) {}
+  public record Metadata(String component, Map<String, String> properties) {
+    /** Copies {@code properties}, keeping their order. */
+    public Metadata {
+      properties =
+          Collections.unmodifiableMap(
+              new LinkedHashMap<>(properties == null ? Map.of() : properties));
+    }
+  }
 
   /**
    * A parsed CBOM: the reconstructed inventory plus its metadata properties (collection health,
    * policy version, JVM) so callers can judge whether the evidence is complete.
    */
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP",
+      justification = "the inventory is handed over on purpose: callers merge parsed CBOMs into it")
   public record Document(Inventory inventory, Map<String, String> properties) {
+
+    /** Copies {@code properties}, keeping their order. */
+    public Document {
+      properties = Collections.unmodifiableMap(new LinkedHashMap<>(properties));
+    }
 
     /**
      * True when this is agent-written evidence whose every health counter is present, a valid
@@ -95,6 +114,9 @@ public final class Cbom {
     }
 
     /**
+     * Checks the health envelope: schema marker, every counter present and numeric, and counters
+     * consistent with the inventory.
+     *
      * @throws IllegalArgumentException describing the first problem with the health envelope
      */
     public void validateAgentHealth() {
@@ -106,7 +128,9 @@ public final class Cbom {
                 + properties.get(SCHEMA_PROPERTY)
                 + ")");
       }
-      for (String p : HEALTH_PROPERTIES) health(p);
+      for (String p : HEALTH_PROPERTIES) {
+        health(p);
+      }
       if (health(P + "overflowedSites") != inventory.overflowedSites()) {
         throw new IllegalArgumentException(
             "declared overflowedSites "
@@ -123,13 +147,24 @@ public final class Cbom {
     /** A health counter; throws if absent or malformed, because absent must not read as healthy. */
     public long health(String property) {
       String v = properties.get(property);
-      if (v == null) throw new IllegalArgumentException("Missing health property " + property);
+      if (v == null) {
+        throw new IllegalArgumentException("Missing health property " + property);
+      }
       return nonNegativeLong(v, property);
     }
   }
 
   // ---------------------------------------------------------------- write
 
+  /**
+   * Writes a snapshot of {@code inventory} to {@code file}; see {@link #write(List, long, Metadata,
+   * Path)}.
+   *
+   * @param inventory the inventory to snapshot
+   * @param metadata descriptive metadata for the BOM
+   * @param file destination
+   * @throws IOException if the file cannot be written
+   */
   public static void write(Inventory inventory, Metadata metadata, Path file) throws IOException {
     write(inventory.entries(), inventory.droppedObservations(), metadata, file);
   }
@@ -164,10 +199,7 @@ public final class Cbom {
             : new FileAttribute<?>[0]);
 
     Path tmp =
-        dir.resolve(
-            ".cbom-"
-                + Long.toHexString(ThreadLocalRandom.current().nextLong() & Long.MAX_VALUE)
-                + ".tmp");
+        dir.resolve(".cbom-" + Long.toHexString(RANDOM.nextLong() & Long.MAX_VALUE) + ".tmp");
     FileAttribute<?>[] fileAttrs =
         posix
             ? new FileAttribute<?>[] {
@@ -189,20 +221,39 @@ public final class Cbom {
               fileAttrs)) {
         created = true; // from here on, tmp is ours to clean up
         ByteBuffer buffer = ByteBuffer.wrap(content);
-        while (buffer.hasRemaining()) out.write(buffer);
+        while (buffer.hasRemaining()) {
+          out.write(buffer);
+        }
       }
       Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
       created = false; // renamed away
     } finally {
       // never delete an entry this call did not create (e.g. when CREATE_NEW lost a name collision)
-      if (created) Files.deleteIfExists(tmp);
+      if (created) {
+        Files.deleteIfExists(tmp);
+      }
     }
   }
 
+  /**
+   * Serializes a snapshot of {@code inventory} as a CycloneDX 1.6 document.
+   *
+   * @param inventory the inventory to snapshot
+   * @param metadata descriptive metadata for the BOM
+   * @return the JSON document
+   */
   public static String toJson(Inventory inventory, Metadata metadata) {
     return toJson(inventory.entries(), inventory.droppedObservations(), metadata);
   }
 
+  /**
+   * Serializes an inventory snapshot as a CycloneDX 1.6 document.
+   *
+   * @param entries the snapshot, as returned by {@link Inventory#entries()}
+   * @param droppedObservations observations dropped by the inventory's caps
+   * @param metadata descriptive metadata for the BOM
+   * @return the JSON document
+   */
   public static String toJson(
       List<Inventory.Entry> entries, long droppedObservations, Metadata metadata) {
     Map<String, Object> bom = new LinkedHashMap<>();
@@ -227,10 +278,14 @@ public final class Cbom {
     long overflowed = 0;
     for (Inventory.Entry e : entries) {
       Long n = e.occurrences().get(Occurrence.OVERFLOW);
-      if (n != null) overflowed = Inventory.saturatingAdd(overflowed, n);
+      if (n != null) {
+        overflowed = Inventory.saturatingAdd(overflowed, n);
+      }
     }
     metaProps.put(P + "overflowedSites", String.valueOf(overflowed));
-    if (metadata.properties() != null) metaProps.putAll(metadata.properties());
+    if (metadata.properties() != null) {
+      metaProps.putAll(metadata.properties());
+    }
     List<Object> props = new ArrayList<>();
     metaProps.forEach((k, v) -> props.add(map("name", k, "value", v)));
     meta.put("properties", props);
@@ -246,7 +301,7 @@ public final class Cbom {
 
   private static Map<String, Object> component(Inventory.Entry entry) {
     CryptoAsset a = entry.asset();
-    Assessment verdict = entry.assessment();
+    final Assessment verdict = entry.assessment();
 
     Map<String, Object> c = new LinkedHashMap<>();
     c.put("type", "cryptographic-asset");
@@ -266,10 +321,15 @@ public final class Cbom {
       Map<String, Object> alg = new LinkedHashMap<>();
       alg.put("primitive", cdxPrimitive(a));
       String parameterSet = a.parameterSet();
-      if (parameterSet != null) alg.put("parameterSetIdentifier", parameterSet);
-      if (a.mode() != null && !"NONE".equalsIgnoreCase(a.mode()))
+      if (parameterSet != null) {
+        alg.put("parameterSetIdentifier", parameterSet);
+      }
+      if (a.mode() != null && !"NONE".equalsIgnoreCase(a.mode())) {
         alg.put("mode", cdxMode(a.mode()));
-      if (a.padding() != null) alg.put("padding", cdxPadding(a.padding()));
+      }
+      if (a.padding() != null) {
+        alg.put("padding", cdxPadding(a.padding()));
+      }
       // executionEnvironment deliberately omitted: we cannot tell software from HSM-backed
       // providers
       alg.put("cryptoFunctions", cdxFunctions(a));
@@ -287,8 +347,12 @@ public final class Cbom {
             (o, count) -> {
               Map<String, Object> occ = new LinkedHashMap<>();
               occ.put("location", o.location());
-              if (o.line() >= 0) occ.put("line", o.line());
-              if (o.symbol() != null) occ.put("symbol", o.symbol());
+              if (o.line() >= 0) {
+                occ.put("line", o.line());
+              }
+              if (o.symbol() != null) {
+                occ.put("symbol", o.symbol());
+              }
               occ.put(
                   "additionalContext",
                   "count=" + count + (o.via() != null ? "; via=" + Escapes.encode(o.via()) : ""));
@@ -305,16 +369,22 @@ public final class Cbom {
     prop(props, "algorithm", a.algorithm());
     prop(props, "mode", a.mode());
     prop(props, "padding", a.padding());
-    if (a.keySize() > 0) prop(props, "keySize", String.valueOf(a.keySize()));
+    if (a.keySize() > 0) {
+      prop(props, "keySize", String.valueOf(a.keySize()));
+    }
     prop(props, "provider", a.provider());
     prop(props, "protocolVersion", a.protocolVersion());
-    if (a.operation() != null) prop(props, "operation", a.operation().name());
+    if (a.operation() != null) {
+      prop(props, "operation", a.operation().name());
+    }
     c.put("properties", props);
     return c;
   }
 
   private static void prop(List<Object> props, String name, String value) {
-    if (value != null) props.add(map("name", P + name, "value", value));
+    if (value != null) {
+      props.add(map("name", P + name, "value", value));
+    }
   }
 
   // ---------------------------------------------------------------- read
@@ -354,6 +424,13 @@ public final class Cbom {
     }
   }
 
+  /**
+   * Parses UTF-8 CBOM bytes; see {@link #parse(String)}.
+   *
+   * @param json the document as UTF-8 bytes
+   * @return the parsed document
+   * @throws IllegalArgumentException on malformed JSON or an invalid Crypto Census component
+   */
   public static Document parse(byte[] json) {
     return parse(new String(json, StandardCharsets.UTF_8));
   }
@@ -368,8 +445,9 @@ public final class Cbom {
   public static Document parse(String json) {
     Object root = Json.parse(json);
     Map<String, Object> bom = asMap(root, "document");
-    if (!"CycloneDX".equals(bom.get("bomFormat")))
+    if (!"CycloneDX".equals(bom.get("bomFormat"))) {
       throw new IllegalArgumentException("Not a CycloneDX document");
+    }
     if (!SPEC_VERSION.equals(bom.get("specVersion"))) {
       throw new IllegalArgumentException(
           "Unsupported specVersion " + bom.get("specVersion") + " (expected " + SPEC_VERSION + ")");
@@ -379,7 +457,9 @@ public final class Cbom {
     Map<String, String> metaProps =
         properties(asMap(bom.getOrDefault("metadata", Map.of()), "metadata"), true);
     String dropped = metaProps.get(P + "dropped");
-    if (dropped != null) inventory.addDropped(nonNegativeLong(dropped, "dropped"));
+    if (dropped != null) {
+      inventory.addDropped(nonNegativeLong(dropped, "dropped"));
+    }
 
     // An agent-written document must consist solely of our own, fully described components;
     // a component that lost its properties must not silently disappear from the evidence.
@@ -390,13 +470,16 @@ public final class Cbom {
       Map<String, String> props = new LinkedHashMap<>();
       all.forEach(
           (k, v) -> {
-            if (k.startsWith(P)) props.put(k.substring(P.length()), v);
+            if (k.startsWith(P)) {
+              props.put(k.substring(P.length()), v);
+            }
           });
       String ref = String.valueOf(c.get("bom-ref"));
       if (props.isEmpty()) {
-        if (strict)
+        if (strict) {
           throw new IllegalArgumentException(
               "Component " + ref + " in an agent document lacks cryptocensus properties");
+        }
         continue; // another tool's component
       }
       if (strict && !"cryptographic-asset".equals(c.get("type"))) {
@@ -479,30 +562,38 @@ public final class Cbom {
         String via = null;
         Object ctx = om.get("additionalContext");
         if (ctx != null) {
-          for (String part : ctx.toString().split(";")) {
+          for (String part :
+              ctx.toString().split(";", -1)) { // -1: keep empty segments; skipped below
             String[] kv = part.trim().split("=", 2);
-            if (kv.length != 2) continue;
-            if (kv[0].equals("count")) count = nonNegativeLong(kv[1], "count");
-            if (kv[0].equals("via")) via = Escapes.decode(kv[1]);
+            if (kv.length != 2) {
+              continue;
+            }
+            if ("count".equals(kv[0])) {
+              count = nonNegativeLong(kv[1], "count");
+            }
+            if ("via".equals(kv[0])) {
+              via = Escapes.decode(kv[1]);
+            }
           }
         }
         Object location = om.get("location");
-        if (!(location instanceof String))
+        if (!(location instanceof String locationName)) {
           throw new IllegalArgumentException("Component " + ref + ": occurrence without location");
+        }
         Object line = om.get("line");
         int lineNumber = -1;
         if (line != null) {
-          if (!(line instanceof Long) || (Long) line < 0 || (Long) line > Integer.MAX_VALUE) {
+          if (!(line instanceof Long l) || l < 0 || l > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Component " + ref + ": invalid line " + line);
           }
-          lineNumber = ((Long) line).intValue();
+          lineNumber = l.intValue();
         }
         Object symbol = om.get("symbol");
         inventory.add(
             asset,
             new Occurrence(
-                (String) location,
-                symbol instanceof String ? (String) symbol : null,
+                locationName,
+                symbol instanceof String symbolName ? symbolName : null,
                 lineNumber,
                 via),
             count);
@@ -528,12 +619,12 @@ public final class Cbom {
       Map<String, Object> pm = asMap(p, "property");
       Object name = pm.get("name");
       Object value = pm.get("value");
-      if (!(name instanceof String) || !(value instanceof String)) {
+      if (!(name instanceof String propertyName) || !(value instanceof String propertyValue)) {
         throw new IllegalArgumentException("Property needs string name and value: " + pm);
       }
-      if (result.put((String) name, (String) value) != null
+      if (result.put(propertyName, propertyValue) != null
           && rejectDuplicates
-          && ((String) name).startsWith(P)) {
+          && propertyName.startsWith(P)) {
         throw new IllegalArgumentException("Duplicate property " + name);
       }
     }
@@ -543,24 +634,28 @@ public final class Cbom {
   static long nonNegativeLong(String value, String what) {
     try {
       long n = Long.parseLong(value.trim());
-      if (n < 0) throw new IllegalArgumentException("Negative " + what + ": " + value);
+      if (n < 0) {
+        throw new IllegalArgumentException("Negative " + what + ": " + value);
+      }
       return n;
     } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("Invalid " + what + ": " + value);
+      throw new IllegalArgumentException("Invalid " + what + ": " + value, e);
     }
   }
 
   @SuppressWarnings("unchecked")
   private static Map<String, Object> asMap(Object o, String what) {
-    if (!(o instanceof Map))
+    if (!(o instanceof Map)) {
       throw new IllegalArgumentException("Expected " + what + " to be an object");
+    }
     return (Map<String, Object>) o;
   }
 
   @SuppressWarnings("unchecked")
   private static List<Object> asList(Object o, String what) {
-    if (!(o instanceof List))
+    if (!(o instanceof List)) {
       throw new IllegalArgumentException("Expected " + what + " to be an array");
+    }
     return (List<Object>) o;
   }
 
@@ -569,107 +664,152 @@ public final class Cbom {
   static String cdxPrimitive(CryptoAsset a) {
     String alg = a.algorithm().toUpperCase(Locale.ROOT);
     switch (a.primitive()) {
-      case SIGNATURE:
+      case SIGNATURE -> {
         return "signature";
-      case KEY_AGREEMENT:
+      }
+      case KEY_AGREEMENT -> {
         return "key-agree";
-      case KEM:
+      }
+      case KEM -> {
         return "kem";
-      case MAC:
+      }
+      case MAC -> {
         return "mac";
-      case MESSAGE_DIGEST:
+      }
+      case MESSAGE_DIGEST -> {
         return alg.startsWith("SHAKE") ? "xof" : "hash";
-      case CIPHER:
-      case KEY_GENERATION:
-        if (alg.equals("RSA")) return "pke";
-        if (alg.startsWith("HMAC")) return "mac";
-        if (alg.equals("RC4") || alg.equals("ARCFOUR") || alg.equals("CHACHA20"))
+      }
+      case CIPHER, KEY_GENERATION -> {
+        if ("RSA".equals(alg)) {
+          return "pke";
+        }
+        if (alg.startsWith("HMAC")) {
+          return "mac";
+        }
+        if ("RC4".equals(alg) || "ARCFOUR".equals(alg) || "CHACHA20".equals(alg)) {
           return "stream-cipher";
-        if (alg.equals("CHACHA20-POLY1305")) return "ae";
+        }
+        if ("CHACHA20-POLY1305".equals(alg)) {
+          return "ae";
+        }
         String mode = a.mode() == null ? "" : a.mode().toUpperCase(Locale.ROOT);
-        if (mode.equals("GCM") || mode.equals("CCM") || mode.equals("SIV")) return "ae";
+        if ("GCM".equals(mode) || "CCM".equals(mode) || "SIV".equals(mode)) {
+          return "ae";
+        }
         return "block-cipher";
-      case KEY_PAIR_GENERATION:
-        if (alg.startsWith("ML-KEM")) return "kem";
+      }
+      case KEY_PAIR_GENERATION -> {
+        if (alg.startsWith("ML-KEM")) {
+          return "kem";
+        }
         if (alg.startsWith("ML-DSA")
             || alg.startsWith("SLH-DSA")
-            || alg.equals("DSA")
-            || alg.equals("EDDSA")
-            || alg.equals("ED25519")
-            || alg.equals("ED448")) return "signature";
-        if (alg.equals("RSA") || alg.equals("RSASSA-PSS")) return "pke";
-        if (alg.equals("DH")
-            || alg.equals("DIFFIEHELLMAN")
-            || alg.equals("XDH")
-            || alg.equals("X25519")
-            || alg.equals("X448")) return "key-agree";
+            || "DSA".equals(alg)
+            || "EDDSA".equals(alg)
+            || "ED25519".equals(alg)
+            || "ED448".equals(alg)) {
+          return "signature";
+        }
+        if ("RSA".equals(alg) || "RSASSA-PSS".equals(alg)) {
+          return "pke";
+        }
+        if ("DH".equals(alg)
+            || "DIFFIEHELLMAN".equals(alg)
+            || "XDH".equals(alg)
+            || "X25519".equals(alg)
+            || "X448".equals(alg)) {
+          return "key-agree";
+        }
         return "other";
-      default:
+      }
+      default -> {
         return "unknown";
+      }
     }
   }
 
   private static List<String> cdxFunctions(CryptoAsset a) {
     Operation op = a.operation();
     switch (a.primitive()) {
-      case CIPHER:
-        if (op == Operation.ENCRYPT || op == Operation.WRAP) return List.of("encrypt");
-        if (op == Operation.DECRYPT || op == Operation.UNWRAP) return List.of("decrypt");
+      case CIPHER -> {
+        if (op == Operation.ENCRYPT || op == Operation.WRAP) {
+          return List.of("encrypt");
+        }
+        if (op == Operation.DECRYPT || op == Operation.UNWRAP) {
+          return List.of("decrypt");
+        }
         return List.of("encrypt", "decrypt");
-      case SIGNATURE:
-        if (op == Operation.SIGN) return List.of("sign");
-        if (op == Operation.VERIFY) return List.of("verify");
+      }
+      case SIGNATURE -> {
+        if (op == Operation.SIGN) {
+          return List.of("sign");
+        }
+        if (op == Operation.VERIFY) {
+          return List.of("verify");
+        }
         return List.of("sign", "verify");
-      case KEY_AGREEMENT:
+      }
+      case KEY_AGREEMENT -> {
         return List.of("keyderive");
-      case KEM:
+      }
+      case KEM -> {
         return List.of("encapsulate", "decapsulate");
-      case KEY_PAIR_GENERATION:
-      case KEY_GENERATION:
+      }
+      case KEY_PAIR_GENERATION, KEY_GENERATION -> {
         return List.of("keygen");
-      case MESSAGE_DIGEST:
+      }
+      case MESSAGE_DIGEST -> {
         return List.of("digest");
-      case MAC:
+      }
+      case MAC -> {
         return List.of("tag");
-      default:
+      }
+      default -> {
         return List.of("unknown");
+      }
     }
   }
 
   private static String cdxMode(String mode) {
     String m = mode.toLowerCase(Locale.ROOT);
-    switch (m) {
-      case "cbc":
-      case "ecb":
-      case "ccm":
-      case "gcm":
-      case "cfb":
-      case "ofb":
-      case "ctr":
-        return m;
-      default:
-        return "other";
-    }
+    return switch (m) {
+      case "cbc", "ecb", "ccm", "gcm", "cfb", "ofb", "ctr" -> m;
+      default -> "other";
+    };
   }
 
   private static String cdxPadding(String padding) {
     String p = padding.toUpperCase(Locale.ROOT);
-    if (p.equals("NOPADDING")) return "raw";
-    if (p.startsWith("PKCS5")) return "pkcs5";
-    if (p.startsWith("PKCS7")) return "pkcs7";
-    if (p.startsWith("PKCS1")) return "pkcs1v15";
-    if (p.startsWith("OAEP")) return "oaep";
+    if ("NOPADDING".equals(p)) {
+      return "raw";
+    }
+    if (p.startsWith("PKCS5")) {
+      return "pkcs5";
+    }
+    if (p.startsWith("PKCS7")) {
+      return "pkcs7";
+    }
+    if (p.startsWith("PKCS1")) {
+      return "pkcs1v15";
+    }
+    if (p.startsWith("OAEP")) {
+      return "oaep";
+    }
     return "other";
   }
 
   private static String tlsVersionNumber(String version) {
-    if (version == null) return "unknown";
+    if (version == null) {
+      return "unknown";
+    }
     return version.startsWith("TLSv") ? version.substring(4) : version;
   }
 
   private static Map<String, Object> map(Object... kv) {
     Map<String, Object> m = new LinkedHashMap<>();
-    for (int i = 0; i < kv.length; i += 2) m.put((String) kv[i], kv[i + 1]);
+    for (int i = 0; i < kv.length; i += 2) {
+      m.put((String) kv[i], kv[i + 1]);
+    }
     return m;
   }
 }

@@ -1,0 +1,6 @@
+# google-java-format and Checkstyle expect LF; keep it on every platform (Windows CI included).
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.jar binary
+*.zip binary

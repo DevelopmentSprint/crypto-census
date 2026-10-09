@@ -12,6 +12,7 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.Provider;
 import java.security.Signature;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import javax.crypto.Cipher;
@@ -88,7 +89,9 @@ public final class Recorder {
       // disable and back out; checking first would leave a window where neither happens.
       IN_FLIGHT.incrementAndGet();
       Runnable hook = afterAdmissionHook;
-      if (hook != null) hook.run();
+      if (hook != null) {
+        hook.run();
+      }
       if (!enabled) {
         IN_FLIGHT.decrementAndGet();
         return 0;
@@ -103,11 +106,21 @@ public final class Recorder {
   static volatile Runnable afterAdmissionHook;
 
   /**
+   * Called on exit from every instrumented method; records the asset for the outermost call.
+   *
+   * @param depth the value {@link #enter()} returned
+   * @param self the JCA object ({@code Cipher}, {@code Signature}, ...) or factory result
+   * @param arg the key, certificate or generated key, when the method has one
    * @param detail {@code Integer} cipher opmode, or {@code String} method name (initSign /
    *     initVerify)
+   * @param thrown the exception the method threw, or null
    */
+  // Catching Throwable is the agent's contract: observation must never break the host application.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
   public static void exit(int depth, Object self, Object arg, Object detail, Throwable thrown) {
-    if (depth <= 0) return;
+    if (depth <= 0) {
+      return;
+    }
     try {
       if (depth == 1 && thrown == null && self != null) {
         record(self, arg, detail);
@@ -116,17 +129,27 @@ public final class Recorder {
       FAILURES.increment();
     } finally {
       DEPTH.get()[0]--;
-      if (depth == 1) IN_FLIGHT.decrementAndGet();
+      if (depth == 1) {
+        IN_FLIGHT.decrementAndGet();
+      }
     }
   }
 
   /** Records an object right after construction, unless we are inside another instrumented call. */
+  // Catching Throwable is the agent's contract: observation must never break the host application.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
   public static void constructed(Object self) {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
     int[] depth = DEPTH.get();
-    if (depth[0] != 0) return;
+    if (depth[0] != 0) {
+      return;
+    }
     WeakReference<Object> last = LAST_CONSTRUCTED.get();
-    if (last != null && last.get() == self) return; // chained constructor of the same object
+    if (last != null && Objects.equals(last.get(), self)) {
+      return;
+    } // chained constructor of the same object
     IN_FLIGHT.incrementAndGet(); // register before re-checking, as in enter()
     if (!enabled) {
       IN_FLIGHT.decrementAndGet();
@@ -164,7 +187,9 @@ public final class Recorder {
    * spelling the policy's static table does not know cannot become "unknown".
    */
   static String resolve(Provider provider, String type, String algorithm) {
-    if (provider == null || algorithm == null) return algorithm;
+    if (provider == null || algorithm == null) {
+      return algorithm;
+    }
     try {
       Provider.Service service = provider.getService(type, algorithm.trim());
       return service != null ? service.getAlgorithm() : algorithm;
@@ -182,7 +207,9 @@ public final class Recorder {
    * {@code AES}, resolves to {@code AES/CBC/PKCS5Padding} either way.
    */
   static String resolveTransformation(Provider provider, String transformation) {
-    if (transformation == null || provider == null) return transformation;
+    if (transformation == null || provider == null) {
+      return transformation;
+    }
     String normalized = transformation.replaceAll("\\s+", "");
     String[] req = normalized.split("/", 3); // padding may itself contain '/'
     String reqAlg = req[0];
@@ -190,17 +217,29 @@ public final class Recorder {
     String reqPad = req.length > 2 ? req[2] : null;
 
     String canonical = null;
-    if (reqMode != null && reqPad != null) canonical = service(provider, normalized);
-    if (canonical == null && reqMode != null) canonical = service(provider, reqAlg + "/" + reqMode);
-    if (canonical == null && reqPad != null) canonical = service(provider, reqAlg + "//" + reqPad);
-    if (canonical == null) canonical = service(provider, reqAlg);
-    if (canonical == null) return normalized;
+    if (reqMode != null && reqPad != null) {
+      canonical = service(provider, normalized);
+    }
+    if (canonical == null && reqMode != null) {
+      canonical = service(provider, reqAlg + "/" + reqMode);
+    }
+    if (canonical == null && reqPad != null) {
+      canonical = service(provider, reqAlg + "//" + reqPad);
+    }
+    if (canonical == null) {
+      canonical = service(provider, reqAlg);
+    }
+    if (canonical == null) {
+      return normalized;
+    }
 
     String[] can = canonical.split("/", 3);
     String alg = can[0];
     String mode = can.length > 1 && !can[1].isEmpty() ? can[1] : reqMode;
     String pad = can.length > 2 && !can[2].isEmpty() ? can[2] : reqPad;
-    if (mode == null && pad == null) return alg;
+    if (mode == null && pad == null) {
+      return alg;
+    }
     return alg + "/" + (mode == null ? "" : mode) + (pad == null ? "" : "/" + pad);
   }
 
@@ -214,15 +253,15 @@ public final class Recorder {
   }
 
   private static CryptoAsset toAsset(Object self, Object arg, Object detail) {
-    if (self instanceof Cipher) {
-      Cipher c = (Cipher) self;
-      Operation op = detail instanceof Integer ? Operation.ofCipherMode((Integer) detail) : null;
+    if (self instanceof Cipher c) {
+
+      Operation op = detail instanceof Integer i ? Operation.ofCipherMode(i) : null;
       Provider p = c.getProvider();
       return CryptoAsset.cipher(
           resolveTransformation(p, c.getAlgorithm()), KeyInfo.size(arg), name(p), op);
     }
-    if (self instanceof Signature) {
-      Signature s = (Signature) self;
+    if (self instanceof Signature s) {
+
       Operation op =
           "initSign".equals(detail)
               ? Operation.SIGN
@@ -235,49 +274,49 @@ public final class Recorder {
           name(p),
           op);
     }
-    if (self instanceof Mac) {
-      Mac m = (Mac) self;
+    if (self instanceof Mac m) {
+
       return CryptoAsset.of(
           Primitive.MAC,
           resolve(m.getProvider(), "Mac", m.getAlgorithm()),
           KeyInfo.size(arg),
           name(m.getProvider()));
     }
-    if (self instanceof KeyAgreement) {
-      KeyAgreement k = (KeyAgreement) self;
+    if (self instanceof KeyAgreement k) {
+
       return CryptoAsset.of(
           Primitive.KEY_AGREEMENT,
           KeyInfo.refine(resolve(k.getProvider(), "KeyAgreement", k.getAlgorithm()), arg),
           KeyInfo.size(arg),
           name(k.getProvider()));
     }
-    if (self instanceof KeyGenerator) {
-      KeyGenerator g = (KeyGenerator) self;
+    if (self instanceof KeyGenerator g) {
+
       return CryptoAsset.of(
           Primitive.KEY_GENERATION,
           resolve(g.getProvider(), "KeyGenerator", g.getAlgorithm()),
           KeyInfo.size(arg),
           name(g.getProvider()));
     }
-    if (self instanceof KeyPairGenerator) {
-      KeyPairGenerator g = (KeyPairGenerator) self;
-      Object publicKey = arg instanceof KeyPair ? ((KeyPair) arg).getPublic() : null;
+    if (self instanceof KeyPairGenerator g) {
+
+      Object publicKey = arg instanceof KeyPair keyPair ? keyPair.getPublic() : null;
       return CryptoAsset.of(
           Primitive.KEY_PAIR_GENERATION,
           KeyInfo.refine(resolve(g.getProvider(), "KeyPairGenerator", g.getAlgorithm()), publicKey),
           KeyInfo.size(publicKey),
           name(g.getProvider()));
     }
-    if (self instanceof MessageDigest) {
-      MessageDigest d = (MessageDigest) self;
+    if (self instanceof MessageDigest d) {
+
       return CryptoAsset.of(
           Primitive.MESSAGE_DIGEST,
           resolve(d.getProvider(), "MessageDigest", d.getAlgorithm()),
           0,
           name(d.getProvider()));
     }
-    if (self instanceof SSLSession) {
-      SSLSession session = (SSLSession) self;
+    if (self instanceof SSLSession session) {
+
       String protocol = session.getProtocol();
       String suite = session.getCipherSuite();
       // JSSE's placeholder session before negotiation
@@ -289,7 +328,7 @@ public final class Recorder {
       }
       return CryptoAsset.tls(protocol, suite);
     }
-    if (self.getClass().getName().equals("javax.crypto.KEM")) {
+    if ("javax.crypto.KEM".equals(self.getClass().getName())) {
       // javax.crypto.KEM is JDK 21+; this agent is compiled for 17
       return CryptoAsset.of(
           Primitive.KEM, KeyInfo.refine(kemAlgorithm(self), arg), KeyInfo.size(arg), null);
@@ -297,16 +336,23 @@ public final class Recorder {
     return null;
   }
 
-  private static volatile Method kemGetAlgorithm;
+  /** {@code javax.crypto.KEM#getAlgorithm()}, resolved once; null before JDK 21. */
+  private static final Method KEM_GET_ALGORITHM = lookupKemGetAlgorithm();
+
+  private static Method lookupKemGetAlgorithm() {
+    try {
+      return Class.forName("javax.crypto.KEM").getMethod("getAlgorithm");
+    } catch (ReflectiveOperationException e) {
+      return null;
+    }
+  }
 
   private static String kemAlgorithm(Object kem) {
+    if (KEM_GET_ALGORITHM == null) {
+      return "KEM";
+    }
     try {
-      Method m = kemGetAlgorithm;
-      if (m == null) {
-        m = kem.getClass().getMethod("getAlgorithm");
-        kemGetAlgorithm = m;
-      }
-      return (String) m.invoke(kem);
+      return (String) KEM_GET_ALGORITHM.invoke(kem);
     } catch (ReflectiveOperationException e) {
       return "KEM";
     }

@@ -22,14 +22,28 @@ public final class CensusAgent {
 
   private CensusAgent() {}
 
+  /**
+   * Entry point for {@code -javaagent:census-agent.jar=options}.
+   *
+   * @param args agent options, see {@code AgentConfig}
+   * @param inst the JVM's instrumentation handle
+   */
   public static void premain(String args, Instrumentation inst) {
     start(args, inst);
   }
 
+  /**
+   * Entry point for dynamic attach.
+   *
+   * @param args agent options, see {@code AgentConfig}
+   * @param inst the JVM's instrumentation handle
+   */
   public static void agentmain(String args, Instrumentation inst) {
     start(args, inst);
   }
 
+  // Catching Throwable is the agent's contract: observation must never break the host application.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
   private static synchronized void start(String args, Instrumentation inst) {
     if (started) {
       System.err.println(

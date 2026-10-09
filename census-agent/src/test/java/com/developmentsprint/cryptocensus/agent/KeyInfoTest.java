@@ -12,6 +12,7 @@ class KeyInfoTest {
 
   /** A key that, legally under the Key contract, hands out its backing array. */
   private static final class LeakyKey implements SecretKey {
+    private static final long serialVersionUID = 1L;
     final byte[] backing;
 
     LeakyKey(byte[] backing) {

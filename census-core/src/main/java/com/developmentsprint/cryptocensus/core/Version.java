@@ -14,6 +14,11 @@ public final class Version {
 
   private Version() {}
 
+  /**
+   * The project version this class was built as.
+   *
+   * @return e.g. {@code 0.1.0}, or {@code unknown}
+   */
   public static String get() {
     return VERSION;
   }
@@ -21,7 +26,9 @@ public final class Version {
   private static String load() {
     try (InputStream in =
         Version.class.getResourceAsStream("/META-INF/cryptocensus/version.properties")) {
-      if (in == null) return "unknown";
+      if (in == null) {
+        return "unknown";
+      }
       Properties p = new Properties();
       p.load(in);
       return p.getProperty("version", "unknown");

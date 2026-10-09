@@ -11,6 +11,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.NamedParameterSpec;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import javax.crypto.SecretKey;
 import javax.crypto.interfaces.DHKey;
 
@@ -34,31 +35,35 @@ final class KeyInfo {
   /** Key size in bits, or 0 when it cannot be determined safely. */
   static int size(Object keyOrCertificate) {
     Object key =
-        keyOrCertificate instanceof Certificate
-            ? ((Certificate) keyOrCertificate).getPublicKey()
+        keyOrCertificate instanceof Certificate certificate
+            ? certificate.getPublicKey()
             : keyOrCertificate;
-    if (key == null || isTokenKey(key)) return 0;
+    if (key == null || isTokenKey(key)) {
+      return 0;
+    }
     try {
-      if (key instanceof RSAKey) return ((RSAKey) key).getModulus().bitLength();
-      if (key instanceof ECKey)
-        return ((ECKey) key).getParams().getCurve().getField().getFieldSize();
-      if (key instanceof DSAKey) return ((DSAKey) key).getParams().getP().bitLength();
-      if (key instanceof DHKey) return ((DHKey) key).getParams().getP().bitLength();
+      if (key instanceof RSAKey rsaKey) {
+        return rsaKey.getModulus().bitLength();
+      }
+      if (key instanceof ECKey ecKey) {
+        return ecKey.getParams().getCurve().getField().getFieldSize();
+      }
+      if (key instanceof DSAKey dsaKey) {
+        return dsaKey.getParams().getP().bitLength();
+      }
+      if (key instanceof DHKey dhKey) {
+        return dhKey.getParams().getP().bitLength();
+      }
       String named = parameterSet(key);
       if (named != null) {
-        switch (named.toUpperCase(Locale.ROOT)) {
-          case "X25519":
-          case "ED25519":
-            return 255;
-          case "X448":
-          case "ED448":
-            return 448;
-          default:
-            return 0;
-        }
+        return switch (named.toUpperCase(Locale.ROOT)) {
+          case "X25519", "ED25519" -> 255;
+          case "X448", "ED448" -> 448;
+          default -> 0;
+        };
       }
-      if (key instanceof SecretKey && isExportableSoftwareKey(key)) {
-        return secretKeyBits((SecretKey) key);
+      if (key instanceof SecretKey secretKey && isExportableSoftwareKey(key)) {
+        return secretKeyBits(secretKey);
       }
     } catch (RuntimeException ignored) {
       // destroyed keys, keys without parameters, provider quirks
@@ -81,7 +86,7 @@ final class KeyInfo {
     Class<?> type = key.getClass();
     return EXPORTABLE.contains(type.getName())
         && (type.getClassLoader() == null
-            || type.getClassLoader() == ClassLoader.getPlatformClassLoader());
+            || Objects.equals(type.getClassLoader(), ClassLoader.getPlatformClassLoader()));
   }
 
   /** PKCS#11 keys: even public getters can trigger token I/O, so we do not inspect them at all. */
@@ -99,12 +104,18 @@ final class KeyInfo {
       return 0;
     }
     byte[] encoded = key.getEncoded();
-    if (encoded == null) return 0;
+    if (encoded == null) {
+      return 0;
+    }
     int bytes = encoded.length;
     Arrays.fill(encoded, (byte) 0); // our own copy: JDK keys clone on getEncoded()
     // DES keys carry one parity bit per byte
-    if (algorithm.equals("DES")) return 56;
-    if (algorithm.equals("DESEDE") || algorithm.equals("TRIPLEDES")) return bytes * 7;
+    if ("DES".equals(algorithm)) {
+      return 56;
+    }
+    if ("DESEDE".equals(algorithm) || "TRIPLEDES".equals(algorithm)) {
+      return bytes * 7;
+    }
     return bytes * 8;
   }
 
@@ -114,32 +125,40 @@ final class KeyInfo {
    */
   static String refine(String algorithm, Object keyOrCertificate) {
     Object key =
-        keyOrCertificate instanceof Certificate
-            ? ((Certificate) keyOrCertificate).getPublicKey()
+        keyOrCertificate instanceof Certificate certificate
+            ? certificate.getPublicKey()
             : keyOrCertificate;
-    if (key == null || isTokenKey(key)) return algorithm;
+    if (key == null || isTokenKey(key)) {
+      return algorithm;
+    }
     String named = parameterSet(key);
-    if (named == null || algorithm == null) return algorithm;
+    if (named == null || algorithm == null) {
+      return algorithm;
+    }
     String a = algorithm.toUpperCase(Locale.ROOT);
     String n = named.toUpperCase(Locale.ROOT);
-    if (a.equals("XDH") || a.equals("EDDSA") || (n.startsWith(a) && n.length() > a.length())) {
+    if ("XDH".equals(a) || "EDDSA".equals(a) || (n.startsWith(a) && n.length() > a.length())) {
       return named;
     }
     return algorithm;
   }
 
   static String parameterSet(Object key) {
-    if (key == null) return null;
+    if (key == null) {
+      return null;
+    }
     try {
       AlgorithmParameterSpec spec = null;
-      if (key instanceof XECKey) {
-        spec = ((XECKey) key).getParams();
-      } else if (key instanceof EdECKey) {
-        spec = ((EdECKey) key).getParams();
+      if (key instanceof XECKey xecKey) {
+        spec = xecKey.getParams();
+      } else if (key instanceof EdECKey edEcKey) {
+        spec = edEcKey.getParams();
       } else if (ASYMMETRIC_GET_PARAMS != null
           && ASYMMETRIC_GET_PARAMS.getDeclaringClass().isInstance(key)) {
         Object params = ASYMMETRIC_GET_PARAMS.invoke(key);
-        if (params instanceof AlgorithmParameterSpec) spec = (AlgorithmParameterSpec) params;
+        if (params instanceof AlgorithmParameterSpec algorithmParameterSpec) {
+          spec = algorithmParameterSpec;
+        }
       }
       return spec instanceof NamedParameterSpec ? ((NamedParameterSpec) spec).getName() : null;
     } catch (ReflectiveOperationException | RuntimeException e) {

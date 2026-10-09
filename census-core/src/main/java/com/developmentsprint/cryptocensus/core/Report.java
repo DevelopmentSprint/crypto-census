@@ -10,10 +10,23 @@ public final class Report {
 
   private Report() {}
 
+  /**
+   * Findings table for a snapshot of {@code inventory}.
+   *
+   * @param inventory the inventory to snapshot
+   * @return a multi-line, human-readable report
+   */
   public static String text(Inventory inventory) {
     return text(inventory.entries(), inventory.droppedObservations());
   }
 
+  /**
+   * Findings table for an inventory snapshot.
+   *
+   * @param entries the snapshot
+   * @param droppedObservations observations dropped by the inventory's caps
+   * @return a multi-line, human-readable report
+   */
   public static String text(List<Inventory.Entry> entries, long droppedObservations) {
     StringBuilder sb = new StringBuilder();
     if (entries.isEmpty() && droppedObservations == 0) {

@@ -9,12 +9,17 @@ import net.bytebuddy.asm.Advice;
  * <p>Every advice uses {@code suppress = Throwable.class}, and the recorder never mutates arguments
  * or return values: the agent observes, it never changes application behavior.
  */
+// A namespace for advice classes, which Byte Buddy reads as class files; it has no members of its
+// own.
+@SuppressWarnings("PMD.MissingStaticMethodInNonInstantiatableClass")
 final class Advices {
 
   private Advices() {}
 
   /** {@code Cipher.init(int opmode, Key|Certificate key, ...)}: records the operation mode too. */
   static final class CipherInit {
+    private CipherInit() {}
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     static int enter() {
       return Recorder.enter();
@@ -36,6 +41,8 @@ final class Advices {
    * The method name tells sign from verify.
    */
   static final class KeyArg0 {
+    private KeyArg0() {}
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     static int enter() {
       return Recorder.enter();
@@ -57,6 +64,8 @@ final class Advices {
    * KeyPairGenerator.generateKeyPair()}.
    */
   static final class ReturnsKey {
+    private ReturnsKey() {}
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     static int enter() {
       return Recorder.enter();
@@ -80,6 +89,8 @@ final class Advices {
    * itself.
    */
   static final class Constructed {
+    private Constructed() {}
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     static void exit(@Advice.This Object self) {
       Recorder.constructed(self);
@@ -88,6 +99,8 @@ final class Advices {
 
   /** Static factories whose result is the asset: {@code MessageDigest.getInstance(...)}. */
   static final class StaticFactory {
+    private StaticFactory() {}
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     static int enter() {
       return Recorder.enter();

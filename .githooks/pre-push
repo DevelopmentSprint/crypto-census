@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Crypto Census pre-push hook: full build with tests before anything leaves the machine.
+# Bypass only in an emergency: git push --no-verify  (CI runs the same build anyway).
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+echo "pre-push: full build with tests and coverage..."
+./mvnw -B -q verify
+echo "pre-push: build passed."

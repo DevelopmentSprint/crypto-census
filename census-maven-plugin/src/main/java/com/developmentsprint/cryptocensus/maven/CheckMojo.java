@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -130,7 +131,7 @@ public class CheckMojo extends AbstractMojo {
         transformErrors = add(transformErrors, doc.health("cryptocensus:transformErrors"));
         recordingFailures = add(recordingFailures, doc.health("cryptocensus:recordingFailures"));
         drainTimedOut = add(drainTimedOut, doc.health("cryptocensus:drainTimedOut"));
-        inputs.put(file.getFileName().toString(), sha256(bytes)); // ... and hash exactly them
+        inputs.put(String.valueOf(file.getFileName()), sha256(bytes)); // ... and hash exactly them
       } catch (IOException | IllegalArgumentException e) {
         throw new MojoExecutionException("Invalid CBOM " + file + ": " + e.getMessage(), e);
       }
@@ -159,8 +160,8 @@ public class CheckMojo extends AbstractMojo {
       throw new MojoFailureException(message + " Set failOnMissingData=false to accept this.");
     }
 
-    List<Inventory.Entry> snapshot = merged.entries();
-    long dropped = merged.droppedObservations();
+    final List<Inventory.Entry> snapshot = merged.entries();
+    final long dropped = merged.droppedObservations();
     Map<String, String> meta = new LinkedHashMap<>();
     meta.put(
         "cryptocensus:project",
@@ -176,7 +177,9 @@ public class CheckMojo extends AbstractMojo {
       throw new MojoExecutionException("Could not write " + output, e);
     }
 
-    for (String line : Report.text(snapshot, dropped).split("\n")) getLog().info(line);
+    for (String line : Report.text(snapshot, dropped).lines().toList()) {
+      getLog().info(line);
+    }
     getLog()
         .info(
             "CBOM: "
@@ -208,9 +211,11 @@ public class CheckMojo extends AbstractMojo {
               + " dropped observation(s), "
               + drainTimedOut
               + " operation(s) still running at shutdown";
-      if (failOnIncompleteCollection)
+      if (failOnIncompleteCollection) {
         problems.add(message + " (set failOnIncompleteCollection=false to accept)");
-      else getLog().warn(message);
+      } else {
+        getLog().warn(message);
+      }
     }
 
     List<Inventory.Entry> unknown =
@@ -223,8 +228,11 @@ public class CheckMojo extends AbstractMojo {
             .collect(Collectors.toList());
     if (!unknown.isEmpty()) {
       String message = unknown.size() + " asset(s) the policy cannot judge:\n" + describe(unknown);
-      if (failOnUnknown) problems.add(message);
-      else getLog().warn(message + "\nSet failOnUnknown=true to enforce.");
+      if (failOnUnknown) {
+        problems.add(message);
+      } else {
+        getLog().warn(message + "\nSet failOnUnknown=true to enforce.");
+      }
     }
 
     if (!"none".equalsIgnoreCase(failOn.trim())) {
@@ -233,7 +241,7 @@ public class CheckMojo extends AbstractMojo {
         threshold = Risk.parse(failOn);
       } catch (IllegalArgumentException e) {
         throw new MojoExecutionException(
-            "Invalid failOn '" + failOn + "'; use broken, weak, quantum-vulnerable or none");
+            "Invalid failOn '" + failOn + "'; use broken, weak, quantum-vulnerable or none", e);
       }
       List<Inventory.Entry> violations =
           snapshot.stream()
@@ -262,7 +270,9 @@ public class CheckMojo extends AbstractMojo {
 
   private List<Path> inputs(Path dir) throws MojoExecutionException {
     List<Path> files = new ArrayList<>();
-    if (!Files.isDirectory(dir)) return files;
+    if (!Files.isDirectory(dir)) {
+      return files;
+    }
     long total = 0;
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "cbom-*.json")) {
       for (Path file : stream) {
@@ -297,13 +307,15 @@ public class CheckMojo extends AbstractMojo {
   private String establishedNoTests() {
     File testClasses = new File(project.getBuild().getTestOutputDirectory());
     String[] children = testClasses.list();
-    if (children == null || children.length == 0)
+    if (children == null || children.length == 0) {
       return "No compiled tests in " + project.getArtifactId();
+    }
     for (String key : new String[] {"skipTests", "maven.test.skip", "skipITs"}) {
       String v =
           session.getUserProperties().getProperty(key, project.getProperties().getProperty(key));
-      if (v != null && (v.isEmpty() || Boolean.parseBoolean(v)))
+      if (v != null && (v.isEmpty() || Boolean.parseBoolean(v))) {
         return "Tests were skipped (" + key + ")";
+      }
     }
     return null;
   }
@@ -319,15 +331,20 @@ public class CheckMojo extends AbstractMojo {
    * leave behind whenever tests actually execute, whatever the skip properties said.
    */
   private boolean testsRanInThisBuild() {
+    // Maven's API exposes java.util.Date; convert at the boundary
     long buildStart =
-        session.getRequest().getStartTime() != null
-            ? session.getRequest().getStartTime().getTime()
-            : 0L;
+        Optional.ofNullable(session.getRequest().getStartTime())
+            .map(start -> start.toInstant().toEpochMilli())
+            .orElse(0L);
     for (File dir : testReportDirectories) {
       File[] reports = dir.listFiles((d, name) -> name.endsWith(".xml") || name.endsWith(".txt"));
-      if (reports == null) continue;
+      if (reports == null) {
+        continue;
+      }
       for (File report : reports) {
-        if (report.lastModified() >= buildStart - 1_000) return true;
+        if (report.lastModified() >= buildStart - 1_000) {
+          return true;
+        }
       }
     }
     return false;
@@ -369,6 +386,6 @@ public class CheckMojo extends AbstractMojo {
 
   private static boolean jdkOnly(Inventory.Entry e) {
     return e.occurrences().keySet().stream()
-        .allMatch(o -> o.location().equals(Occurrence.JDK_LOCATION));
+        .allMatch(o -> Occurrence.JDK_LOCATION.equals(o.location()));
   }
 }

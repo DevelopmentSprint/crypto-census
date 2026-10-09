@@ -253,7 +253,9 @@ class PolicyTest {
   void cnsa2FlagIsExact(Primitive primitive, String algorithm, int keySize, boolean cnsa2) {
     Assessment verdict = assess(primitive, algorithm, keySize, "ENCRYPT");
     assertThat(verdict.cnsa2()).as(verdict.reason()).isEqualTo(cnsa2);
-    if (!cnsa2) assertThat(verdict.reason()).doesNotContain("(CNSA 2.0)");
+    if (!cnsa2) {
+      assertThat(verdict.reason()).doesNotContain("(CNSA 2.0)");
+    }
   }
 
   @ParameterizedTest(name = "{0} {1} -> {2}")

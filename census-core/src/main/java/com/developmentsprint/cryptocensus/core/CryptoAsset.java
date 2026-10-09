@@ -35,6 +35,7 @@ public record CryptoAsset(
 
   private static final Pattern TRAILING_PARAMETER = Pattern.compile(".*[-_/](\\d{2,})$");
 
+  /** Validates and canonicalizes: algorithm names via {@link Names}, blank strings to null. */
   public CryptoAsset {
     Objects.requireNonNull(primitive, "primitive");
     Objects.requireNonNull(algorithm, "algorithm");
@@ -46,19 +47,48 @@ public record CryptoAsset(
     padding = clean(padding);
     provider = clean(provider);
     protocolVersion = clean(protocolVersion);
-    if (keySize < 0) keySize = 0;
+    if (keySize < 0) {
+      keySize = 0;
+    }
   }
 
+  /**
+   * An asset without mode, padding or operation.
+   *
+   * @param primitive how it was reached
+   * @param algorithm algorithm name (canonicalized)
+   * @param keySize key size in bits, or 0 when unknown
+   * @param provider JCA provider name, or null
+   * @return the asset
+   */
   public static CryptoAsset of(
       Primitive primitive, String algorithm, int keySize, String provider) {
     return new CryptoAsset(primitive, algorithm, null, null, keySize, provider, null, null);
   }
 
+  /**
+   * An asset without mode or padding.
+   *
+   * @param primitive how it was reached
+   * @param algorithm algorithm name (canonicalized)
+   * @param keySize key size in bits, or 0 when unknown
+   * @param provider JCA provider name, or null
+   * @param operation what was done with it, or null
+   * @return the asset
+   */
   public static CryptoAsset of(
       Primitive primitive, String algorithm, int keySize, String provider, Operation operation) {
     return new CryptoAsset(primitive, algorithm, null, null, keySize, provider, null, operation);
   }
 
+  /**
+   * A cipher asset from a JCA transformation, without an operation.
+   *
+   * @param transformation e.g. {@code AES/GCM/NoPadding}
+   * @param keySize key size in bits, or 0 when unknown
+   * @param provider JCA provider name, or null
+   * @return the asset
+   */
   public static CryptoAsset cipher(String transformation, int keySize, String provider) {
     return cipher(transformation, keySize, provider, null);
   }
@@ -80,7 +110,9 @@ public record CryptoAsset(
       try {
         int named = Integer.parseInt(algorithm.substring(underscore + 1));
         algorithm = algorithm.substring(0, underscore);
-        if (keySize == 0) keySize = named;
+        if (keySize == 0) {
+          keySize = named;
+        }
       } catch (NumberFormatException ignored) {
         // not a size suffix
       }
@@ -89,6 +121,13 @@ public record CryptoAsset(
         Primitive.CIPHER, algorithm, mode, padding, keySize, provider, null, operation);
   }
 
+  /**
+   * A negotiated TLS session shape.
+   *
+   * @param protocolVersion e.g. {@code TLSv1.3}
+   * @param cipherSuite e.g. {@code TLS_AES_256_GCM_SHA384}
+   * @return the asset
+   */
   public static CryptoAsset tls(String protocolVersion, String cipherSuite) {
     return new CryptoAsset(Primitive.TLS, cipherSuite, null, null, 0, null, protocolVersion, null);
   }
@@ -113,7 +152,9 @@ public record CryptoAsset(
    * parameter set carried in the name ({@code ML-KEM-768 -> 768}, {@code SHA-384 -> 384}).
    */
   public String parameterSet() {
-    if (keySize > 0) return String.valueOf(keySize);
+    if (keySize > 0) {
+      return String.valueOf(keySize);
+    }
     Matcher m = TRAILING_PARAMETER.matcher(algorithm);
     return m.matches() ? m.group(1) : null;
   }
@@ -123,28 +164,24 @@ public record CryptoAsset(
    * different assets can never produce the same reference.
    */
   public String ref() {
-    StringBuilder sb =
-        new StringBuilder("crypto:")
-            .append(primitive.name().toLowerCase(Locale.ROOT))
-            .append(':')
-            .append(Escapes.encode(algorithm))
-            .append(':')
-            .append(Escapes.encode(nullToEmpty(protocolVersion)))
-            .append(':')
-            .append(Escapes.encode(nullToEmpty(mode)))
-            .append(':')
-            .append(Escapes.encode(nullToEmpty(padding)))
-            .append(':')
-            .append(keySize)
-            .append(':')
-            .append(operation == null ? "" : operation.label())
-            .append('@')
-            .append(Escapes.encode(nullToEmpty(provider)));
-    return sb.toString();
+    return "crypto:"
+        + String.join(
+            ":",
+            primitive.name().toLowerCase(Locale.ROOT),
+            Escapes.encode(algorithm),
+            Escapes.encode(nullToEmpty(protocolVersion)),
+            Escapes.encode(nullToEmpty(mode)),
+            Escapes.encode(nullToEmpty(padding)),
+            String.valueOf(keySize),
+            operation == null ? "" : operation.label())
+        + "@"
+        + Escapes.encode(nullToEmpty(provider));
   }
 
   private static String clean(String s) {
-    if (s == null || s.isBlank()) return null;
+    if (s == null || s.isBlank()) {
+      return null;
+    }
     return Names.truncate(s.trim());
   }
 

@@ -191,7 +191,8 @@ class CbomTest {
         "{\"bomFormat\":\"CycloneDX\",\"specVersion\":\"1.6\",\"components\":[{\"properties\":["
             + "{\"name\":\"cryptocensus:primitive\",\"value\":\"MESSAGE_DIGEST\"},"
             + "{\"name\":\"cryptocensus:algorithm\",\"value\":\"MD5\"}],"
-            + "\"evidence\":{\"occurrences\":[{\"location\":\"a\",\"additionalContext\":\"count=-5\"}]}}]}";
+            + "\"evidence\":{\"occurrences\":[{\"location\":\"a\","
+            + "\"additionalContext\":\"count=-5\"}]}}]}";
     assertThatThrownBy(() -> Cbom.parse(negative)).hasMessageContaining("Negative count");
     String duplicate =
         "{\"bomFormat\":\"CycloneDX\",\"specVersion\":\"1.6\",\"components\":[],\"components\":[]}";
@@ -199,7 +200,7 @@ class CbomTest {
   }
 
   @Test
-  void aMaximalAgentCbomStaysWithinTheParserBudget() {
+  void maximalAgentCbomStaysWithinTheParserBudget() {
     // the agent's default caps (500 assets x 50 sites) must produce documents the plugin accepts
     Inventory full = Inventory.bounded(500, 50);
     for (int a = 0; a < 500; a++) {
@@ -260,7 +261,9 @@ class CbomTest {
           (java.util.Map<String, Object>)
               ((java.util.Map<String, Object>) o).get("cryptoProperties");
       Object alg = crypto.get("algorithmProperties");
-      if (alg != null) ((java.util.Map<String, Object>) alg).put("parameterSetIdentifier", "512");
+      if (alg != null) {
+        ((java.util.Map<String, Object>) alg).put("parameterSetIdentifier", "512");
+      }
     }
     assertThatThrownBy(() -> Cbom.parse(Json.write(forged))).hasMessageContaining("contradict");
 
@@ -279,13 +282,15 @@ class CbomTest {
     java.util.Map<String, Object> meta = (java.util.Map<String, Object>) bom.get("metadata");
     for (Object p : (java.util.List<Object>) meta.get("properties")) {
       java.util.Map<String, Object> pm = (java.util.Map<String, Object>) p;
-      if (name.equals(pm.get("name"))) pm.put("value", value);
+      if (name.equals(pm.get("name"))) {
+        pm.put("value", value);
+      }
     }
     return Json.write(bom);
   }
 
   @Test
-  void aSingleHugeStringFailsBeforeItIsBuilt() {
+  void singleHugeStringFailsBeforeItIsBuilt() {
     // round 4: a 40 MB string in an ignored field filled a 128 MB heap before the budget was
     // charged
     String huge =
@@ -352,7 +357,7 @@ class CbomTest {
 
   @Test
   @DisabledOnOs(OS.WINDOWS)
-  void writeReplacesASymlinkInsteadOfFollowingIt(@TempDir Path dir) throws Exception {
+  void writeReplacesSymlinkInsteadOfFollowingIt(@TempDir Path dir) throws Exception {
     Path victim = dir.resolve("victim.txt");
     Files.writeString(victim, "precious");
     Path link = dir.resolve("cbom.json");

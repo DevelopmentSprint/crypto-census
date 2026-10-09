@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Minimal, strict JSON writer and parser. The agent runs inside arbitrary applications, so it must
@@ -28,9 +27,6 @@ final class Json {
    */
   static final long MAX_RETAINED_BYTES = 64L * 1024 * 1024;
 
-  private static final Pattern NUMBER =
-      Pattern.compile("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
-
   private Json() {}
 
   // ---------------------------------------------------------------- writing
@@ -44,11 +40,13 @@ final class Json {
   private static void write(StringBuilder sb, Object value, int indent) {
     if (value == null) {
       sb.append("null");
-    } else if (value instanceof String) {
-      quote(sb, (String) value);
+    } else if (value instanceof String string) {
+      quote(sb, string);
     } else if (value instanceof Double || value instanceof Float) {
       double d = ((Number) value).doubleValue();
-      if (!Double.isFinite(d)) throw new IllegalArgumentException("Non-finite number " + d);
+      if (!Double.isFinite(d)) {
+        throw new IllegalArgumentException("Non-finite number " + d);
+      }
       sb.append(value);
     } else if (value instanceof Number || value instanceof Boolean) {
       sb.append(value);
@@ -89,7 +87,9 @@ final class Json {
   }
 
   private static void pad(StringBuilder sb, int indent) {
-    for (int i = 0; i < indent; i++) sb.append("  ");
+    for (int i = 0; i < indent; i++) {
+      sb.append("  ");
+    }
   }
 
   private static void quote(StringBuilder sb, String s) {
@@ -97,22 +97,12 @@ final class Json {
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
       switch (c) {
-        case '"':
-          sb.append("\\\"");
-          break;
-        case '\\':
-          sb.append("\\\\");
-          break;
-        case '\n':
-          sb.append("\\n");
-          break;
-        case '\r':
-          sb.append("\\r");
-          break;
-        case '\t':
-          sb.append("\\t");
-          break;
-        default:
+        case '"' -> sb.append("\\\"");
+        case '\\' -> sb.append("\\\\");
+        case '\n' -> sb.append("\\n");
+        case '\r' -> sb.append("\\r");
+        case '\t' -> sb.append("\\t");
+        default -> {
           if (c < 0x20) {
             sb.append("\\u00")
                 .append(Character.forDigit(c >> 4, 16))
@@ -120,6 +110,7 @@ final class Json {
           } else {
             sb.append(c);
           }
+        }
       }
     }
     sb.append('"');
@@ -132,54 +123,108 @@ final class Json {
     p.ws();
     Object value = p.value(0);
     p.ws();
-    if (p.pos != text.length()) throw p.error("Trailing content");
+    if (p.pos != text.length()) {
+      throw p.error("Trailing content");
+    }
     return value;
   }
 
+  /** RFC 8259 number grammar: -?(0|[1-9][0-9]*)(.[0-9]+)?([eE][+-]?[0-9]+)? without a regex. */
+  static boolean isJsonNumber(String n) {
+    int i = 0;
+    int len = n.length();
+    if (i < len && n.charAt(i) == '-') {
+      i++;
+    }
+    if (i >= len) {
+      return false;
+    }
+    if (n.charAt(i) == '0') {
+      i++;
+    } else if (n.charAt(i) >= '1' && n.charAt(i) <= '9') {
+      i = digits(n, i);
+    } else {
+      return false;
+    }
+    if (i < len && n.charAt(i) == '.') {
+      int fraction = digits(n, i + 1);
+      if (fraction == i + 1) {
+        return false;
+      }
+      i = fraction;
+    }
+    if (i < len && (n.charAt(i) == 'e' || n.charAt(i) == 'E')) {
+      i++;
+      if (i < len && (n.charAt(i) == '+' || n.charAt(i) == '-')) {
+        i++;
+      }
+      int exponent = digits(n, i);
+      if (exponent == i) {
+        return false;
+      }
+      i = exponent;
+    }
+    return i == len;
+  }
+
+  private static int digits(String n, int from) {
+    int i = from;
+    while (i < n.length() && n.charAt(i) >= '0' && n.charAt(i) <= '9') {
+      i++;
+    }
+    return i;
+  }
+
   private static final class Parser {
-    private final String s;
+    private final String text;
     private int pos;
     private int values;
     private long retained;
 
     void charge(long bytes) {
       retained += bytes;
-      if (retained > MAX_RETAINED_BYTES)
+      if (retained > MAX_RETAINED_BYTES) {
         throw error("Parsed document would retain more than " + MAX_RETAINED_BYTES + " bytes");
-    }
-
-    Parser(String s) {
-      this.s = s;
-    }
-
-    Object value(int depth) {
-      if (depth > MAX_DEPTH) throw error("Nesting deeper than " + MAX_DEPTH);
-      if (++values > MAX_VALUES) throw error("More than " + MAX_VALUES + " values");
-      if (pos >= s.length()) throw error("Unexpected end of input");
-      char c = s.charAt(pos);
-      switch (c) {
-        case '{':
-          return object(depth);
-        case '[':
-          return array(depth);
-        case '"':
-          return string();
-        case 't':
-          literal("true");
-          return Boolean.TRUE;
-        case 'f':
-          literal("false");
-          return Boolean.FALSE;
-        case 'n':
-          literal("null");
-          return null;
-        default:
-          return number();
       }
     }
 
+    Parser(String text) {
+      this.text = text;
+    }
+
+    Object value(int depth) {
+      if (depth > MAX_DEPTH) {
+        throw error("Nesting deeper than " + MAX_DEPTH);
+      }
+      if (++values > MAX_VALUES) {
+        throw error("More than " + MAX_VALUES + " values");
+      }
+      if (pos >= text.length()) {
+        throw error("Unexpected end of input");
+      }
+      char c = text.charAt(pos);
+      return switch (c) {
+        case '{' -> object(depth);
+        case '[' -> array(depth);
+        case '"' -> string();
+        case 't' -> {
+          literal("true");
+          yield true;
+        }
+        case 'f' -> {
+          literal("false");
+          yield false;
+        }
+        case 'n' -> {
+          literal("null");
+          yield null;
+        }
+        default -> number();
+      };
+    }
+
     Map<String, Object> object(int depth) {
-      Map<String, Object> map = new LinkedHashMap<>();
+      final Map<String, Object> map = new LinkedHashMap<>();
       charge(64);
       pos++;
       ws();
@@ -189,7 +234,9 @@ final class Json {
       }
       while (true) {
         ws();
-        if (!peek('"')) throw error("Expected object key");
+        if (!peek('"')) {
+          throw error("Expected object key");
+        }
         int keyPos = pos;
         String key = string();
         if (map.containsKey(key)) {
@@ -212,7 +259,7 @@ final class Json {
     }
 
     List<Object> array(int depth) {
-      List<Object> list = new ArrayList<>();
+      final List<Object> list = new ArrayList<>();
       charge(40);
       pos++;
       ws();
@@ -238,13 +285,17 @@ final class Json {
       expect('"');
       StringBuilder sb = new StringBuilder();
       while (true) {
-        if (pos >= s.length()) throw error("Unterminated string");
-        char c = s.charAt(pos++);
+        if (pos >= text.length()) {
+          throw error("Unterminated string");
+        }
+        char c = text.charAt(pos++);
         if (c == '"') {
           charge(40 + 2L * sb.length());
           return sb.toString();
         }
-        if (c < 0x20) throw error("Unescaped control character");
+        if (c < 0x20) {
+          throw error("Unescaped control character");
+        }
         if (retained + 2L * sb.length() > MAX_RETAINED_BYTES) {
           throw error("Parsed document would retain more than " + MAX_RETAINED_BYTES + " bytes");
         }
@@ -252,56 +303,49 @@ final class Json {
           sb.append(c);
           continue;
         }
-        if (pos >= s.length()) throw error("Unterminated escape");
-        char e = s.charAt(pos++);
+        if (pos >= text.length()) {
+          throw error("Unterminated escape");
+        }
+        char e = text.charAt(pos++);
         switch (e) {
-          case '"':
-            sb.append('"');
-            break;
-          case '\\':
-            sb.append('\\');
-            break;
-          case '/':
-            sb.append('/');
-            break;
-          case 'b':
-            sb.append('\b');
-            break;
-          case 'f':
-            sb.append('\f');
-            break;
-          case 'n':
-            sb.append('\n');
-            break;
-          case 'r':
-            sb.append('\r');
-            break;
-          case 't':
-            sb.append('\t');
-            break;
-          case 'u':
-            if (pos + 4 > s.length()) throw error("Truncated unicode escape");
+          case '"' -> sb.append('"');
+          case '\\' -> sb.append('\\');
+          case '/' -> sb.append('/');
+          case 'b' -> sb.append('\b');
+          case 'f' -> sb.append('\f');
+          case 'n' -> sb.append('\n');
+          case 'r' -> sb.append('\r');
+          case 't' -> sb.append('\t');
+          case 'u' -> {
+            if (pos + 4 > text.length()) {
+              throw error("Truncated unicode escape");
+            }
             int cp = 0;
             for (int i = 0; i < 4; i++) {
-              int d = Character.digit(s.charAt(pos + i), 16);
-              if (d < 0) throw error("Invalid unicode escape");
+              int d = Character.digit(text.charAt(pos + i), 16);
+              if (d < 0) {
+                throw error("Invalid unicode escape");
+              }
               cp = cp * 16 + d;
             }
             sb.append((char) cp);
             pos += 4;
-            break;
-          default:
-            throw error("Invalid escape \\" + e);
+          }
+          default -> throw error("Invalid escape \\" + e);
         }
       }
     }
 
     Number number() {
       int start = pos;
-      while (pos < s.length() && "+-0123456789.eE".indexOf(s.charAt(pos)) >= 0) pos++;
-      String n = s.substring(start, pos);
-      if (n.isEmpty()) throw error("Unexpected character '" + s.charAt(pos) + "'");
-      if (!NUMBER.matcher(n).matches()) {
+      while (pos < text.length() && "+-0123456789.eE".indexOf(text.charAt(pos)) >= 0) {
+        pos++;
+      }
+      String n = text.substring(start, pos);
+      if (n.isEmpty()) {
+        throw error("Unexpected character '" + text.charAt(pos) + "'");
+      }
+      if (!isJsonNumber(n)) {
         pos = start;
         throw error("Invalid number " + n);
       }
@@ -311,7 +355,7 @@ final class Json {
           return Long.parseLong(n);
         } catch (NumberFormatException overflow) {
           pos = start;
-          throw error("Integer out of range " + n);
+          throw error("Integer out of range " + n, overflow);
         }
       }
       double d = Double.parseDouble(n);
@@ -323,29 +367,39 @@ final class Json {
     }
 
     void literal(String word) {
-      if (!s.startsWith(word, pos)) throw error("Expected " + word);
+      if (!text.startsWith(word, pos)) {
+        throw error("Expected " + word);
+      }
       pos += word.length();
     }
 
     void ws() {
-      while (pos < s.length()) {
-        char c = s.charAt(pos);
-        if (c != ' ' && c != '\t' && c != '\n' && c != '\r') break;
+      while (pos < text.length()) {
+        char c = text.charAt(pos);
+        if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
+          break;
+        }
         pos++;
       }
     }
 
     boolean peek(char c) {
-      return pos < s.length() && s.charAt(pos) == c;
+      return pos < text.length() && text.charAt(pos) == c;
     }
 
     void expect(char c) {
-      if (!peek(c)) throw error("Expected '" + c + "'");
+      if (!peek(c)) {
+        throw error("Expected '" + c + "'");
+      }
       pos++;
     }
 
     IllegalArgumentException error(String message) {
       return new IllegalArgumentException(message + " at offset " + pos);
+    }
+
+    IllegalArgumentException error(String message, Throwable cause) {
+      return new IllegalArgumentException(message + " at offset " + pos, cause);
     }
   }
 }

@@ -191,66 +191,70 @@ public final class Policy {
               "SHAKE256",
               Assessment.of(Risk.ACCEPTABLE, "XOF; strength depends on output length")));
 
+  /**
+   * Assesses one asset.
+   *
+   * @param asset the asset
+   * @return its risk, a one-line reason, NIST level and CNSA 2.0 eligibility
+   */
   public Assessment assess(CryptoAsset asset) {
     String alg = asset.algorithm().toUpperCase(Locale.ROOT);
-    switch (asset.primitive()) {
-      case TLS:
-        return tls(asset.protocolVersion(), alg);
-      case MESSAGE_DIGEST:
-        return DIGESTS.getOrDefault(
-            alg, Assessment.of(Risk.UNKNOWN, "Unrecognized digest " + asset.algorithm()));
-      case MAC:
-        return mac(alg, asset.keySize());
-      case SIGNATURE:
-        return signature(alg, asset.keySize(), asset.operation());
-      case CIPHER:
-        return cipher(
-            alg, upper(asset.mode()), upper(asset.padding()), asset.keySize(), asset.operation());
-      case KEY_GENERATION:
-        return keyGeneration(alg, asset.keySize());
-      case KEY_AGREEMENT:
-      case KEM:
-      case KEY_PAIR_GENERATION:
-        return asymmetric(alg, asset.keySize(), null);
-      default:
-        return Assessment.of(Risk.UNKNOWN, "No rule for primitive " + asset.primitive());
-    }
+    return switch (asset.primitive()) {
+      case TLS -> tls(asset.protocolVersion(), alg);
+      case MESSAGE_DIGEST ->
+          DIGESTS.getOrDefault(
+              alg, Assessment.of(Risk.UNKNOWN, "Unrecognized digest " + asset.algorithm()));
+      case MAC -> mac(alg, asset.keySize());
+      case SIGNATURE -> signature(alg, asset.keySize(), asset.operation());
+      case CIPHER ->
+          cipher(
+              alg, upper(asset.mode()), upper(asset.padding()), asset.keySize(), asset.operation());
+      case KEY_GENERATION -> keyGeneration(alg, asset.keySize());
+      case KEY_AGREEMENT, KEM, KEY_PAIR_GENERATION -> asymmetric(alg, asset.keySize(), null);
+      default -> Assessment.of(Risk.UNKNOWN, "No rule for primitive " + asset.primitive());
+    };
   }
 
   // ---------------------------------------------------------------- post-quantum
 
   private static Assessment postQuantum(String alg) {
     switch (alg) {
-      case "ML-KEM-512":
+      case "ML-KEM-512" -> {
         return Assessment.of(Risk.QUANTUM_SAFE, "ML-KEM-512 (FIPS 203)", 1);
-      case "ML-KEM-768":
+      }
+      case "ML-KEM-768" -> {
         return Assessment.of(
             Risk.QUANTUM_SAFE, "ML-KEM-768 (FIPS 203); CNSA 2.0 requires ML-KEM-1024", 3);
-      case "ML-KEM-1024":
+      }
+      case "ML-KEM-1024" -> {
         return Assessment.cnsa2(Risk.QUANTUM_SAFE, "ML-KEM-1024 (FIPS 203, CNSA 2.0)", 5);
-      case "ML-KEM":
+      }
+      case "ML-KEM" -> {
         return Assessment.of(
             Risk.QUANTUM_SAFE, "ML-KEM (FIPS 203); parameter set not observed", -1);
-      case "X25519MLKEM768":
-      case "SECP256R1MLKEM768":
+      }
+      case "X25519MLKEM768", "SECP256R1MLKEM768" -> {
         return Assessment.of(Risk.QUANTUM_SAFE, "Hybrid ECDHE + ML-KEM-768 key establishment", 3);
-      case "SECP384R1MLKEM1024":
+      }
+      case "SECP384R1MLKEM1024" -> {
         return Assessment.of(Risk.QUANTUM_SAFE, "Hybrid ECDHE + ML-KEM-1024 key establishment", 5);
-      case "ML-DSA-44":
+      }
+      case "ML-DSA-44" -> {
         return Assessment.of(
             Risk.QUANTUM_SAFE, "ML-DSA-44 (FIPS 204); CNSA 2.0 requires ML-DSA-87", 2);
-      case "ML-DSA-65":
+      }
+      case "ML-DSA-65" -> {
         return Assessment.of(
             Risk.QUANTUM_SAFE, "ML-DSA-65 (FIPS 204); CNSA 2.0 requires ML-DSA-87", 3);
-      case "ML-DSA-87":
+      }
+      case "ML-DSA-87" -> {
         return Assessment.cnsa2(Risk.QUANTUM_SAFE, "ML-DSA-87 (FIPS 204, CNSA 2.0)", 5);
-      case "ML-DSA":
+      }
+      case "ML-DSA" -> {
         return Assessment.of(
             Risk.QUANTUM_SAFE, "ML-DSA (FIPS 204); parameter set not observed", -1);
-      case "HSS/LMS":
-      case "LMS":
-      case "XMSS":
-      case "XMSSMT":
+      }
+      case "HSS/LMS", "LMS", "XMSS", "XMSSMT" -> {
         // CNSA 2.0 lists LMS/XMSS only for software/firmware signing with specific parameter
         // sets; neither is observable here, so eligibility is not claimed.
         return Assessment.of(
@@ -258,13 +262,13 @@ public final class Policy {
             "Stateful hash-based signature (SP 800-208); CNSA 2.0 eligibility depends on parameter"
                 + " set and firmware-signing use",
             -1);
-      default:
-        break;
+      }
+      default -> {}
     }
     Matcher slh = SLH_DSA.matcher(alg);
     if (slh.matches()) {
       String bits = slh.group(1);
-      int level = bits == null ? -1 : bits.equals("128") ? 1 : bits.equals("192") ? 3 : 5;
+      int level = bits == null ? -1 : "128".equals(bits) ? 1 : "192".equals(bits) ? 3 : 5;
       return Assessment.of(Risk.QUANTUM_SAFE, "SLH-DSA (FIPS 205)", level);
     }
     if (alg.startsWith("KYBER") || alg.startsWith("DILITHIUM") || alg.startsWith("SPHINCS")) {
@@ -279,16 +283,20 @@ public final class Policy {
 
   private static Assessment asymmetric(String alg, int keySize, Operation op) {
     Assessment pq = postQuantum(alg);
-    if (pq != null) return pq;
+    if (pq != null) {
+      return pq;
+    }
 
     if (RSA.contains(alg)) {
       return rsaSignatureSize(keySize, op);
     }
-    if (alg.equals("DSA")) {
+    if ("DSA".equals(alg)) {
       return dsaSize(keySize, op);
     }
     if (FFDH.contains(alg)) {
-      if (keySize == 0) return unobserved("Finite-field Diffie-Hellman");
+      if (keySize == 0) {
+        return unobserved("Finite-field Diffie-Hellman");
+      }
       if (keySize < MIN_RSA_DH_DSA_BITS) {
         return Assessment.of(
             Risk.BROKEN,
@@ -298,8 +306,10 @@ public final class Policy {
           Risk.QUANTUM_VULNERABLE,
           "Finite-field Diffie-Hellman is broken by Shor's algorithm; migrate to ML-KEM");
     }
-    if (EC.contains(alg) || alg.equals("DHKEM")) {
-      if (keySize == 0) return unobserved("Elliptic-curve cryptography");
+    if (EC.contains(alg) || "DHKEM".equals(alg)) {
+      if (keySize == 0) {
+        return unobserved("Elliptic-curve cryptography");
+      }
       boolean legacy = op == Operation.VERIFY;
       int minimum = legacy ? MIN_LEGACY_EC_BITS : MIN_EC_BITS;
       if (keySize > 0 && keySize < minimum) {
@@ -334,7 +344,9 @@ public final class Policy {
    * verification only, 1024..2047 is legacy use.
    */
   private static Assessment rsaSignatureSize(int keySize, Operation op) {
-    if (keySize == 0) return unobserved("RSA");
+    if (keySize == 0) {
+      return unobserved("RSA");
+    }
     boolean verify = op == Operation.VERIFY;
     if (keySize < MIN_LEGACY_RSA_VERIFY_BITS || (!verify && keySize < MIN_RSA_DH_DSA_BITS)) {
       return Assessment.of(
@@ -360,7 +372,9 @@ public final class Policy {
    * below 2048 bits is disallowed on both sides, with no legacy-use exception.
    */
   private static Assessment rsaTransportSize(int keySize) {
-    if (keySize == 0) return unobserved("RSA key transport");
+    if (keySize == 0) {
+      return unobserved("RSA key transport");
+    }
     if (keySize < MIN_RSA_DH_DSA_BITS) {
       return Assessment.of(
           Risk.BROKEN,
@@ -380,7 +394,9 @@ public final class Policy {
    * observed, not the subgroup size N, so the N conditions of Table 2 are not assessed.
    */
   private static Assessment dsaSize(int keySize, Operation op) {
-    if (keySize == 0) return unobserved("DSA");
+    if (keySize == 0) {
+      return unobserved("DSA");
+    }
     if (op == Operation.VERIFY) {
       if (keySize < MIN_LEGACY_DSA_VERIFY_BITS) {
         return Assessment.of(
@@ -405,26 +421,34 @@ public final class Policy {
 
   private static Assessment signature(String alg, int keySize, Operation op) {
     Assessment pq = postQuantum(alg);
-    if (pq != null) return pq;
+    if (pq != null) {
+      return pq;
+    }
 
     int with = alg.indexOf("WITH");
     if (with <= 0) {
       return asymmetric(alg, keySize, op);
     }
-    String hash = alg.substring(0, with);
+    String digestName = alg.substring(0, with);
     String key = alg.substring(with + 4);
 
     Assessment keyVerdict;
-    if (RSA_SIGNATURE_KEYS.contains(key)) keyVerdict = rsaSignatureSize(keySize, op);
-    else if (EC_SIGNATURE_KEYS.contains(key)) keyVerdict = asymmetric("ECDSA", keySize, op);
-    else if (DSA_SIGNATURE_KEYS.contains(key)) keyVerdict = asymmetric("DSA", keySize, op);
-    else return Assessment.of(Risk.UNKNOWN, "Unrecognized signature algorithm " + alg);
+    if (RSA_SIGNATURE_KEYS.contains(key)) {
+      keyVerdict = rsaSignatureSize(keySize, op);
+    } else if (EC_SIGNATURE_KEYS.contains(key)) {
+      keyVerdict = asymmetric("ECDSA", keySize, op);
+    } else if (DSA_SIGNATURE_KEYS.contains(key)) {
+      keyVerdict = asymmetric("DSA", keySize, op);
+    } else {
+      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature algorithm " + alg);
+    }
 
     Assessment hashVerdict;
-    if (hash.equals("MD2") || hash.equals("MD5")) {
+    if ("MD2".equals(digestName) || "MD5".equals(digestName)) {
       hashVerdict =
-          Assessment.of(Risk.BROKEN, hash + " signatures are forgeable via hash collisions");
-    } else if (hash.equals("SHA1")) {
+          Assessment.of(
+              Risk.BROKEN, digestName + " signatures are forgeable via digestName collisions");
+    } else if ("SHA1".equals(digestName)) {
       hashVerdict =
           op == Operation.VERIFY
               ? Assessment.of(
@@ -433,10 +457,10 @@ public final class Policy {
                   Risk.BROKEN,
                   "SHA-1 signature generation is disallowed (SP 800-131A); collisions are"
                       + " practical");
-    } else if (SIGNATURE_HASHES.contains(hash)) {
+    } else if (SIGNATURE_HASHES.contains(digestName)) {
       hashVerdict = null;
     } else {
-      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature hash in " + alg);
+      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature digestName in " + alg);
     }
     return worst(keyVerdict, hashVerdict);
   }
@@ -445,7 +469,7 @@ public final class Policy {
 
   private static Assessment cipher(
       String alg, String mode, String padding, int keySize, Operation op) {
-    boolean legacyUse = op == Operation.DECRYPT || op == Operation.UNWRAP;
+    final boolean legacyUse = op == Operation.DECRYPT || op == Operation.UNWRAP;
 
     if (alg.startsWith("PBEWITH")) {
       if (alg.contains("MD5")
@@ -458,14 +482,14 @@ public final class Policy {
       return Assessment.of(
           Risk.UNKNOWN, "Password-based encryption; work factor (iteration count) not observed");
     }
-    if (alg.equals("RSA")) {
-      if (mode != null && !mode.equals("ECB") && !mode.equals("NONE")) {
+    if ("RSA".equals(alg)) {
+      if (mode != null && !"ECB".equals(mode) && !"NONE".equals(mode)) {
         return Assessment.of(Risk.UNKNOWN, "Unrecognized RSA mode " + mode);
       }
       Assessment pad;
       if ("NOPADDING".equals(padding)) {
         pad = Assessment.of(Risk.BROKEN, "Textbook RSA (no padding) is insecure");
-      } else if (padding == null || padding.equals("PKCS1PADDING")) {
+      } else if (padding == null || "PKCS1PADDING".equals(padding)) {
         String which =
             padding == null ? "Provider default padding (PKCS#1 v1.5)" : "PKCS#1 v1.5 padding";
         pad =
@@ -481,32 +505,32 @@ public final class Policy {
       }
       return worst(rsaTransportSize(keySize), pad);
     }
-    if (alg.equals("DES") || alg.equals("RC2") || alg.equals("RC4") || alg.equals("ARCFOUR")) {
+    if ("DES".equals(alg) || "RC2".equals(alg) || "RC4".equals(alg) || "ARCFOUR".equals(alg)) {
       return Assessment.of(Risk.BROKEN, alg + " is cryptographically broken");
     }
-    if (alg.equals("DESEDE") || alg.equals("TRIPLEDES")) {
+    if ("DESEDE".equals(alg) || "TRIPLEDES".equals(alg)) {
       return legacyUse
           ? Assessment.of(Risk.WEAK, "TDEA decryption is legacy use only (SP 800-131A)")
           : Assessment.of(Risk.BROKEN, "TDEA encryption is disallowed after 2023 (SP 800-131A)");
     }
-    if (alg.equals("BLOWFISH")) {
+    if ("BLOWFISH".equals(alg)) {
       return Assessment.of(Risk.WEAK, "64-bit block cipher (Sweet32); not NIST-approved");
     }
-    if (alg.equals("CHACHA20-POLY1305")) {
+    if ("CHACHA20-POLY1305".equals(alg)) {
       return Assessment.of(
           Risk.QUANTUM_SAFE, "256-bit AEAD; quantum-resistant, not a NIST/CNSA algorithm", 5);
     }
-    if (alg.equals("CHACHA20")) {
+    if ("CHACHA20".equals(alg)) {
       return Assessment.of(
           Risk.ACCEPTABLE, "Unauthenticated stream cipher; prefer ChaCha20-Poly1305");
     }
-    if (alg.equals("AESWRAP")
-        || alg.equals("AESWRAPPAD")
-        || alg.equals("AESKW")
-        || alg.equals("AESKWP")) {
+    if ("AESWRAP".equals(alg)
+        || "AESWRAPPAD".equals(alg)
+        || "AESKW".equals(alg)
+        || "AESKWP".equals(alg)) {
       return blockCipherStrength("AES", keySize, "AES key wrap");
     }
-    if (alg.equals("AES") || alg.equals("CAMELLIA") || alg.equals("ARIA")) {
+    if ("AES".equals(alg) || "CAMELLIA".equals(alg) || "ARIA".equals(alg)) {
       if (mode == null) {
         return Assessment.of(
             Risk.WEAK,
@@ -514,10 +538,10 @@ public final class Policy {
                 + alg
                 + "/ECB/PKCS5Padding)");
       }
-      if (mode.equals("ECB")) {
+      if ("ECB".equals(mode)) {
         return Assessment.of(Risk.WEAK, "ECB mode leaks plaintext patterns; use GCM");
       }
-      if (mode.equals("PCBC")) {
+      if ("PCBC".equals(mode)) {
         return Assessment.of(Risk.WEAK, "PCBC is a legacy mode with known weaknesses; use GCM");
       }
       if (!APPROVED_MODES.contains(mode)) {
@@ -535,7 +559,7 @@ public final class Policy {
   }
 
   private static Assessment blockCipherStrength(String alg, int keySize, String what) {
-    boolean aes = alg.equals("AES");
+    boolean aes = "AES".equals(alg);
     if (keySize == 256) {
       return aes
           ? Assessment.cnsa2(Risk.QUANTUM_SAFE, what + " with a 256-bit key (CNSA 2.0)", 5)
@@ -544,10 +568,12 @@ public final class Policy {
               what + " with a 256-bit key; quantum-resistant, not a CNSA 2.0 algorithm",
               5);
     }
-    if (keySize == 192)
+    if (keySize == 192) {
       return Assessment.of(Risk.ACCEPTABLE, what + "-192 is secure; CNSA 2.0 requires AES-256", 3);
-    if (keySize == 128)
+    }
+    if (keySize == 128) {
       return Assessment.of(Risk.ACCEPTABLE, what + "-128 is secure; CNSA 2.0 requires AES-256", 1);
+    }
     if (keySize == 0) {
       // these ciphers only accept 128/192/256-bit keys, so an unobserved size cannot hide a weak
       // key
@@ -560,28 +586,20 @@ public final class Policy {
   }
 
   private static Assessment keyGeneration(String alg, int keySize) {
-    switch (alg) {
-      case "AES":
-      case "CAMELLIA":
-      case "ARIA":
-        return blockCipherStrength(alg, keySize, alg + " key generation");
-      case "DES":
-      case "RC2":
-      case "RC4":
-      case "ARCFOUR":
-        return Assessment.of(Risk.BROKEN, alg + " is cryptographically broken");
-      case "DESEDE":
-      case "TRIPLEDES":
-        return Assessment.of(Risk.BROKEN, "New TDEA keys are disallowed after 2023 (SP 800-131A)");
-      case "BLOWFISH":
-        return Assessment.of(Risk.WEAK, "64-bit block cipher (Sweet32); not NIST-approved");
-      case "CHACHA20":
-        return Assessment.of(Risk.QUANTUM_SAFE, "256-bit ChaCha20 key", 5);
-      default:
-        return alg.startsWith("HMAC")
-            ? mac(alg, keySize)
-            : Assessment.of(Risk.UNKNOWN, "Unrecognized key generator " + alg);
-    }
+    return switch (alg) {
+      case "AES", "CAMELLIA", "ARIA" -> blockCipherStrength(alg, keySize, alg + " key generation");
+      case "DES", "RC2", "RC4", "ARCFOUR" ->
+          Assessment.of(Risk.BROKEN, alg + " is cryptographically broken");
+      case "DESEDE", "TRIPLEDES" ->
+          Assessment.of(Risk.BROKEN, "New TDEA keys are disallowed after 2023 (SP 800-131A)");
+      case "BLOWFISH" ->
+          Assessment.of(Risk.WEAK, "64-bit block cipher (Sweet32); not NIST-approved");
+      case "CHACHA20" -> Assessment.of(Risk.QUANTUM_SAFE, "256-bit ChaCha20 key", 5);
+      default ->
+          alg.startsWith("HMAC")
+              ? mac(alg, keySize)
+              : Assessment.of(Risk.UNKNOWN, "Unrecognized key generator " + alg);
+    };
   }
 
   private static Assessment mac(String alg, int keySize) {
@@ -592,50 +610,53 @@ public final class Policy {
           alg + " key of " + keySize + " bits is below the 112-bit minimum (SP 800-131A)");
     }
     switch (alg) {
-      case "HMACMD5":
+      case "HMACMD5" -> {
         return Assessment.of(Risk.WEAK, "HMAC-MD5 is deprecated");
-      case "HMACSHA1":
-      case "HMACSHA224":
-      case "HMACSHA256":
-      case "HMACSHA512/224":
-      case "HMACSHA512/256":
-      case "HMACSHA3-224":
-      case "HMACSHA3-256":
-      case "KMAC128":
-      case "KMAC256":
-        if (keySize == 0)
+      }
+      case "HMACSHA1",
+          "HMACSHA224",
+          "HMACSHA256",
+          "HMACSHA512/224",
+          "HMACSHA512/256",
+          "HMACSHA3-224",
+          "HMACSHA3-256",
+          "KMAC128",
+          "KMAC256" -> {
+        if (keySize == 0) {
           return Assessment.of(
               Risk.UNKNOWN,
               alg + ": key length not observed; MAC keys below 112 bits are disallowed");
+        }
         return Assessment.of(
             Risk.ACCEPTABLE,
             "Secure MAC with a "
                 + keySize
                 + "-bit key"
-                + (alg.equals("HMACSHA1")
+                + ("HMACSHA1".equals(alg)
                     ? "; HMAC-SHA-1 remains approved but is not CNSA 2.0"
                     : ""));
-      case "HMACSHA384":
-      case "HMACSHA512":
-      case "HMACSHA3-384":
-      case "HMACSHA3-512":
-        if (keySize == 0)
+      }
+      case "HMACSHA384", "HMACSHA512", "HMACSHA3-384", "HMACSHA3-512" -> {
+        if (keySize == 0) {
           return Assessment.of(
               Risk.UNKNOWN,
               alg + ": key length not observed; MAC keys below 112 bits are disallowed");
-        if (keySize >= 256)
+        }
+        if (keySize >= 256) {
           return Assessment.of(Risk.QUANTUM_SAFE, "Strong MAC with a " + keySize + "-bit key");
+        }
         return Assessment.of(Risk.ACCEPTABLE, "Strong hash; key length " + keySize + " bits");
-      case "AESCMAC":
-      case "AES-CMAC":
-      case "AES-GMAC":
-      case "GMAC":
+      }
+      case "AESCMAC", "AES-CMAC", "AES-GMAC", "GMAC" -> {
         // AES keys are at least 128 bits, so these are sound regardless of observed size
         return Assessment.of(Risk.ACCEPTABLE, "AES-based MAC");
-      case "POLY1305":
+      }
+      case "POLY1305" -> {
         return Assessment.of(Risk.ACCEPTABLE, "Poly1305 (fixed 256-bit one-time key)");
-      default:
+      }
+      default -> {
         return Assessment.of(Risk.UNKNOWN, "Unrecognized MAC " + alg);
+      }
     }
   }
 
@@ -644,19 +665,13 @@ public final class Policy {
   private static Assessment tls(String protocolVersion, String suite) {
     String version = protocolVersion == null ? "" : protocolVersion;
     switch (version) {
-      case "SSLv2Hello":
-      case "SSLv3":
-      case "TLSv1":
-      case "TLSv1.1":
-      case "DTLSv1.0":
+      case "SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "DTLSv1.0" -> {
         return Assessment.of(Risk.BROKEN, version + " is deprecated (RFC 8996)");
-      case "TLSv1.2":
-      case "TLSv1.3":
-      case "DTLSv1.2":
-      case "DTLSv1.3":
-        break;
-      default:
+      }
+      case "TLSv1.2", "TLSv1.3", "DTLSv1.2", "DTLSv1.3" -> {}
+      default -> {
         return Assessment.of(Risk.UNKNOWN, "Unrecognized protocol version " + version);
+      }
     }
     if (suite.contains("_NULL_")
         || suite.contains("_EXPORT")
@@ -701,11 +716,21 @@ public final class Policy {
    * hidden behind a known, lesser finding (e.g. SHA-1 verification with an unobservable key size).
    */
   private static Assessment worst(Assessment a, Assessment b) {
-    if (b == null) return a;
-    if (a.risk() == Risk.BROKEN) return a;
-    if (b.risk() == Risk.BROKEN) return b;
-    if (a.risk() == Risk.UNKNOWN) return a;
-    if (b.risk() == Risk.UNKNOWN) return b;
+    if (b == null) {
+      return a;
+    }
+    if (a.risk() == Risk.BROKEN) {
+      return a;
+    }
+    if (b.risk() == Risk.BROKEN) {
+      return b;
+    }
+    if (a.risk() == Risk.UNKNOWN) {
+      return a;
+    }
+    if (b.risk() == Risk.UNKNOWN) {
+      return b;
+    }
     return b.risk().severity() > a.risk().severity() ? b : a;
   }
 

@@ -40,10 +40,21 @@ public enum Risk {
     this.severity = severity;
   }
 
+  /**
+   * Severity used for {@code failOn} thresholds; {@link #UNKNOWN} shares {@link #ACCEPTABLE}'s.
+   *
+   * @return 0 (quantum-safe) to 4 (broken)
+   */
   public int severity() {
     return severity;
   }
 
+  /**
+   * Whether this risk meets or exceeds {@code threshold}.
+   *
+   * @param threshold the lowest failing risk
+   * @return true if this risk is at least as severe
+   */
   public boolean isAtLeast(Risk threshold) {
     return severity >= threshold.severity;
   }
@@ -53,6 +64,11 @@ public enum Risk {
     return valueOf(value.trim().toUpperCase(Locale.ROOT).replace('-', '_'));
   }
 
+  /**
+   * Lower-case, hyphenated label as used in CBOMs and configuration.
+   *
+   * @return e.g. {@code quantum-vulnerable}
+   */
   public String label() {
     return name().toLowerCase(Locale.ROOT).replace('_', '-');
   }

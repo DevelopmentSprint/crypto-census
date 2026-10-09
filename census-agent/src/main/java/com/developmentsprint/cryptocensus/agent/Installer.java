@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -75,6 +76,18 @@ public final class Installer {
 
   private Installer() {}
 
+  /**
+   * Installs the instrumentation once per JVM and registers the shutdown hook that writes the CBOM.
+   *
+   * @param args agent options
+   * @param inst the JVM's instrumentation handle
+   * @param agentJar the agent jar, used to locate advice class files
+   * @throws IOException if the agent jar cannot be read
+   */
+  // Catching Throwable is the agent's contract: observation must never break the host application.
+  // The class-file locator stays open for the JVM's lifetime: advice is resolved lazily on class
+  // load.
+  @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.CloseResource"})
   public static void install(String args, Instrumentation inst, File agentJar) throws IOException {
     if (!INSTALLED.compareAndSet(false, true)) {
       System.err.println(
@@ -97,80 +110,92 @@ public final class Installer {
               listener, AgentBuilder.Listener.StreamWriting.toSystemError().withErrorsOnly());
     }
 
-    ResettableClassFileTransformer transformer = null;
+    // Captured as soon as Byte Buddy registers the transformer, so a failure later during
+    // retransformation can still undo it (installOn() never returns in that case).
+    AtomicReference<ResettableClassFileTransformer> registered = new AtomicReference<>();
     try {
-      transformer =
-          new AgentBuilder.Default()
-              .disableClassFormatChanges()
-              .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-              .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
-              .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
-              // Describe types by parsing class files, not reflection. Reflecting on a loaded
-              // KeyPairGenerator loads its nested Delegate inside the transformer, where Byte
-              // Buddy's
-              // circularity guard skips it - and it would never be instrumented.
-              .with(AgentBuilder.DescriptionStrategy.Default.POOL_FIRST)
-              .with(listener)
-              // Replaces the default ignore matcher, which would skip bootstrap (JDK) classes.
-              .ignore(nameStartsWith("com.developmentsprint.cryptocensus.agent.").or(isSynthetic()))
-              .type(named("javax.crypto.Cipher"))
-              .transform(advice(locator, Advices.CipherInit.class, named("init").and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .type(named("java.security.Signature"))
-              .transform(
-                  advice(
-                      locator,
-                      Advices.KeyArg0.class,
-                      named("initSign").or(named("initVerify")).and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .type(named("javax.crypto.Mac"))
-              .transform(advice(locator, Advices.KeyArg0.class, named("init").and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .type(named("javax.crypto.KeyAgreement"))
-              .transform(advice(locator, Advices.KeyArg0.class, named("init").and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .type(named("javax.crypto.KEM"))
-              .transform(
-                  advice(
-                      locator,
-                      Advices.KeyArg0.class,
-                      named("newEncapsulator").or(named("newDecapsulator")).and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .type(named("javax.crypto.KeyGenerator"))
-              .transform(
-                  advice(locator, Advices.ReturnsKey.class, named("generateKey").and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
+      new AgentBuilder.Default()
+          .disableClassFormatChanges()
+          .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+          .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
+          .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
+          // Describe types by parsing class files, not reflection. Reflecting on a loaded
+          // KeyPairGenerator loads its nested Delegate inside the transformer, where Byte
+          // Buddy's
+          // circularity guard skips it - and it would never be instrumented.
+          .with(AgentBuilder.DescriptionStrategy.Default.POOL_FIRST)
+          .with(listener)
+          .with(
+              new AgentBuilder.InstallationListener.Adapter() {
+                @Override
+                public void onBeforeInstall(
+                    Instrumentation instrumentation,
+                    ResettableClassFileTransformer classFileTransformer) {
+                  registered.set(classFileTransformer);
+                }
+              })
+          // Replaces the default ignore matcher, which would skip bootstrap (JDK) classes.
+          .ignore(nameStartsWith("com.developmentsprint.cryptocensus.agent.").or(isSynthetic()))
+          .type(named("javax.crypto.Cipher"))
+          .transform(advice(locator, Advices.CipherInit.class, named("init").and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(named("java.security.Signature"))
+          .transform(
+              advice(
+                  locator,
+                  Advices.KeyArg0.class,
+                  named("initSign").or(named("initVerify")).and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(named("javax.crypto.Mac"))
+          .transform(advice(locator, Advices.KeyArg0.class, named("init").and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(named("javax.crypto.KeyAgreement"))
+          .transform(advice(locator, Advices.KeyArg0.class, named("init").and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(named("javax.crypto.KEM"))
+          .transform(
+              advice(
+                  locator,
+                  Advices.KeyArg0.class,
+                  named("newEncapsulator").or(named("newDecapsulator")).and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(named("javax.crypto.KeyGenerator"))
+          .transform(
+              advice(locator, Advices.ReturnsKey.class, named("generateKey").and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
 
-              // KeyPairGenerator.getInstance returns provider subclasses that override
-              // generateKeyPair
-              .type(isSubTypeOf(KeyPairGenerator.class))
-              .transform(
-                  advice(
-                      locator,
-                      Advices.ReturnsKey.class,
-                      named("generateKeyPair")
-                          .or(named("genKeyPair"))
-                          .and(isPublic())
-                          .and(not(isAbstract()))))
-              .assureReadEdgeTo(inst, Recorder.class)
+          // KeyPairGenerator.getInstance returns provider subclasses that override
+          // generateKeyPair
+          .type(isSubTypeOf(KeyPairGenerator.class))
+          .transform(
+              advice(
+                  locator,
+                  Advices.ReturnsKey.class,
+                  named("generateKeyPair")
+                      .or(named("genKeyPair"))
+                      .and(isPublic())
+                      .and(not(isAbstract()))))
+          .assureReadEdgeTo(inst, Recorder.class)
 
-              // Negotiated TLS sessions. SSLSessionImpl is JSSE-internal (stable since the JDK 11
-              // rewrite) but we only read it through the public SSLSession interface.
-              .type(config.tls ? named("sun.security.ssl.SSLSessionImpl") : none())
-              .transform(advice(locator, Advices.Constructed.class, isConstructor()))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .type(named("java.security.MessageDigest"))
-              .transform(
-                  advice(
-                      locator,
-                      Advices.StaticFactory.class,
-                      named("getInstance").and(isStatic()).and(isPublic())))
-              .assureReadEdgeTo(inst, Recorder.class)
-              .installOn(inst);
+          // Negotiated TLS sessions. SSLSessionImpl is JSSE-internal (stable since the JDK 11
+          // rewrite) but we only read it through the public SSLSession interface.
+          .type(config.tls ? named("sun.security.ssl.SSLSessionImpl") : none())
+          .transform(advice(locator, Advices.Constructed.class, isConstructor()))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(named("java.security.MessageDigest"))
+          .transform(
+              advice(
+                  locator,
+                  Advices.StaticFactory.class,
+                  named("getInstance").and(isStatic()).and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .installOn(inst);
     } catch (Throwable t) {
       // Leave the JVM exactly as we found it rather than half-instrumented.
-      if (transformer != null)
-        transformer.reset(inst, AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
+      ResettableClassFileTransformer partial = registered.get();
+      if (partial != null) {
+        partial.reset(inst, AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
+      }
       System.err.println(PREFIX + "instrumentation failed; agent disabled: " + t);
       return;
     }
@@ -194,8 +219,11 @@ public final class Installer {
   }
 
   private static void track(Set<String> set, String name) {
-    if (set.size() < MAX_TRACKED_TYPES || set.contains(name)) set.add(name);
-    else UNTRACKED_TYPES.increment();
+    if (set.size() < MAX_TRACKED_TYPES || set.contains(name)) {
+      set.add(name);
+    } else {
+      UNTRACKED_TYPES.increment();
+    }
   }
 
   /** Tracks which selected types were instrumented and whether any of them failed. */
@@ -226,6 +254,8 @@ public final class Installer {
     }
   }
 
+  // Catching Throwable is the agent's contract: observation must never break the host application.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
   private static void shutdown(AgentConfig config) {
     Recorder.disable();
     // let admitted observations (including those still inside the provider) finish, briefly
@@ -236,8 +266,9 @@ public final class Installer {
     int stillRunning = Recorder.inFlight();
     try {
       Inventory inventory = Recorder.inventory();
-      List<Inventory.Entry> snapshot = inventory.entries();
-      long dropped = inventory.droppedObservations();
+      // one consistent snapshot, taken before anything else, feeds both the CBOM and the summary
+      final List<Inventory.Entry> snapshot = inventory.entries();
+      final long dropped = inventory.droppedObservations();
 
       Map<String, String> props = new LinkedHashMap<>();
       props.put("cryptocensus:java.version", System.getProperty("java.version"));

@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -24,35 +25,64 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class Inventory {
 
-  private final ConcurrentHashMap<CryptoAsset, ConcurrentHashMap<Occurrence, AtomicLong>> data =
+  // ConcurrentMap (not Map): computeIfAbsent below must be atomic
+  private final ConcurrentMap<CryptoAsset, ConcurrentMap<Occurrence, AtomicLong>> data =
       new ConcurrentHashMap<>();
   private final AtomicLong dropped = new AtomicLong();
   private final AtomicLong overflowedSites = new AtomicLong();
   private final int maxAssets;
   private final int maxOccurrencesPerAsset;
 
+  /** An unbounded inventory, for merging CBOMs that were each bounded when written. */
   public Inventory() {
     this(Integer.MAX_VALUE, Integer.MAX_VALUE);
   }
 
   private Inventory(int maxAssets, int maxOccurrencesPerAsset) {
-    if (maxAssets < 1 || maxOccurrencesPerAsset < 1)
+    if (maxAssets < 1 || maxOccurrencesPerAsset < 1) {
       throw new IllegalArgumentException("limits must be positive");
+    }
     this.maxAssets = maxAssets;
     this.maxOccurrencesPerAsset = maxOccurrencesPerAsset;
   }
 
+  /**
+   * An inventory that keeps at most {@code maxAssets} distinct assets and {@code
+   * maxOccurrencesPerAsset} call sites per asset.
+   *
+   * @param maxAssets distinct assets kept; further assets are dropped and counted
+   * @param maxOccurrencesPerAsset call sites kept per asset; further ones fold into {@link
+   *     Occurrence#OVERFLOW}
+   * @return a new bounded inventory
+   */
   public static Inventory bounded(int maxAssets, int maxOccurrencesPerAsset) {
     return new Inventory(maxAssets, maxOccurrencesPerAsset);
   }
 
+  /**
+   * Records one use of {@code asset} at {@code occurrence}.
+   *
+   * @param asset what was used
+   * @param occurrence where it was used
+   */
   public void record(CryptoAsset asset, Occurrence occurrence) {
     add(asset, occurrence, 1);
   }
 
+  /**
+   * Adds {@code count} uses of {@code asset} at {@code occurrence}. Counts saturate at {@link
+   * Long#MAX_VALUE}.
+   *
+   * @param asset what was used
+   * @param occurrence where it was used
+   * @param count number of uses, never negative
+   * @throws IllegalArgumentException if {@code count} is negative
+   */
   public void add(CryptoAsset asset, Occurrence occurrence, long count) {
-    if (count < 0) throw new IllegalArgumentException("negative count " + count);
-    ConcurrentHashMap<Occurrence, AtomicLong> sites = data.get(asset);
+    if (count < 0) {
+      throw new IllegalArgumentException("negative count " + count);
+    }
+    ConcurrentMap<Occurrence, AtomicLong> sites = data.get(asset);
     if (sites == null) {
       // Approximate under concurrency (may overshoot by the number of racing threads); that is fine
       // for a safety cap.
@@ -66,7 +96,9 @@ public final class Inventory {
     if (!sites.containsKey(site) && sites.size() >= maxOccurrencesPerAsset) {
       site = Occurrence.OVERFLOW;
     }
-    if (Occurrence.OVERFLOW.equals(site)) addSaturating(overflowedSites, count);
+    if (Occurrence.OVERFLOW.equals(site)) {
+      addSaturating(overflowedSites, count);
+    }
     addSaturating(sites.computeIfAbsent(site, k -> new AtomicLong()), count);
   }
 
@@ -99,8 +131,16 @@ public final class Inventory {
     return overflowedSites.get();
   }
 
+  /**
+   * Adds to the dropped-observation count, for example when merging a CBOM that recorded drops.
+   *
+   * @param count observations dropped, never negative
+   * @throws IllegalArgumentException if {@code count} is negative
+   */
   public void addDropped(long count) {
-    if (count < 0) throw new IllegalArgumentException("negative count " + count);
+    if (count < 0) {
+      throw new IllegalArgumentException("negative count " + count);
+    }
     addSaturating(dropped, count);
   }
 
@@ -116,6 +156,12 @@ public final class Inventory {
     return entries(new Policy());
   }
 
+  /**
+   * Snapshot of all entries assessed with {@code policy}, most severe first.
+   *
+   * @param policy the policy that produces each entry's assessment
+   * @return an unmodifiable snapshot
+   */
   public List<Entry> entries(Policy policy) {
     List<Entry> result = new ArrayList<>();
     data.forEach(
@@ -135,9 +181,22 @@ public final class Inventory {
 
   /** One asset with its verdict and per-occurrence call counts. */
   public record Entry(CryptoAsset asset, Assessment assessment, Map<Occurrence, Long> occurrences) {
+
+    /** Copies {@code occurrences}, keeping their (sorted) order. */
+    public Entry {
+      occurrences = Collections.unmodifiableMap(new LinkedHashMap<>(occurrences));
+    }
+
+    /**
+     * Total uses across all occurrences.
+     *
+     * @return the saturating sum of occurrence counts
+     */
     public long total() {
       long sum = 0;
-      for (long n : occurrences.values()) sum = saturatingAdd(sum, n);
+      for (long n : occurrences.values()) {
+        sum = saturatingAdd(sum, n);
+      }
       return sum;
     }
   }
