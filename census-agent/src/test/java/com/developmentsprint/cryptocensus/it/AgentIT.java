@@ -8,23 +8,32 @@ import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Operation;
 import com.developmentsprint.cryptocensus.core.Primitive;
 import com.developmentsprint.cryptocensus.core.Risk;
+import com.developmentsprint.cryptocensus.core.Targets;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Runs {@link CryptoWorkload} in a child JVM with the packaged (shaded) agent attached. */
 class AgentIT {
+
+  /**
+   * Newest class file version the bundled Byte Buddy (1.18.14) parses without experimental mode.
+   */
+  static final int LATEST_JDK_SUPPORTED_BY_BYTE_BUDDY = 27;
 
   @TempDir static Path tmp;
 
@@ -92,6 +101,123 @@ class AgentIT {
         .containsEntry("cryptocensus:drainTimedOut", "0");
     assertThat(document.properties().get("cryptocensus:instrumented"))
         .contains("javax.crypto.Cipher", "java.security.Signature", "java.security.MessageDigest");
+  }
+
+  @Test
+  void reportsEveryFixedTargetAndNoGaps() {
+    Map<String, Targets.Status> targets =
+        Targets.parse(document.properties().get(Targets.PROPERTY));
+    assertThat(targets)
+        .as(stderr)
+        .containsEntry("javax.crypto.Cipher", Targets.Status.INSTRUMENTED)
+        .containsEntry("java.security.KeyPairGenerator", Targets.Status.INSTRUMENTED)
+        .containsEntry("sun.security.ssl.SSLSessionImpl", Targets.Status.INSTRUMENTED);
+    assertThat(targets.values()).noneMatch(Targets.Status::isGap);
+    if (Runtime.version().feature() >= 24) {
+      // the workload uses ML-KEM there
+      assertThat(targets).containsEntry("javax.crypto.KEM", Targets.Status.INSTRUMENTED);
+    } else if (Runtime.version().feature() < 21) {
+      assertThat(targets).doesNotContainKey("javax.crypto.KEM");
+    }
+    assertThat(Targets.parse(document.properties().get(Targets.MISSING_PROPERTY)))
+        .doesNotContainValue(Targets.Status.INSTRUMENTED);
+    assertThat(stderr).doesNotContain("instrumentation gap");
+  }
+
+  @Test
+  void unusedTargetsAreNotLoadedRatherThanMissing() throws Exception {
+    // no TLS in this run: the session class is never loaded, which is not a gap
+    Path cbom = tmp.resolve("no-tls.json");
+    Run run = runAgent("output=" + cbom + ",summary=false", List.of());
+    assertThat(run.exitCode).as(run.stderr).isZero();
+    Map<String, Targets.Status> missing =
+        Targets.parse(Cbom.read(cbom).properties().get(Targets.MISSING_PROPERTY));
+    assertThat(missing).containsEntry("sun.security.ssl.SSLSessionImpl", Targets.Status.NOT_LOADED);
+    assertThat(missing.values()).noneMatch(Targets.Status::isGap);
+  }
+
+  // ------------------------------------------------------------------ newer JDKs
+
+  @Test
+  void byteBuddyExperimentalIsOffByDefault() {
+    assertThat(document.properties()).containsEntry("cryptocensus:byteBuddyExperimental", "false");
+  }
+
+  @Test
+  void standardByteBuddyExperimentalPropertyReachesTheShadedCopy() throws Exception {
+    // Regression: shading relocated the property name, so -Dnet.bytebuddy.experimental had no
+    // effect. The CBOM reports the value the shaded Byte Buddy actually reads.
+    Path cbom = tmp.resolve("experimental-property.json");
+    Run run =
+        runAgent(
+            List.of(
+                "-Dnet.bytebuddy.experimental=true",
+                "-javaagent:" + agentJar() + "=output=" + cbom + ",summary=false"),
+            List.of());
+    assertThat(run.exitCode).as(run.stderr).isZero();
+    assertThat(run.stderr).contains("experimental mode");
+    assertThat(Cbom.read(cbom).properties())
+        .containsEntry("cryptocensus:byteBuddyExperimental", "true")
+        .containsEntry("cryptocensus:transformErrors", "0");
+  }
+
+  @Test
+  void experimentalAgentOptionEnablesIt() throws Exception {
+    Path cbom = tmp.resolve("experimental-option.json");
+    Run run = runAgent("output=" + cbom + ",summary=false,experimental=true", List.of());
+    assertThat(run.exitCode).as(run.stderr).isZero();
+    assertThat(Cbom.read(cbom).properties())
+        .containsEntry("cryptocensus:byteBuddyExperimental", "true");
+  }
+
+  @Test
+  @EnabledIf("jdkNewerThanByteBuddySupports")
+  void newerJdkIsInstrumentedOnlyInExperimentalModeAndSaysSo() throws Exception {
+    // Without the switch the agent must not pretend: errors and gaps are reported.
+    Path strict = tmp.resolve("newer-jdk-default.json");
+    Run failing = runAgent("output=" + strict + ",summary=false", List.of());
+    assertThat(failing.exitCode).as(failing.stderr).isZero();
+    Cbom.Document doc = Cbom.read(strict);
+    assertThat(doc.health("cryptocensus:transformErrors")).isPositive();
+    assertThat(failing.stderr).contains("instrumentation gap");
+
+    Path experimental = tmp.resolve("newer-jdk-experimental.json");
+    Run run = runAgent("output=" + experimental + ",summary=false,experimental=true", List.of());
+    assertThat(run.exitCode).as(run.stderr).isZero();
+    Cbom.Document ok = Cbom.read(experimental);
+    assertThat(ok.properties()).containsEntry("cryptocensus:transformErrors", "0");
+    assertThat(ok.inventory().entries()).isNotEmpty();
+  }
+
+  static boolean jdkNewerThanByteBuddySupports() {
+    return Runtime.version().feature() > LATEST_JDK_SUPPORTED_BY_BYTE_BUDDY;
+  }
+
+  // ------------------------------------------------------------------ vendor providers
+
+  @Test
+  @EnabledIf("openJcePlusAvailable")
+  void attributesOpenJcePlusKeyGenerationToTheApplication() {
+    // Regression (IBM Semeru): OpenJCEPlus's own generateKeyPair frame was reported as the caller.
+    List<Inventory.Entry> dsa =
+        inventory.entries().stream()
+            .filter(e -> e.asset().primitive() == Primitive.KEY_PAIR_GENERATION)
+            .filter(e -> CryptoWorkload.OPEN_JCE_PLUS.equals(e.asset().provider()))
+            .toList();
+    assertThat(dsa).as(describe()).isNotEmpty();
+    assertThat(dsa)
+        .allSatisfy(
+            e ->
+                assertThat(e.occurrences().keySet())
+                    .allSatisfy(
+                        o -> {
+                          assertThat(o.location()).isEqualTo(CryptoWorkload.class.getName());
+                          assertThat(o.symbol()).isEqualTo("openJcePlus");
+                        }));
+  }
+
+  static boolean openJcePlusAvailable() {
+    return Security.getProvider(CryptoWorkload.OPEN_JCE_PLUS) != null;
   }
 
   @Test

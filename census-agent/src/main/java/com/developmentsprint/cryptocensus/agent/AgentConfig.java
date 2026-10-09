@@ -31,6 +31,9 @@ import java.util.Set;
  *   <li>{@code maxSites} - call sites kept per asset before folding into an overflow bucket
  *       (default 50)
  *   <li>{@code debug} - log instrumentation errors (default {@code false})
+ *   <li>{@code experimental} - let Byte Buddy parse class files newer than it officially supports
+ *       (a JDK released after this agent); same as {@code -Dnet.bytebuddy.experimental=true}
+ *       (default {@code false})
  * </ul>
  */
 final class AgentConfig {
@@ -39,13 +42,23 @@ final class AgentConfig {
   private static final SecureRandom RANDOM = new SecureRandom();
 
   private static final Set<String> KEYS =
-      Set.of("output", "dir", "app", "summary", "tls", "maxAssets", "maxSites", "debug");
+      Set.of(
+          "output",
+          "dir",
+          "app",
+          "summary",
+          "tls",
+          "maxAssets",
+          "maxSites",
+          "debug",
+          "experimental");
 
   final Path output;
   final String app;
   final boolean summary;
   final boolean tls;
   final boolean debug;
+  final boolean experimental;
   final int maxAssets;
   final int maxSites;
   final List<String> warnings;
@@ -56,6 +69,7 @@ final class AgentConfig {
     this.summary = bool(options, "summary", true, warnings);
     this.tls = bool(options, "tls", true, warnings);
     this.debug = bool(options, "debug", false, warnings);
+    this.experimental = bool(options, "experimental", false, warnings);
     this.maxAssets = positiveInt(options, "maxAssets", 500, warnings);
     this.maxSites = positiveInt(options, "maxSites", 50, warnings);
     this.warnings = Collections.unmodifiableList(warnings);
