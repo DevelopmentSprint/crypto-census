@@ -1,0 +1,16 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "properties": [
+      {"name": "cryptocensus:schema", "value": "census-agent/1"},
+      {"name": "cryptocensus:transformErrors", "value": "0"},
+      {"name": "cryptocensus:recordingFailures", "value": "0"},
+      {"name": "cryptocensus:dropped", "value": "0"},
+      {"name": "cryptocensus:overflowedSites", "value": "0"},
+      {"name": "cryptocensus:drainTimedOut", "value": "0"}
+    ]
+  },
+  "components": []
+}
