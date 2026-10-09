@@ -547,6 +547,20 @@
         </profile>
 
         <!--
+            Conformance tests in real application servers (Open Liberty on IBM Semeru, WildFly), run in
+            containers with Testcontainers:
+              mvn -P app-servers verify
+            Needs Docker; without it the tests are skipped, not failed. CI runs this in its own job.
+            See docs/CONFORMANCE.md.
+        -->
+        <profile>
+            <id>app-servers</id>
+            <modules>
+                <module>census-app-servers</module>
+            </modules>
+        </profile>
+
+        <!--
             Let Error Prone rewrite fixable findings in place, then run spotless:apply:
               mvn -P errorprone-patch test-compile && mvn spotless:apply
             Review the diff before committing.
@@ -672,6 +686,7 @@
                             <waitUntil>validated</waitUntil>
                             <excludeArtifacts>
                                 <artifact>census-demo</artifact>
+                                <artifact>census-app-servers</artifact>
                             </excludeArtifacts>
                         </configuration>
                     </plugin>
