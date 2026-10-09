@@ -8,23 +8,27 @@ import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Operation;
 import com.developmentsprint.cryptocensus.core.Primitive;
 import com.developmentsprint.cryptocensus.core.Risk;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
+import com.developmentsprint.cryptocensus.core.Targets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.security.Security;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Runs {@link CryptoWorkload} in a child JVM with the packaged (shaded) agent attached. */
 class AgentIT {
+
+  /**
+   * Newest class file version the bundled Byte Buddy (1.18.14) parses without experimental mode.
+   */
+  static final int LATEST_JDK_SUPPORTED_BY_BYTE_BUDDY = 27;
 
   @TempDir static Path tmp;
 
@@ -35,42 +39,15 @@ class AgentIT {
 
   @BeforeAll
   static void runWorkload() throws Exception {
-    Path keystore = tmp.resolve("tls.p12");
-    Process keytool =
-        new ProcessBuilder(
-                javaTool("keytool"),
-                "-genkeypair",
-                "-alias",
-                "server",
-                "-keyalg",
-                "EC",
-                "-groupname",
-                "secp256r1",
-                "-dname",
-                "CN=localhost",
-                "-ext",
-                "SAN=dns:localhost",
-                "-validity",
-                "1",
-                "-storetype",
-                "PKCS12",
-                "-keystore",
-                keystore.toString(),
-                "-storepass",
-                "changeit",
-                "-keypass",
-                "changeit")
-            .redirectErrorStream(true)
-            .start();
-    assertThat(keytool.waitFor(60, TimeUnit.SECONDS) && keytool.exitValue() == 0)
-        .as(new String(keytool.getInputStream().readAllBytes(), StandardCharsets.UTF_8))
-        .isTrue();
+    Path keystore = ChildJvm.keystore(tmp);
 
     Path cbom = tmp.resolve("cbom.json");
-    Run run =
-        runAgent("output=" + cbom + ",app=agent-it", List.of(keystore.toString(), "changeit"));
-    stderr = run.stderr;
-    exitCode = run.exitCode;
+    ChildJvm.Result run =
+        runAgent(
+            "output=" + cbom + ",app=agent-it",
+            List.of(keystore.toString(), ChildJvm.KEYSTORE_PASSWORD));
+    stderr = run.stderr();
+    exitCode = run.exitCode();
     assertThat(exitCode).as(stderr).isZero();
     assertThat(cbom).as(stderr).exists();
     document = Cbom.read(cbom);
@@ -92,6 +69,125 @@ class AgentIT {
         .containsEntry("cryptocensus:drainTimedOut", "0");
     assertThat(document.properties().get("cryptocensus:instrumented"))
         .contains("javax.crypto.Cipher", "java.security.Signature", "java.security.MessageDigest");
+  }
+
+  @Test
+  void reportsEveryFixedTargetAndNoGaps() {
+    Map<String, Targets.Status> targets =
+        Targets.parse(document.properties().get(Targets.PROPERTY));
+    assertThat(targets)
+        .as(stderr)
+        .containsEntry("javax.crypto.Cipher", Targets.Status.INSTRUMENTED)
+        .containsEntry("java.security.KeyPairGenerator", Targets.Status.INSTRUMENTED)
+        .containsEntry("sun.security.ssl.SSLSessionImpl", Targets.Status.INSTRUMENTED);
+    assertThat(targets.values()).noneMatch(Targets.Status::isGap);
+    if (Runtime.version().feature() >= 24) {
+      // the workload uses ML-KEM there
+      assertThat(targets).containsEntry("javax.crypto.KEM", Targets.Status.INSTRUMENTED);
+    } else if (Runtime.version().feature() < 21) {
+      assertThat(targets).doesNotContainKey("javax.crypto.KEM");
+    }
+    assertThat(Targets.parse(document.properties().get(Targets.MISSING_PROPERTY)))
+        .doesNotContainValue(Targets.Status.INSTRUMENTED);
+    assertThat(stderr).doesNotContain("instrumentation gap");
+  }
+
+  @Test
+  void unusedTargetsAreNotLoadedRatherThanMissing() throws Exception {
+    // no TLS in this run: the session class is never loaded, which is not a gap
+    Path cbom = tmp.resolve("no-tls.json");
+    ChildJvm.Result run = runAgent("output=" + cbom + ",summary=false", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    Map<String, Targets.Status> missing =
+        Targets.parse(Cbom.read(cbom).properties().get(Targets.MISSING_PROPERTY));
+    assertThat(missing).containsEntry("sun.security.ssl.SSLSessionImpl", Targets.Status.NOT_LOADED);
+    assertThat(missing.values()).noneMatch(Targets.Status::isGap);
+  }
+
+  // ------------------------------------------------------------------ newer JDKs
+
+  @Test
+  void byteBuddyExperimentalIsOffByDefault() {
+    assertThat(document.properties()).containsEntry("cryptocensus:byteBuddyExperimental", "false");
+  }
+
+  @Test
+  void standardByteBuddyExperimentalPropertyReachesTheShadedCopy() throws Exception {
+    // Regression: shading relocated the property name, so -Dnet.bytebuddy.experimental had no
+    // effect. The CBOM reports the value the shaded Byte Buddy actually reads.
+    Path cbom = tmp.resolve("experimental-property.json");
+    ChildJvm.Result run =
+        runAgent(
+            List.of(
+                "-Dnet.bytebuddy.experimental=true",
+                "-javaagent:" + agentJar() + "=output=" + cbom + ",summary=false"),
+            List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(run.stderr()).contains("experimental mode");
+    assertThat(Cbom.read(cbom).properties())
+        .containsEntry("cryptocensus:byteBuddyExperimental", "true")
+        .containsEntry("cryptocensus:transformErrors", "0");
+  }
+
+  @Test
+  void experimentalAgentOptionEnablesIt() throws Exception {
+    Path cbom = tmp.resolve("experimental-option.json");
+    ChildJvm.Result run =
+        runAgent("output=" + cbom + ",summary=false,experimental=true", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(Cbom.read(cbom).properties())
+        .containsEntry("cryptocensus:byteBuddyExperimental", "true");
+  }
+
+  @Test
+  @EnabledIf("jdkNewerThanByteBuddySupports")
+  void newerJdkIsInstrumentedOnlyInExperimentalModeAndSaysSo() throws Exception {
+    // Without the switch the agent must not pretend: errors and gaps are reported.
+    Path strict = tmp.resolve("newer-jdk-default.json");
+    ChildJvm.Result failing = runAgent("output=" + strict + ",summary=false", List.of());
+    assertThat(failing.exitCode()).as(failing.stderr()).isZero();
+    Cbom.Document doc = Cbom.read(strict);
+    assertThat(doc.health("cryptocensus:transformErrors")).isPositive();
+    assertThat(failing.stderr()).contains("instrumentation gap");
+
+    Path experimental = tmp.resolve("newer-jdk-experimental.json");
+    ChildJvm.Result run =
+        runAgent("output=" + experimental + ",summary=false,experimental=true", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    Cbom.Document ok = Cbom.read(experimental);
+    assertThat(ok.properties()).containsEntry("cryptocensus:transformErrors", "0");
+    assertThat(ok.inventory().entries()).isNotEmpty();
+  }
+
+  static boolean jdkNewerThanByteBuddySupports() {
+    return Runtime.version().feature() > LATEST_JDK_SUPPORTED_BY_BYTE_BUDDY;
+  }
+
+  // ------------------------------------------------------------------ vendor providers
+
+  @Test
+  @EnabledIf("openJcePlusAvailable")
+  void attributesOpenJcePlusKeyGenerationToTheApplication() {
+    // Regression (IBM Semeru): OpenJCEPlus's own generateKeyPair frame was reported as the caller.
+    List<Inventory.Entry> dsa =
+        inventory.entries().stream()
+            .filter(e -> e.asset().primitive() == Primitive.KEY_PAIR_GENERATION)
+            .filter(e -> CryptoWorkload.OPEN_JCE_PLUS.equals(e.asset().provider()))
+            .toList();
+    assertThat(dsa).as(describe()).isNotEmpty();
+    assertThat(dsa)
+        .allSatisfy(
+            e ->
+                assertThat(e.occurrences().keySet())
+                    .allSatisfy(
+                        o -> {
+                          assertThat(o.location()).isEqualTo(CryptoWorkload.class.getName());
+                          assertThat(o.symbol()).isEqualTo("openJcePlus");
+                        }));
+  }
+
+  static boolean openJcePlusAvailable() {
+    return Security.getProvider(CryptoWorkload.OPEN_JCE_PLUS) != null;
   }
 
   @Test
@@ -262,13 +358,13 @@ class AgentIT {
   void repeatedJavaagentInstallsOnce() throws Exception {
     Path cbom = tmp.resolve("twice.json");
     String opts = "output=" + cbom + ",summary=false";
-    Run run =
+    ChildJvm.Result run =
         runAgent(
             List.of(
                 "-javaagent:" + agentJar() + "=" + opts, "-javaagent:" + agentJar() + "=" + opts),
             List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
-    assertThat(run.stderr).contains("already started");
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(run.stderr()).contains("already started");
     Inventory twice = Cbom.read(cbom).inventory();
     // counts are not doubled by a second transformer (MD5 by name, plus by OID where the JDK
     // supports it)
@@ -291,9 +387,9 @@ class AgentIT {
             .replace(",", "%2C")
             .replace("=", "%3D")
             .replace(" ", "%20");
-    Run run = runAgent("dir=" + encoded + ",summary=false,bogus=1", List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
-    assertThat(run.stderr).contains("unknown option 'bogus'");
+    ChildJvm.Result run = runAgent("dir=" + encoded + ",summary=false,bogus=1", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(run.stderr()).contains("unknown option 'bogus'");
     try (var files = Files.list(dir)) {
       assertThat(files.map(p -> p.getFileName().toString()).toList())
           .singleElement()
@@ -347,42 +443,21 @@ class AgentIT {
     return sb.toString();
   }
 
-  private record Run(int exitCode, String stderr) {}
-
-  private static Run runAgent(String agentOptions, List<String> args) throws Exception {
+  private static ChildJvm.Result runAgent(String agentOptions, List<String> args) throws Exception {
     return runAgent(List.of("-javaagent:" + agentJar() + "=" + agentOptions), args);
   }
 
-  private static Run runAgent(List<String> jvmArgs, List<String> args) throws Exception {
-    Path err = Files.createTempFile(tmp, "stderr", ".txt");
-    List<String> command = new ArrayList<>();
-    command.add(javaTool("java"));
-    command.addAll(ChildJvmCoverage.jvmArgs());
-    command.addAll(jvmArgs);
-    command.add("-cp");
-    command.add(classpathEntry(CryptoWorkload.class));
-    command.add(CryptoWorkload.class.getName());
-    command.addAll(args);
-    Process process =
-        new ProcessBuilder(command)
-            .redirectError(err.toFile())
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .start();
-    assertThat(process.waitFor(120, TimeUnit.SECONDS)).isTrue();
-    return new Run(process.exitValue(), Files.readString(err, StandardCharsets.UTF_8));
+  private static ChildJvm.Result runAgent(List<String> jvmArgs, List<String> args)
+      throws Exception {
+    return ChildJvm.run(
+        tmp,
+        jvmArgs,
+        List.of(ChildJvm.classpathEntry(CryptoWorkload.class)),
+        CryptoWorkload.class,
+        args);
   }
 
   private static String agentJar() {
-    String jar = System.getProperty("census.agent.jar");
-    assertThat(jar).as("census.agent.jar system property").isNotBlank();
-    return jar;
-  }
-
-  private static String javaTool(String name) {
-    return Paths.get(System.getProperty("java.home"), "bin", name).toString();
-  }
-
-  static String classpathEntry(Class<?> type) throws Exception {
-    return new File(type.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+    return ChildJvm.agentJar();
   }
 }

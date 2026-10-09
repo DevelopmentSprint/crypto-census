@@ -19,13 +19,14 @@
 
     <properties>
         <!--
-            Unit-test coverage floors, measured on target/classes (73.7% line / 73.8% branch on
-            JDK 21, 74.2% / 75.3% on JDK 25). The agent as it runs in AgentIT's child JVMs has its own
-            gate, jacoco.runtime.minimum.* in the quality profile below. Raise when coverage rises,
-            never lower.
+            Unit-test coverage floors, measured on target/classes for the classes designed to be unit
+            tested: Installer (it instruments the JVM it runs in) and Advices (inlined into JDK
+            methods, never run as their own classes) are excluded from this gate and owned by the
+            runtime gate below (jacoco.runtime.minimum.*), which measures the agent in child JVMs.
+            Measured 91.8% line / 82.6% branch on JDK 25. Raise when coverage rises, never lower.
         -->
-        <jacoco.minimum.line>0.73</jacoco.minimum.line>
-        <jacoco.minimum.branch>0.73</jacoco.minimum.branch>
+        <jacoco.minimum.line>0.90</jacoco.minimum.line>
+        <jacoco.minimum.branch>0.80</jacoco.minimum.branch>
     </properties>
 
     <dependencies>
@@ -46,6 +47,13 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- TomcatIT: embedded HTTPS server in a child JVM with the agent -->
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>${tomcat.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -106,6 +114,31 @@
                 </executions>
             </plugin>
             <plugin>
+                <!-- ApmCoexistenceIT / TomcatIT: the OpenTelemetry Java agent, as a file (never on a class path) -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-apm-agent</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>io.opentelemetry.javaagent</groupId>
+                                    <artifactId>opentelemetry-javaagent</artifactId>
+                                    <version>${opentelemetry-javaagent.version}</version>
+                                    <destFileName>opentelemetry-javaagent.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/it-agents</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
@@ -119,6 +152,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <census.agent.jar>${project.build.directory}/${project.build.finalName}.jar</census.agent.jar>
+                        <otel.agent.jar>${project.build.directory}/it-agents/opentelemetry-javaagent.jar</otel.agent.jar>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -139,7 +173,8 @@
                  AgentIT as a system property, and ChildJvmCoverage puts it on each child command
                  line. The children write target/jacoco-it.exec (deleted before each IT run, since the
                  JaCoCo agent appends). JaCoCo dumps from a shutdown hook that races the census
-                 agent's own CBOM-writing hook, so CryptoWorkload dumps once more after that hook.
+                 agent's own CBOM-writing hook, so the child workloads (CryptoWorkload, TomcatWorkload)
+                 dump once more after that hook. ChildJvm adds the JaCoCo agent to every child.
               2. At verify, src/build/runtime-coverage.xml (JaCoCo's Ant report task; the Maven
                  plugin can only analyze target/classes) analyzes the agent classes *inside the
                  shaded jar*: byte for byte what the children loaded, and every class, executed or
@@ -185,6 +220,18 @@
                                     </includes>
                                     <excludes>
                                         <exclude>com.developmentsprint.cryptocensus.agent.shaded.*</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- unit gate: only classes designed for unit tests (see jacoco.minimum.* above) -->
+                                <id>jacoco-check</id>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>**/Installer.class</exclude>
+                                        <exclude>**/Installer$*.class</exclude>
+                                        <exclude>**/Advices.class</exclude>
+                                        <exclude>**/Advices$*.class</exclude>
                                     </excludes>
                                 </configuration>
                             </execution>

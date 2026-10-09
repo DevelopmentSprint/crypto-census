@@ -69,6 +69,12 @@
         <maven.api.version>3.9.16</maven.api.version>
         <maven.plugin.tools.version>3.15.2</maven.plugin.tools.version>
 
+        <!-- conformance tests (test scope only; see docs/CONFORMANCE.md) -->
+        <tomcat.version>11.0.26</tomcat.version>
+        <opentelemetry-javaagent.version>2.31.1</opentelemetry-javaagent.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
+        <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
+
         <!-- static analysis: see the "quality" profile -->
         <spotless.version>3.10.2</spotless.version>
         <google-java-format.version>1.36.1</google-java-format.version>
@@ -173,6 +179,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
                     <version>${maven.plugin.tools.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.11.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -550,6 +561,20 @@
         </profile>
 
         <!--
+            Conformance tests in real application servers (Open Liberty on IBM Semeru, WildFly), run in
+            containers with Testcontainers:
+              mvn -P app-servers verify
+            Needs Docker; without it the tests are skipped, not failed. CI runs this in its own job.
+            See docs/CONFORMANCE.md.
+        -->
+        <profile>
+            <id>app-servers</id>
+            <modules>
+                <module>census-app-servers</module>
+            </modules>
+        </profile>
+
+        <!--
             Let Error Prone rewrite fixable findings in place, then run spotless:apply:
               mvn -P errorprone-patch test-compile && mvn spotless:apply
             Review the diff before committing.
@@ -675,6 +700,7 @@
                             <waitUntil>validated</waitUntil>
                             <excludeArtifacts>
                                 <artifact>census-demo</artifact>
+                                <artifact>census-app-servers</artifact>
                             </excludeArtifacts>
                         </configuration>
                     </plugin>

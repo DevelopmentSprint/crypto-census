@@ -21,6 +21,9 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public final class CryptoWorkload {
 
+  /** IBM's provider in Semeru (and WebSphere Liberty on Semeru). */
+  static final String OPEN_JCE_PLUS = "OpenJCEPlus";
+
   public static void main(String[] args) throws Exception {
     ChildJvmCoverage.dumpAfterAgentShutdown();
     byte[] data = "transfer 100 EUR".getBytes(StandardCharsets.UTF_8);
@@ -70,6 +73,9 @@ public final class CryptoWorkload {
 
     if (Runtime.version().feature() >= 24) {
       postQuantum(data);
+    }
+    if (java.security.Security.getProvider(OPEN_JCE_PLUS) != null) {
+      openJcePlus();
     }
     if (args.length > 0) {
       loopbackTls(args[0], args[1]);
@@ -216,6 +222,17 @@ public final class CryptoWorkload {
     Cipher tdeaDec = Cipher.getInstance("DESede/CBC/PKCS5Padding");
     tdeaDec.init(Cipher.DECRYPT_MODE, tdea, new javax.crypto.spec.IvParameterSpec(tdeaEnc.getIV()));
     tdeaDec.doFinal(ct);
+  }
+
+  /**
+   * DSA key generation through OpenJCEPlus (Semeru). Its DSAKeyPairGenerator extends
+   * KeyPairGenerator directly and is defined by the application class loader, so its own frame is
+   * on the stack when the agent records the call.
+   */
+  private static void openJcePlus() throws Exception {
+    KeyPairGenerator dsa = KeyPairGenerator.getInstance("DSA", OPEN_JCE_PLUS);
+    dsa.initialize(2048);
+    dsa.generateKeyPair();
   }
 
   /**

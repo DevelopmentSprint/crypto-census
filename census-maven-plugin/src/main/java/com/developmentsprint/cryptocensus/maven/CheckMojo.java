@@ -5,6 +5,7 @@ import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Occurrence;
 import com.developmentsprint.cryptocensus.core.Report;
 import com.developmentsprint.cryptocensus.core.Risk;
+import com.developmentsprint.cryptocensus.core.Targets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
@@ -86,6 +87,16 @@ public class CheckMojo extends AbstractMojo {
   private boolean failOnIncompleteCollection;
 
   /**
+   * Fail when a JDK class the agent always instruments was absent, not transformed, or had none of
+   * the expected methods in some test JVM (for example a newer JDK that renamed {@code
+   * sun.security.ssl.SSLSessionImpl}): that kind of cryptography was then not observed. Off by
+   * default, because an unfamiliar JDK build can legitimately lack a JDK-internal class; the gap is
+   * always reported as a warning.
+   */
+  @Parameter(property = "census.failOnMissingTargets", defaultValue = "false")
+  private boolean failOnMissingTargets;
+
+  /**
    * Algorithms accepted regardless of risk, matched case-insensitively against the asset's
    * canonical algorithm or display name (for example {@code SHA-1} for a legacy checksum you have
    * signed off).
@@ -123,11 +134,14 @@ public class CheckMojo extends AbstractMojo {
     long transformErrors = 0;
     long recordingFailures = 0;
     long drainTimedOut = 0;
+    List<Map<String, Targets.Status>> targets = new ArrayList<>();
     for (Path file : inputs(Path.of(runDir))) {
       try {
         byte[] bytes = Cbom.readBytes(file); // read once ...
         Cbom.Document doc = Cbom.parse(bytes); // ... parse those bytes ...
         doc.validateAgentHealth(); // schema, every counter present and numeric, counters consistent
+        // absent (an older agent) parses as no targets
+        targets.add(Targets.parse(doc.properties().get(Targets.PROPERTY)));
         merged.mergeFrom(doc.inventory());
         transformErrors = add(transformErrors, doc.health("cryptocensus:transformErrors"));
         recordingFailures = add(recordingFailures, doc.health("cryptocensus:recordingFailures"));
@@ -170,6 +184,9 @@ public class CheckMojo extends AbstractMojo {
     meta.put("cryptocensus:transformErrors", String.valueOf(transformErrors));
     meta.put("cryptocensus:recordingFailures", String.valueOf(recordingFailures));
     meta.put("cryptocensus:drainTimedOut", String.valueOf(drainTimedOut));
+    Map<String, Targets.Status> mergedTargets = Targets.merge(targets);
+    meta.put(Targets.PROPERTY, Targets.format(mergedTargets));
+    meta.put(Targets.MISSING_PROPERTY, Targets.format(Targets.missing(mergedTargets)));
     inputs.forEach((name, hash) -> meta.put("cryptocensus:input:" + name, "sha256:" + hash));
     try {
       Cbom.write(
@@ -218,6 +235,11 @@ public class CheckMojo extends AbstractMojo {
         getLog().warn(message);
       }
     }
+
+    TargetReport targetReport = targetReport(targets, failOnMissingTargets);
+    targetReport.info().forEach(getLog()::info);
+    targetReport.warnings().forEach(getLog()::warn);
+    targetReport.failure().ifPresent(problems::add);
 
     List<Inventory.Entry> unknown =
         snapshot.stream()
@@ -303,6 +325,41 @@ public class CheckMojo extends AbstractMojo {
               + " no character outside ASCII case-folds to the letters of none anyway")
   private static boolean isNone(String failOn) {
     return "none".equalsIgnoreCase(failOn.trim());
+  }
+
+  /**
+   * What to say about the fixed instrumentation targets.
+   *
+   * @param info targets nothing exercised
+   * @param warnings gaps, when they only warn
+   * @param failure gaps, when {@code failOnMissingTargets} makes them fail the build
+   */
+  record TargetReport(List<String> info, List<String> warnings, Optional<String> failure) {}
+
+  /**
+   * Judges the per-JVM target statuses: never-loaded targets are informational, gaps (absent, not
+   * transformed, no matching methods) warn, or fail the build when configured to.
+   */
+  static TargetReport targetReport(
+      List<Map<String, Targets.Status>> perJvm, boolean failOnMissingTargets) {
+    List<String> info = new ArrayList<>();
+    List<String> notLoaded = Targets.notLoaded(Targets.merge(perJvm));
+    if (!notLoaded.isEmpty()) {
+      info.add("Not exercised by any test JVM (never loaded): " + String.join(", ", notLoaded));
+    }
+    List<String> gaps = Targets.describeGaps(perJvm);
+    if (gaps.isEmpty()) {
+      return new TargetReport(info, List.of(), Optional.empty());
+    }
+    String message =
+        "Instrumentation gap: some cryptography could not be observed:\n  "
+            + String.join("\n  ", gaps);
+    return failOnMissingTargets
+        ? new TargetReport(
+            info,
+            List.of(),
+            Optional.of(message + "\n(set failOnMissingTargets=false to only warn)"))
+        : new TargetReport(info, List.of(message), Optional.empty());
   }
 
   /** Saturating add: health counters must never wrap to a value that reads as healthy. */

@@ -76,6 +76,12 @@ final class Callsites {
       if (isCryptoLayer(c)) {
         continue;
       }
+      if (isThirdPartyTls(c)) {
+        if (via == null) {
+          via = "jsse";
+        }
+        continue;
+      }
       if (isPlatform(f)) {
         if (via == null) {
           via = subsystem(c);
@@ -103,20 +109,66 @@ final class Callsites {
         || c.startsWith("sun.security.provider.DRBG");
   }
 
+  /**
+   * Packages of JCA providers. Their frames are never the application's call site, whichever class
+   * loader defined them: Semeru's OpenJCEPlus, for one, is defined by the application class loader,
+   * and an HSM vendor's provider sits on the class path like any library.
+   */
+  private static final String[] PROVIDER_PACKAGES = {
+    // OpenJDK
+    "sun.security.jca.",
+    "sun.security.rsa.",
+    "sun.security.ec.",
+    "sun.security.pkcs11.", // SunPKCS11, including NSS-backed FIPS mode (RHEL)
+    "sun.security.mscapi.", // SunMSCAPI (Windows)
+    "com.sun.crypto.provider.",
+    "apple.security.", // Apple provider (macOS KeychainStore)
+    // IBM (Semeru, WebSphere): IBMJCE, IBMJCEFIPS, IBMJCEPlus(FIPS), OpenJCEPlus(FIPS),
+    // IBMPKCS11Impl, IBMJCECCA
+    "com.ibm.crypto.",
+    // Bouncy Castle, including BC-FIPS
+    "org.bouncycastle.jcajce.provider.",
+    "org.bouncycastle.jce.provider.",
+    "org.bouncycastle.pqc.jcajce.provider.",
+    // Other providers common in regulated environments
+    "com.amazon.corretto.crypto.provider.", // ACCP
+    "com.amazonaws.cloudhsm.jce.provider.", // AWS CloudHSM
+    "com.safenetinc.luna.provider.", // Thales Luna HSM
+    "com.ncipher.provider.", // Entrust nShield HSM
+    "com.wolfssl.provider.jce.", // wolfCrypt JCE (FIPS)
+    "org.conscrypt.", // Conscrypt
+  };
+
+  /** TLS implementations that are libraries rather than part of the JDK. */
+  private static final String[] THIRD_PARTY_TLS_PACKAGES = {
+    "org.bouncycastle.jsse.", // BCJSSE
+    "org.bouncycastle.tls.",
+  };
+
   /** The JCA facades and crypto providers: never interesting as a call site. */
   private static boolean isCryptoLayer(String c) {
-    return c.startsWith("java.security.")
+    if (c.startsWith("java.security.")
         || c.startsWith("javax.crypto.")
-        || c.startsWith("sun.security.jca.")
         || (c.startsWith("sun.security.provider.")
-            && !c.startsWith("sun.security.provider.certpath."))
-        || c.startsWith("sun.security.rsa.")
-        || c.startsWith("sun.security.ec.")
-        || c.startsWith("sun.security.pkcs11.")
-        || c.startsWith("com.sun.crypto.provider.")
-        || c.startsWith("org.bouncycastle.jcajce.provider.")
-        || c.startsWith("org.bouncycastle.jce.provider.")
-        || c.startsWith("org.bouncycastle.pqc.jcajce.provider.");
+            && !c.startsWith("sun.security.provider.certpath."))) {
+      return true;
+    }
+    for (String p : PROVIDER_PACKAGES) {
+      if (c.startsWith(p)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** A TLS stack shipped as a library: its handshake crypto is attributed like JSSE's. */
+  private static boolean isThirdPartyTls(String c) {
+    for (String p : THIRD_PARTY_TLS_PACKAGES) {
+      if (c.startsWith(p)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isPlatform(Frame f) {
