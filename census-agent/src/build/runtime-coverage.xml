@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Coverage of census-agent as it really runs: report and gate. Called by maven-antrun-plugin from
+    the quality profile in census-agent/pom.xml, which explains the whole mechanism; the Maven
+    properties it passes are listed there.
+
+    The classes analyzed are the agent's own classes *inside the shaded jar*: byte for byte what the
+    child JVMs loaded, and all of them, loaded or not, so an unexercised class counts as uncovered.
+    Execution data: the child JVMs' (it.exec) plus the unit tests' (unit.exec). JaCoCo matches data
+    to classes by a checksum of the class bytes, so unit-test data counts only for classes the shade
+    plugin left byte-identical and is ignored for the rest; the result never overstates coverage.
+-->
+<project name="census-agent-runtime-coverage" default="check" xmlns:jacoco="antlib:org.jacoco.ant">
+
+    <target name="decide">
+        <condition property="skipped">
+            <or>
+                <istrue value="${skip.tests}"/>
+                <istrue value="${skip.its}"/>
+                <istrue value="${skip.test.compile}"/>
+                <istrue value="${skip.jacoco}"/>
+            </or>
+        </condition>
+    </target>
+
+    <target name="check" depends="decide" unless="skipped">
+        <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" classpathref="maven.plugin.classpath"/>
+        <fail message="No child-JVM coverage data in ${it.exec}: no integration test ran a child JVM with the JaCoCo agent (see ChildJvmCoverage). Use -DskipITs to skip the integration tests and this gate together.">
+            <condition>
+                <not>
+                    <available file="${it.exec}"/>
+                </not>
+            </condition>
+        </fail>
+        <jacoco:report>
+            <executiondata>
+                <file file="${it.exec}"/>
+                <fileset file="${unit.exec}"/>
+            </executiondata>
+            <structure name="census-agent as run (child JVMs + unit tests)">
+                <classfiles>
+                    <zipfileset src="${agent.jar}"
+                                includes="com/developmentsprint/cryptocensus/agent/**/*.class"
+                                excludes="com/developmentsprint/cryptocensus/agent/shaded/**"/>
+                </classfiles>
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="${source.dir}"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="${report.dir}"/>
+            <xml destfile="${report.dir}/jacoco.xml"/>
+            <check failonviolation="true">
+                <rule element="BUNDLE">
+                    <limit counter="LINE" value="COVEREDRATIO" minimum="${minimum.line}"/>
+                    <limit counter="BRANCH" value="COVEREDRATIO" minimum="${minimum.branch}"/>
+                </rule>
+            </check>
+        </jacoco:report>
+    </target>
+</project>
