@@ -5,3 +5,6 @@ target/
 .DS_Store
 cryptocensus-cbom.json
 dependency-reduced-pom.xml
+
+# Claude Code agent worktrees
+.claude/
