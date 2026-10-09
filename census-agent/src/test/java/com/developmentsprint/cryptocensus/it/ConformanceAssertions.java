@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.developmentsprint.cryptocensus.core.Cbom;
 import com.developmentsprint.cryptocensus.core.Inventory;
+import com.developmentsprint.cryptocensus.core.Occurrence;
 import com.developmentsprint.cryptocensus.core.Primitive;
 import com.developmentsprint.cryptocensus.core.Targets;
 import java.util.List;
@@ -43,8 +44,10 @@ final class ConformanceAssertions {
   }
 
   /**
-   * Every occurrence of the given asset is attributed to {@code location} (and {@code symbol},
-   * unless null).
+   * The application's own use of the given asset is attributed to {@code location} (and {@code
+   * symbol}, unless null), and no other code is blamed for it: every occurrence is either that call
+   * site or went through a JDK subsystem ({@code via jsse}, ...). The JDK itself may use the same
+   * algorithm, e.g. SHA3-256 inside ML-KEM in a JDK 27 TLS handshake.
    */
   static void assertAttributedTo(
       Cbom.Document document,
@@ -52,19 +55,26 @@ final class ConformanceAssertions {
       String algorithm,
       String location,
       String symbol) {
-    List<Inventory.Entry> entries = entries(document, primitive, algorithm);
-    assertThat(entries).as(primitive + " " + algorithm + " in " + describe(document)).isNotEmpty();
-    assertThat(entries)
+    List<Occurrence> occurrences =
+        entries(document, primitive, algorithm).stream()
+            .flatMap(e -> e.occurrences().keySet().stream())
+            .toList();
+    assertThat(occurrences)
+        .as(primitive + " " + algorithm + " in " + describe(document))
+        .anySatisfy(
+            o -> {
+              assertThat(o.location()).isEqualTo(location);
+              assertThat(o.via()).isNull();
+              if (symbol != null) {
+                assertThat(o.symbol()).isEqualTo(symbol);
+              }
+            })
         .allSatisfy(
-            e ->
-                assertThat(e.occurrences().keySet())
-                    .allSatisfy(
-                        o -> {
-                          assertThat(o.location()).isEqualTo(location);
-                          if (symbol != null) {
-                            assertThat(o.symbol()).isEqualTo(symbol);
-                          }
-                        }));
+            o -> {
+              if (o.via() == null) {
+                assertThat(o.location()).isEqualTo(location);
+              }
+            });
   }
 
   static String describe(Cbom.Document document) {
