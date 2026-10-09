@@ -56,6 +56,9 @@ public final class Policy {
   private static final int MIN_LEGACY_EC_BITS = 160;
   private static final int MIN_MAC_KEY_BITS = 112;
 
+  /** HMAC keys from 256 bits keep at least 128-bit strength against Grover-style search. */
+  private static final int MIN_QUANTUM_SAFE_MAC_KEY_BITS = 256;
+
   private static final Set<String> RSA = Set.of("RSA", "RSASSA-PSS", "RSA-PSS");
   private static final Set<String> EC = Set.of("EC", "ECDH", "ECDSA", "ECMQV");
   private static final Set<String> FFDH = Set.of("DH", "DIFFIEHELLMAN");
@@ -567,30 +570,29 @@ public final class Policy {
   }
 
   private static Assessment blockCipherStrength(String alg, int keySize, String what) {
-    boolean aes = "AES".equals(alg);
-    if (keySize == 256) {
-      return aes
-          ? Assessment.cnsa2(Risk.QUANTUM_SAFE, what + " with a 256-bit key (CNSA 2.0)", 5)
-          : Assessment.of(
-              Risk.QUANTUM_SAFE,
-              what + " with a 256-bit key; quantum-resistant, not a CNSA 2.0 algorithm",
-              5);
-    }
-    if (keySize == 192) {
-      return Assessment.of(Risk.ACCEPTABLE, what + "-192 is secure; CNSA 2.0 requires AES-256", 3);
-    }
-    if (keySize == 128) {
-      return Assessment.of(Risk.ACCEPTABLE, what + "-128 is secure; CNSA 2.0 requires AES-256", 1);
-    }
-    if (keySize == 0) {
+    // AES, Camellia and ARIA define exactly these three key sizes
+    return switch (keySize) {
+      case 256 ->
+          "AES".equals(alg)
+              ? Assessment.cnsa2(Risk.QUANTUM_SAFE, what + " with a 256-bit key (CNSA 2.0)", 5)
+              : Assessment.of(
+                  Risk.QUANTUM_SAFE,
+                  what + " with a 256-bit key; quantum-resistant, not a CNSA 2.0 algorithm",
+                  5);
+      case 192 ->
+          Assessment.of(Risk.ACCEPTABLE, what + "-192 is secure; CNSA 2.0 requires AES-256", 3);
+      case 128 ->
+          Assessment.of(Risk.ACCEPTABLE, what + "-128 is secure; CNSA 2.0 requires AES-256", 1);
       // these ciphers only accept 128/192/256-bit keys, so an unobserved size cannot hide a weak
       // key
-      return Assessment.of(
-          Risk.ACCEPTABLE,
-          what + ": key size not observed (128 bits or more); CNSA 2.0 requires AES-256");
-    }
-    return Assessment.of(
-        Risk.UNKNOWN, what + " with an unexpected key size of " + keySize + " bits");
+      case 0 ->
+          Assessment.of(
+              Risk.ACCEPTABLE,
+              what + ": key size not observed (128 bits or more); CNSA 2.0 requires AES-256");
+      default ->
+          Assessment.of(
+              Risk.UNKNOWN, what + " with an unexpected key size of " + keySize + " bits");
+    };
   }
 
   private static Assessment keyGeneration(String alg, int keySize) {
@@ -650,7 +652,7 @@ public final class Policy {
               Risk.UNKNOWN,
               alg + ": key length not observed; MAC keys below 112 bits are disallowed");
         }
-        if (keySize >= 256) {
+        if (keySize >= MIN_QUANTUM_SAFE_MAC_KEY_BITS) {
           return Assessment.of(Risk.QUANTUM_SAFE, "Strong MAC with a " + keySize + "-bit key");
         }
         return Assessment.of(Risk.ACCEPTABLE, "Strong hash; key length " + keySize + " bits");

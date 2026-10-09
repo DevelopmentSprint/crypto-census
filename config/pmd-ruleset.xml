@@ -5,44 +5,67 @@
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>
         PMD's curated quickstart set, plus the full security, multithreading and error-prone
-        categories. Every exclusion below says why; prefer fixing code over adding one.
+        categories. Every exclusion below says why, naming the code it covers; prefer fixing code
+        over adding one, and re-check the rationale when that code changes.
     </description>
 
     <rule ref="rulesets/java/quickstart.xml">
         <!-- Also part of quickstart; see the multithreading reference below for the reason. -->
         <exclude name="AvoidUsingVolatile"/>
-        <!-- Targets hot-path SLF4J-style logging; ours is a handful of Maven Log calls per build. -->
+        <!-- Targets hot-path logging. Ours is the Maven plugins' Log: CheckMojo and PrepareAgentMojo
+             call it a handful of times per build, so an isXxxEnabled() guard saves nothing. -->
         <exclude name="GuardLogStatement"/>
     </rule>
     <rule ref="category/java/security.xml"/>
 
     <rule ref="category/java/multithreading.xml">
-        <!-- Flags every HashMap/LinkedHashMap; ours are method-local and never shared across threads.
-             Shared state (Inventory, Recorder) already uses ConcurrentHashMap / atomics. -->
+        <!-- Flags every HashMap/LinkedHashMap/EnumMap. Each remaining one is created inside a method,
+             filled by the thread that created it, then returned, serialized or wrapped unmodifiable
+             (mostly CycloneDX JSON objects in Cbom, Json and CheckMojo); none is a mutable field.
+             Shared mutable state uses ConcurrentHashMap or atomics (Inventory, Recorder, Installer),
+             and static lookup tables are immutable Map.of/Map.ofEntries (Names, Policy, KeyInfo). -->
         <exclude name="UseConcurrentHashMap"/>
-        <!-- J2EE-era rule: the agent must register a JVM shutdown hook, which is a Thread. -->
+        <!-- J2EE-era rule: the agent must register a JVM shutdown hook (Installer), which is a
+             Thread. -->
         <exclude name="DoNotUseThreads"/>
-        <!-- volatile is the correct publication mechanism for our flags (see Recorder's admission protocol). -->
+        <!-- Recorder's three volatile fields are deliberate: the enabled flag is half of the
+             shutdown admission protocol (see Recorder.enter), the inventory reference is replaced by
+             configure() (Installer calls it before enable()), and the test hook is read on that same path.
+             Locks there would sit inside every instrumented JCA call. -->
         <exclude name="AvoidUsingVolatile"/>
-        <!-- Style preference; a synchronized static method is the clearest one-time-init guard here. -->
+        <!-- CensusAgent.start is the only synchronized method: a one-time-init guard against a
+             repeated -javaagent / attach, where method-level locking is the clearest form. -->
         <exclude name="AvoidSynchronizedAtMethodLevel"/>
     </rule>
 
     <rule ref="category/java/errorprone.xml">
-        <!-- CycloneDX field names ("name", "type", "components") read better inline than as constants. -->
+        <!-- Hits are CycloneDX field names in Cbom ("name", "type", "components", ...) and JCA
+             algorithm names in Policy ("RSA", "DSA", "AES"); each reads better inline than as a
+             constant that only restates its value. -->
         <exclude name="AvoidDuplicateLiterals"/>
-        <!-- Policy thresholds are named constants already; remaining literals are parser indices. -->
+        <!-- Numeric policy thresholds are named constants (Policy's MIN_*_BITS) or switch cases, and
+             PMD already ignores 0 and -1. The remaining hits are JCA algorithm, mode and padding
+             names compared in Policy, Cbom and KeyInfo ("RSA", "ECB", "NOPADDING", ...), option
+             keywords ("true", "false"), CycloneDX property keys and a key=value arity check (2) in
+             Cbom's parser, JSON syntax characters and the 0x20 control-character bound in Json, the
+             '%' escape marker in Escapes, Recorder's outermost-call depth (1) and the
+             javax.crypto.KEM class name. Constants would only restate those values. -->
         <exclude name="AvoidLiteralsInIfCondition"/>
-        <!-- Parsers reset state to null deliberately (e.g. "no subsystem seen yet"). -->
+        <!-- null means "absent" in the data model: Occurrence's compact constructor normalizes blank
+             symbol/via to null, and Policy uses a null partial verdict for "no objection" (worst()
+             ignores it). -->
         <exclude name="NullAssignment"/>
-        <!-- Records and enums expose a field through an accessor of the same name by design. -->
+        <!-- Record-style accessors: a private field read through a method of the same name
+             (Risk.severity(), Inventory.overflowedSites(), Recorder.inventory() and failures()). -->
         <exclude name="AvoidFieldNameMatchingMethodName"/>
-        <exclude name="AvoidFieldNameMatchingTypeName"/>
-        <!-- J2EE-era rule: we inspect a class's *defining* loader on purpose; the context loader would be wrong. -->
+        <!-- J2EE-era rule: Callsites and KeyInfo inspect a class's *defining* loader on purpose (is it
+             a JDK class?); the thread context loader would answer a different question. -->
         <exclude name="UseProperClassLoader"/>
     </rule>
 
-    <!-- Allow the idioms `while ((n = in.read(buf)) > 0)` and `++count > LIMIT`, nothing else. -->
+    <!-- Allow the read loop `while ((n = in.read(buffer)) > 0)` (Cbom's size-capped file read) and
+         increments/decrements inside an operand (`++values > MAX_VALUES`, `charAt(pos++)` in Json's
+         parser, `return ++depth[0]` in Recorder), nothing else. -->
     <rule ref="category/java/errorprone.xml/AssignmentInOperand">
         <properties>
             <property name="allowWhile" value="true"/>

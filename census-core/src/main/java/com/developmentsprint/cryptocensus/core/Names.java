@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.core;
 
-import java.util.HashMap;
+import static java.util.Map.entry;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -25,80 +26,74 @@ public final class Names {
    */
   public static final int MAX_LENGTH = 256;
 
-  private static final Map<String, String> OIDS = new HashMap<>();
-  private static final Map<String, String> DIGESTS = new HashMap<>();
+  /** Algorithm OIDs, as accepted by the JCA (with or without an {@code OID.} prefix). */
+  private static final Map<String, String> OIDS =
+      Map.ofEntries(
+          // digests (RFC 3279, RFC 5754, NIST CSOR)
+          entry("1.2.840.113549.2.2", "MD2"),
+          entry("1.2.840.113549.2.5", "MD5"),
+          entry("1.3.14.3.2.26", "SHA-1"),
+          entry("2.16.840.1.101.3.4.2.4", "SHA-224"),
+          entry("2.16.840.1.101.3.4.2.1", "SHA-256"),
+          entry("2.16.840.1.101.3.4.2.2", "SHA-384"),
+          entry("2.16.840.1.101.3.4.2.3", "SHA-512"),
+          entry("2.16.840.1.101.3.4.2.5", "SHA-512/224"),
+          entry("2.16.840.1.101.3.4.2.6", "SHA-512/256"),
+          entry("2.16.840.1.101.3.4.2.7", "SHA3-224"),
+          entry("2.16.840.1.101.3.4.2.8", "SHA3-256"),
+          entry("2.16.840.1.101.3.4.2.9", "SHA3-384"),
+          entry("2.16.840.1.101.3.4.2.10", "SHA3-512"),
+          // HMAC (RFC 4231, RFC 8018)
+          entry("1.2.840.113549.2.7", "HmacSHA1"),
+          entry("1.2.840.113549.2.8", "HmacSHA224"),
+          entry("1.2.840.113549.2.9", "HmacSHA256"),
+          entry("1.2.840.113549.2.10", "HmacSHA384"),
+          entry("1.2.840.113549.2.11", "HmacSHA512"),
+          // signatures (RFC 8017, RFC 5758)
+          entry("1.2.840.113549.1.1.4", "MD5withRSA"),
+          entry("1.2.840.113549.1.1.5", "SHA1withRSA"),
+          entry("1.2.840.113549.1.1.14", "SHA224withRSA"),
+          entry("1.2.840.113549.1.1.11", "SHA256withRSA"),
+          entry("1.2.840.113549.1.1.12", "SHA384withRSA"),
+          entry("1.2.840.113549.1.1.13", "SHA512withRSA"),
+          entry("1.2.840.113549.1.1.10", "RSASSA-PSS"),
+          entry("1.2.840.10045.4.1", "SHA1withECDSA"),
+          entry("1.2.840.10045.4.3.1", "SHA224withECDSA"),
+          entry("1.2.840.10045.4.3.2", "SHA256withECDSA"),
+          entry("1.2.840.10045.4.3.3", "SHA384withECDSA"),
+          entry("1.2.840.10045.4.3.4", "SHA512withECDSA"),
+          entry("1.2.840.10040.4.3", "SHA1withDSA"),
+          entry("1.3.101.112", "Ed25519"),
+          entry("1.3.101.113", "Ed448"),
+          // key agreement / key types
+          entry("1.3.101.110", "X25519"),
+          entry("1.3.101.111", "X448"),
+          entry("1.2.840.113549.1.1.1", "RSA"),
+          entry("1.2.840.10045.2.1", "EC"),
+          // FIPS 203 / 204 (NIST CSOR)
+          entry("2.16.840.1.101.3.4.4.1", "ML-KEM-512"),
+          entry("2.16.840.1.101.3.4.4.2", "ML-KEM-768"),
+          entry("2.16.840.1.101.3.4.4.3", "ML-KEM-1024"),
+          entry("2.16.840.1.101.3.4.3.17", "ML-DSA-44"),
+          entry("2.16.840.1.101.3.4.3.18", "ML-DSA-65"),
+          entry("2.16.840.1.101.3.4.3.19", "ML-DSA-87"));
+
+  /** Digest aliases the JCA accepts, keyed by their upper-case spelling. */
+  private static final Map<String, String> DIGESTS =
+      Map.ofEntries(
+          entry("SHA", "SHA-1"),
+          entry("SHA1", "SHA-1"),
+          entry("SHA224", "SHA-224"),
+          entry("SHA256", "SHA-256"),
+          entry("SHA384", "SHA-384"),
+          entry("SHA512", "SHA-512"),
+          entry("SHA512/224", "SHA-512/224"),
+          entry("SHA512/256", "SHA-512/256"));
+
   private static final Pattern SIGNATURE =
       Pattern.compile("(.+?)WITH(.+)", Pattern.CASE_INSENSITIVE);
 
-  static {
-    // digests (RFC 3279, RFC 5754, NIST CSOR)
-    oid("1.2.840.113549.2.2", "MD2");
-    oid("1.2.840.113549.2.5", "MD5");
-    oid("1.3.14.3.2.26", "SHA-1");
-    oid("2.16.840.1.101.3.4.2.4", "SHA-224");
-    oid("2.16.840.1.101.3.4.2.1", "SHA-256");
-    oid("2.16.840.1.101.3.4.2.2", "SHA-384");
-    oid("2.16.840.1.101.3.4.2.3", "SHA-512");
-    oid("2.16.840.1.101.3.4.2.5", "SHA-512/224");
-    oid("2.16.840.1.101.3.4.2.6", "SHA-512/256");
-    oid("2.16.840.1.101.3.4.2.7", "SHA3-224");
-    oid("2.16.840.1.101.3.4.2.8", "SHA3-256");
-    oid("2.16.840.1.101.3.4.2.9", "SHA3-384");
-    oid("2.16.840.1.101.3.4.2.10", "SHA3-512");
-    // HMAC (RFC 4231, RFC 8018)
-    oid("1.2.840.113549.2.7", "HmacSHA1");
-    oid("1.2.840.113549.2.8", "HmacSHA224");
-    oid("1.2.840.113549.2.9", "HmacSHA256");
-    oid("1.2.840.113549.2.10", "HmacSHA384");
-    oid("1.2.840.113549.2.11", "HmacSHA512");
-    // signatures (RFC 8017, RFC 5758)
-    oid("1.2.840.113549.1.1.4", "MD5withRSA");
-    oid("1.2.840.113549.1.1.5", "SHA1withRSA");
-    oid("1.2.840.113549.1.1.14", "SHA224withRSA");
-    oid("1.2.840.113549.1.1.11", "SHA256withRSA");
-    oid("1.2.840.113549.1.1.12", "SHA384withRSA");
-    oid("1.2.840.113549.1.1.13", "SHA512withRSA");
-    oid("1.2.840.113549.1.1.10", "RSASSA-PSS");
-    oid("1.2.840.10045.4.1", "SHA1withECDSA");
-    oid("1.2.840.10045.4.3.1", "SHA224withECDSA");
-    oid("1.2.840.10045.4.3.2", "SHA256withECDSA");
-    oid("1.2.840.10045.4.3.3", "SHA384withECDSA");
-    oid("1.2.840.10045.4.3.4", "SHA512withECDSA");
-    oid("1.2.840.10040.4.3", "SHA1withDSA");
-    oid("1.3.101.112", "Ed25519");
-    oid("1.3.101.113", "Ed448");
-    // key agreement / key types
-    oid("1.3.101.110", "X25519");
-    oid("1.3.101.111", "X448");
-    oid("1.2.840.113549.1.1.1", "RSA");
-    oid("1.2.840.10045.2.1", "EC");
-    // FIPS 203 / 204 (NIST CSOR)
-    oid("2.16.840.1.101.3.4.4.1", "ML-KEM-512");
-    oid("2.16.840.1.101.3.4.4.2", "ML-KEM-768");
-    oid("2.16.840.1.101.3.4.4.3", "ML-KEM-1024");
-    oid("2.16.840.1.101.3.4.3.17", "ML-DSA-44");
-    oid("2.16.840.1.101.3.4.3.18", "ML-DSA-65");
-    oid("2.16.840.1.101.3.4.3.19", "ML-DSA-87");
-
-    digest("SHA", "SHA-1");
-    digest("SHA1", "SHA-1");
-    digest("SHA224", "SHA-224");
-    digest("SHA256", "SHA-256");
-    digest("SHA384", "SHA-384");
-    digest("SHA512", "SHA-512");
-    digest("SHA512/224", "SHA-512/224");
-    digest("SHA512/256", "SHA-512/256");
-  }
-
   private Names() {}
-
-  private static void oid(String oid, String name) {
-    OIDS.put(oid, name);
-  }
-
-  private static void digest(String alias, String name) {
-    DIGESTS.put(alias, name);
-  }
 
   /**
    * Canonical name for an algorithm reached through {@code primitive}: OIDs resolved, whitespace

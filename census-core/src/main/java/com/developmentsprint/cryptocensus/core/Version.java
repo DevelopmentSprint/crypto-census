@@ -10,7 +10,7 @@ import java.util.Properties;
  */
 public final class Version {
 
-  private static final String VERSION = load();
+  private static final String CURRENT = load();
 
   private Version() {}
 
@@ -20,7 +20,7 @@ public final class Version {
    * @return e.g. {@code 0.1.0}, or {@code unknown}
    */
   public static String get() {
-    return VERSION;
+    return CURRENT;
   }
 
   private static String load() {
