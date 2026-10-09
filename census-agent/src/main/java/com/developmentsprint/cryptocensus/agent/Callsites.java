@@ -1,7 +1,6 @@
 package com.developmentsprint.cryptocensus.agent;
 
 import com.developmentsprint.cryptocensus.core.Occurrence;
-
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -18,115 +17,143 @@ import java.util.stream.Stream;
  */
 final class Callsites {
 
-    private static final StackWalker WALKER = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
-    private static final ClassLoader PLATFORM = ClassLoader.getPlatformClassLoader();
+  private static final StackWalker WALKER =
+      StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+  private static final ClassLoader PLATFORM = ClassLoader.getPlatformClassLoader();
 
-    private Callsites() {
+  private Callsites() {}
+
+  /** One stack frame. {@code type} is null when only the name is known (tests). */
+  static final class Frame {
+    final String className;
+    final String methodName;
+    final int line;
+    final Class<?> type;
+
+    Frame(String className, String methodName, int line) {
+      this(className, methodName, line, null);
     }
 
-    /** One stack frame. {@code type} is null when only the name is known (tests). */
-    static final class Frame {
-        final String className;
-        final String methodName;
-        final int line;
-        final Class<?> type;
+    Frame(String className, String methodName, int line, Class<?> type) {
+      this.className = className;
+      this.methodName = methodName;
+      this.line = line;
+      this.type = type;
+    }
+  }
 
-        Frame(String className, String methodName, int line) {
-            this(className, methodName, line, null);
+  static Occurrence current() {
+    return WALKER.walk(
+        frames ->
+            attribute(
+                frames
+                    .map(
+                        f ->
+                            new Frame(
+                                f.getClassName(),
+                                f.getMethodName(),
+                                f.getLineNumber(),
+                                f.getDeclaringClass()))
+                    .iterator()));
+  }
+
+  static Occurrence attribute(Stream<Frame> frames) {
+    return attribute(frames.iterator());
+  }
+
+  static Occurrence attribute(Iterator<Frame> frames) {
+    String via = null;
+    Frame application = null;
+    while (application == null && frames.hasNext()) {
+      Frame f = frames.next();
+      String c = f.className;
+      if (isAgent(c)) {
+        continue;
+      }
+      if (via == null && isSecureRandom(c)) {
+        via = "secure-random";
+      }
+      if (isCryptoLayer(c)) {
+        continue;
+      }
+      if (isPlatform(f)) {
+        if (via == null) {
+          via = subsystem(c);
         }
-
-        Frame(String className, String methodName, int line, Class<?> type) {
-            this.className = className;
-            this.methodName = methodName;
-            this.line = line;
-            this.type = type;
-        }
+      } else {
+        application = f;
+      }
     }
+    return application == null
+        ? new Occurrence(Occurrence.JDK_LOCATION, null, -1, via)
+        : new Occurrence(application.className, application.methodName, application.line, via);
+  }
 
-    static Occurrence current() {
-        return WALKER.walk(frames -> attribute(
-                frames.map(f -> new Frame(f.getClassName(), f.getMethodName(), f.getLineNumber(), f.getDeclaringClass()))
-                        .iterator()));
-    }
+  private static boolean isAgent(String c) {
+    return c.startsWith("com.developmentsprint.cryptocensus.agent.");
+  }
 
-    static Occurrence attribute(Stream<Frame> frames) {
-        return attribute(frames.iterator());
-    }
+  private static boolean isSecureRandom(String c) {
+    return "java.security.SecureRandom".equals(c)
+        || c.startsWith("sun.security.provider.SecureRandom")
+        || c.startsWith("sun.security.provider.NativePRNG")
+        || c.startsWith("sun.security.provider.SeedGenerator")
+        || c.startsWith("sun.security.provider.AbstractDrbg")
+        || c.startsWith("sun.security.provider.HashDrbg")
+        || c.startsWith("sun.security.provider.DRBG");
+  }
 
-    static Occurrence attribute(Iterator<Frame> frames) {
-        String via = null;
-        while (frames.hasNext()) {
-            Frame f = frames.next();
-            String c = f.className;
-            if (isAgent(c)) {
-                continue;
-            }
-            if (via == null && isSecureRandom(c)) {
-                via = "secure-random";
-            }
-            if (isCryptoLayer(c)) {
-                continue;
-            }
-            if (isPlatform(f)) {
-                if (via == null) via = subsystem(c);
-                continue;
-            }
-            return new Occurrence(c, f.methodName, f.line, via);
-        }
-        return new Occurrence(Occurrence.JDK_LOCATION, null, -1, via);
-    }
+  /** The JCA facades and crypto providers: never interesting as a call site. */
+  private static boolean isCryptoLayer(String c) {
+    return c.startsWith("java.security.")
+        || c.startsWith("javax.crypto.")
+        || c.startsWith("sun.security.jca.")
+        || (c.startsWith("sun.security.provider.")
+            && !c.startsWith("sun.security.provider.certpath."))
+        || c.startsWith("sun.security.rsa.")
+        || c.startsWith("sun.security.ec.")
+        || c.startsWith("sun.security.pkcs11.")
+        || c.startsWith("com.sun.crypto.provider.")
+        || c.startsWith("org.bouncycastle.jcajce.provider.")
+        || c.startsWith("org.bouncycastle.jce.provider.")
+        || c.startsWith("org.bouncycastle.pqc.jcajce.provider.");
+  }
 
-    private static boolean isAgent(String c) {
-        return c.startsWith("com.developmentsprint.cryptocensus.agent.");
+  private static boolean isPlatform(Frame f) {
+    if (f.type != null) {
+      ClassLoader loader = f.type.getClassLoader();
+      return loader == null || loader.equals(PLATFORM);
     }
+    String c = f.className;
+    return c.startsWith("java.")
+        || c.startsWith("javax.")
+        || c.startsWith("jdk.")
+        || c.startsWith("sun.")
+        || c.startsWith("com.sun.");
+  }
 
-    private static boolean isSecureRandom(String c) {
-        return c.equals("java.security.SecureRandom")
-                || c.startsWith("sun.security.provider.SecureRandom")
-                || c.startsWith("sun.security.provider.NativePRNG")
-                || c.startsWith("sun.security.provider.SeedGenerator")
-                || c.startsWith("sun.security.provider.AbstractDrbg")
-                || c.startsWith("sun.security.provider.HashDrbg")
-                || c.startsWith("sun.security.provider.DRBG");
+  private static String subsystem(String c) {
+    if (c.startsWith("sun.security.ssl.") || c.startsWith("javax.net.ssl.")) {
+      return "jsse";
     }
-
-    /** The JCA facades and crypto providers: never interesting as a call site. */
-    private static boolean isCryptoLayer(String c) {
-        return c.startsWith("java.security.")
-                || c.startsWith("javax.crypto.")
-                || c.startsWith("sun.security.jca.")
-                || (c.startsWith("sun.security.provider.") && !c.startsWith("sun.security.provider.certpath."))
-                || c.startsWith("sun.security.rsa.")
-                || c.startsWith("sun.security.ec.")
-                || c.startsWith("sun.security.pkcs11.")
-                || c.startsWith("com.sun.crypto.provider.")
-                || c.startsWith("org.bouncycastle.jcajce.provider.")
-                || c.startsWith("org.bouncycastle.jce.provider.")
-                || c.startsWith("org.bouncycastle.pqc.jcajce.provider.");
+    if (c.startsWith("java.util.jar.")
+        || c.startsWith("sun.security.util.SignatureFileVerifier")
+        || c.startsWith("sun.security.util.ManifestEntryVerifier")
+        || c.startsWith("sun.security.pkcs.")) {
+      return "jar-verification";
     }
-
-    private static boolean isPlatform(Frame f) {
-        if (f.type != null) {
-            ClassLoader loader = f.type.getClassLoader();
-            return loader == null || loader == PLATFORM;
-        }
-        String c = f.className;
-        return c.startsWith("java.") || c.startsWith("javax.") || c.startsWith("jdk.")
-                || c.startsWith("sun.") || c.startsWith("com.sun.");
+    if (c.startsWith("sun.security.provider.certpath.")
+        || c.startsWith("sun.security.validator.")
+        || c.startsWith("sun.security.x509.")) {
+      return "pki-validation";
     }
-
-    private static String subsystem(String c) {
-        if (c.startsWith("sun.security.ssl.") || c.startsWith("javax.net.ssl.")) return "jsse";
-        if (c.startsWith("java.util.jar.")
-                || c.startsWith("sun.security.util.SignatureFileVerifier")
-                || c.startsWith("sun.security.util.ManifestEntryVerifier")
-                || c.startsWith("sun.security.pkcs.")) return "jar-verification";
-        if (c.startsWith("sun.security.provider.certpath.")
-                || c.startsWith("sun.security.validator.")
-                || c.startsWith("sun.security.x509.")) return "pki-validation";
-        if (c.startsWith("java.util.Random")) return "secure-random";
-        // reflection, lambdas and thread plumbing say nothing about which subsystem was involved
-        if (c.startsWith("java.lang.") || c.startsWith("jdk.internal.reflect.")) return null;
-        return c;
+    if (c.startsWith("java.util.Random")) {
+      return "secure-random";
     }
+    // reflection, lambdas and thread plumbing say nothing about which subsystem was involved
+    if (c.startsWith("java.lang.") || c.startsWith("jdk.internal.reflect.")) {
+      return null;
+    }
+    return c;
+  }
 }

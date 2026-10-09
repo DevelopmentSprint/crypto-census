@@ -23,6 +23,12 @@
         </resources>
     </build>
 
+    <properties>
+        <!-- coverage floors (unit tests run in-process); raise when coverage rises, never lower -->
+        <jacoco.minimum.line>0.85</jacoco.minimum.line>
+        <jacoco.minimum.branch>0.70</jacoco.minimum.branch>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -18,6 +18,9 @@
     </description>
 
     <properties>
+        <!-- coverage floors (no branches); raise when coverage rises, never lower -->
+        <jacoco.minimum.line>0.90</jacoco.minimum.line>
+        <jacoco.minimum.branch>0.00</jacoco.minimum.branch>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.install.skip>true</maven.install.skip>
         <!-- A property rather than <configuration>, so -Dcensus.failOn=quantum-vulnerable can raise it live -->

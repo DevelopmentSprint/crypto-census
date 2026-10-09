@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Crypto Census pre-commit hook: runs the full static analysis suite before every commit.
+# Installed automatically by the build (git config core.hooksPath .githooks).
+# Bypass only in an emergency: git commit --no-verify  (CI runs the same checks anyway).
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Only Java sources, POMs and analysis configuration can change the analysis result.
+if ! git diff --cached --name-only --diff-filter=ACMR | grep -qE '(\.java|pom\.xml|^config/|^\.mvn/)'; then
+  exit 0
+fi
+
+# Error Prone and google-java-format need JDK 21+ to run; refuse rather than silently skip checks.
+java_major=$(java -XshowSettings:properties -version 2>&1 | awk -F'= ' '/java.specification.version/ {print $2}' | cut -d. -f1)
+if [ -z "${java_major}" ] || [ "${java_major}" -lt 21 ]; then
+  echo "pre-commit: static analysis needs JDK 21+ (found: ${java_major:-unknown}). Set JAVA_HOME to a newer JDK." >&2
+  exit 1
+fi
+
+echo "pre-commit: running static analysis (Spotless, Checkstyle, Error Prone, javac -Werror, PMD, CPD, SpotBugs, Enforcer)..."
+log=$(mktemp "${TMPDIR:-/tmp}/census-precommit.XXXXXX")
+trap 'rm -f "$log"' EXIT
+
+if ! ./mvnw -B -q -P quality verify -DskipTests -Dinvoker.skip -Djacoco.skip > "$log" 2>&1; then
+  grep -E '^\[(ERROR|WARNING)\]' "$log" | grep -vE 'Help 1|re-run|Re-run|full stack|http|^\[ERROR\] $' | head -60 >&2
+  if grep -q 'spotless' "$log"; then
+    echo >&2
+    echo "pre-commit: formatting differs from google-java-format. Fix with:  ./mvnw spotless:apply" >&2
+  fi
+  echo >&2
+  echo "pre-commit: static analysis failed; commit aborted. Full log above (first 60 findings)." >&2
+  exit 1
+fi
+echo "pre-commit: all checks passed."

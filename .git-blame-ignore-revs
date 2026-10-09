@@ -1,0 +1,3 @@
+# Mechanical reformatting with google-java-format; skip in git blame:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+850ea6cc2a35112dd8bc176a0318de5fd9ce6019

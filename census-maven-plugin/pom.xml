@@ -17,6 +17,11 @@
         prepare-agent attaches the agent to test JVMs; check merges their CBOMs and enforces a risk threshold.
     </description>
 
+    <properties>
+        <!-- Set by JaCoCo's prepare-agent-integration in the quality profile; empty otherwise. -->
+        <invoker.mavenOpts/>
+    </properties>
+
     <prerequisites>
         <maven>3.6.3</maven>
     </prerequisites>
@@ -87,6 +92,8 @@
                         <goal>verify</goal>
                     </goals>
                     <showErrors>true</showErrors>
+                    <!-- carries the JaCoCo agent into the Invoker builds when the quality profile is on -->
+                    <mavenOpts>${invoker.mavenOpts}</mavenOpts>
                 </configuration>
                 <executions>
                     <execution>
@@ -101,4 +108,74 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            Coverage that counts the Invoker builds: the plugin runs inside separate Maven processes there,
+            so instrument those (MAVEN_OPTS) and merge with the unit-test data before checking.
+        -->
+        <profile>
+            <id>quality</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <properties>
+                <jacoco.minimum.line>0.80</jacoco.minimum.line>
+                <jacoco.minimum.branch>0.60</jacoco.minimum.branch>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jacoco-prepare-invoker</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <propertyName>invoker.mavenOpts</propertyName>
+                                    <includes>
+                                        <include>com.developmentsprint.cryptocensus.*</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>jacoco-merge</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>merge</goal>
+                                </goals>
+                                <configuration>
+                                    <fileSets>
+                                        <fileSet>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>jacoco.exec</include>
+                                                <include>jacoco-it.exec</include>
+                                            </includes>
+                                        </fileSet>
+                                    </fileSets>
+                                    <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report</id>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>jacoco-check</id>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

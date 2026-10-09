@@ -286,6 +286,33 @@ Modules:
   composition, odd paths, missing data and failure modes.
 - `census-demo`: a toy payments service that runs the plugin on itself.
 
+## Code quality
+
+Every build on JDK 21+ runs a strict static analysis suite; every tool fails the build on any finding.
+
+| Stage | Tool | What it enforces |
+|---|---|---|
+| validate | [Spotless](https://github.com/diffplug/spotless) + [google-java-format](https://github.com/google/google-java-format) | formatting (`./mvnw spotless:apply` fixes it) |
+| validate | [Checkstyle](https://checkstyle.org) with Google's `google_checks.xml` | Google Java Style |
+| compile | [Error Prone](https://errorprone.info) + `javac -Xlint:all -Werror` | bug patterns at compile time |
+| verify | [PMD](https://pmd.github.io) + CPD | error-prone, security and multithreading rules; copy-paste |
+| verify | [SpotBugs](https://spotbugs.github.io) + [FindSecBugs](https://find-sec-bugs.github.io) | bytecode bug and security patterns, effort max, threshold low |
+| verify | [JaCoCo](https://www.jacoco.org) | per-module coverage floors (the plugin's include the Invoker builds) |
+| always | Maven Enforcer | pinned plugin versions, dependency convergence, no duplicate classes, Java 17 bytecode |
+| CI | [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/) | known CVEs, fails on CVSS >= 7 (weekly and on `main`/`develop`) |
+| GitHub | Dependabot | weekly Maven and GitHub Actions updates |
+
+Exclusions live in [`config/`](config) and each one states why. The Maven Wrapper pins Maven 3.9.12
+and verifies its SHA-256.
+
+**Git hooks** are installed by the first build (`core.hooksPath .githooks`):
+
+- `pre-commit` runs the whole static analysis suite (no tests) and blocks the commit on any finding;
+- `pre-push` runs the full build with tests and coverage.
+
+Both need JDK 21+. `git commit --no-verify` exists for emergencies; CI runs the same checks regardless.
+To let Error Prone fix what it can: `./mvnw -P errorprone-patch test-compile && ./mvnw spotless:apply`.
+
 ## Contributing
 
 The project follows [gitflow](https://nvie.com/posts/a-successful-git-branching-model/): `main` only

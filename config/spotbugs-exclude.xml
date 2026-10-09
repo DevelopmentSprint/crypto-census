@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SpotBugs + FindSecBugs exclusions. Each one must be narrow and explain why it is a false positive. -->
+<FindBugsFilter>
+    <!--
+        IMPROPER_UNICODE: case mapping here only classifies public algorithm names (already resolved by
+        the JCA provider, which maps case the same way). Nothing compares secrets or identities.
+    -->
+    <Match>
+        <Or>
+            <Package name="com.developmentsprint.cryptocensus.core"/>
+            <Package name="com.developmentsprint.cryptocensus.agent"/>
+            <Package name="com.developmentsprint.cryptocensus.maven"/>
+        </Or>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+    <!--
+        UNSAFE_HASH_EQUALS: the heuristic sees digest names ("SHA-256", "MD5") and assumes hash values.
+        These classes compare public algorithm names, never secret digests, so timing is irrelevant.
+    -->
+    <Match>
+        <Or>
+            <Class name="com.developmentsprint.cryptocensus.core.Policy"/>
+            <Class name="com.developmentsprint.cryptocensus.core.CryptoAsset"/>
+        </Or>
+        <Bug pattern="UNSAFE_HASH_EQUALS"/>
+    </Match>
+    <!--
+        PATH_TRAVERSAL_IN: the agent writes its CBOM where the operator's own -javaagent options say,
+        and locates its own jar from its code source. No untrusted party chooses these paths.
+    -->
+    <Match>
+        <Or>
+            <Class name="com.developmentsprint.cryptocensus.agent.AgentConfig"/>
+            <Class name="com.developmentsprint.cryptocensus.agent.CensusAgent"/>
+        </Or>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <!--
+        PATH_TRAVERSAL_IN: the Maven plugin reads and writes paths from the project's own POM
+        configuration (build directory, report directories); the build owner chooses them.
+    -->
+    <Match>
+        <Package name="com.developmentsprint.cryptocensus.maven"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <!-- HARD_CODE_PASSWORD: KeyInfo switches on curve names ("X25519", "Ed448"); there are no passwords. -->
+    <Match>
+        <Class name="com.developmentsprint.cryptocensus.agent.KeyInfo"/>
+        <Bug pattern="HARD_CODE_PASSWORD"/>
+    </Match>
+    <!-- UWF_UNWRITTEN_FIELD: afterAdmissionHook is a test seam, written only by RecorderTest. -->
+    <Match>
+        <Class name="com.developmentsprint.cryptocensus.agent.Recorder"/>
+        <Field name="afterAdmissionHook"/>
+        <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+    </Match>
+</FindBugsFilter>
