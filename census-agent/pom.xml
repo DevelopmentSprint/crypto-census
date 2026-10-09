@@ -43,6 +43,13 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <!-- TomcatIT: embedded HTTPS server in a child JVM with the agent -->
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>${tomcat.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -101,6 +108,31 @@
                 </executions>
             </plugin>
             <plugin>
+                <!-- ApmCoexistenceIT / TomcatIT: the OpenTelemetry Java agent, as a file (never on a class path) -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-apm-agent</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>io.opentelemetry.javaagent</groupId>
+                                    <artifactId>opentelemetry-javaagent</artifactId>
+                                    <version>${opentelemetry-javaagent.version}</version>
+                                    <destFileName>opentelemetry-javaagent.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/it-agents</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
@@ -114,6 +146,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <census.agent.jar>${project.build.directory}/${project.build.finalName}.jar</census.agent.jar>
+                        <otel.agent.jar>${project.build.directory}/it-agents/opentelemetry-javaagent.jar</otel.agent.jar>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

@@ -9,17 +9,12 @@ import com.developmentsprint.cryptocensus.core.Operation;
 import com.developmentsprint.cryptocensus.core.Primitive;
 import com.developmentsprint.cryptocensus.core.Risk;
 import com.developmentsprint.cryptocensus.core.Targets;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.Security;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
@@ -44,42 +39,15 @@ class AgentIT {
 
   @BeforeAll
   static void runWorkload() throws Exception {
-    Path keystore = tmp.resolve("tls.p12");
-    Process keytool =
-        new ProcessBuilder(
-                javaTool("keytool"),
-                "-genkeypair",
-                "-alias",
-                "server",
-                "-keyalg",
-                "EC",
-                "-groupname",
-                "secp256r1",
-                "-dname",
-                "CN=localhost",
-                "-ext",
-                "SAN=dns:localhost",
-                "-validity",
-                "1",
-                "-storetype",
-                "PKCS12",
-                "-keystore",
-                keystore.toString(),
-                "-storepass",
-                "changeit",
-                "-keypass",
-                "changeit")
-            .redirectErrorStream(true)
-            .start();
-    assertThat(keytool.waitFor(60, TimeUnit.SECONDS) && keytool.exitValue() == 0)
-        .as(new String(keytool.getInputStream().readAllBytes(), StandardCharsets.UTF_8))
-        .isTrue();
+    Path keystore = ChildJvm.keystore(tmp);
 
     Path cbom = tmp.resolve("cbom.json");
-    Run run =
-        runAgent("output=" + cbom + ",app=agent-it", List.of(keystore.toString(), "changeit"));
-    stderr = run.stderr;
-    exitCode = run.exitCode;
+    ChildJvm.Result run =
+        runAgent(
+            "output=" + cbom + ",app=agent-it",
+            List.of(keystore.toString(), ChildJvm.KEYSTORE_PASSWORD));
+    stderr = run.stderr();
+    exitCode = run.exitCode();
     assertThat(exitCode).as(stderr).isZero();
     assertThat(cbom).as(stderr).exists();
     document = Cbom.read(cbom);
@@ -128,8 +96,8 @@ class AgentIT {
   void unusedTargetsAreNotLoadedRatherThanMissing() throws Exception {
     // no TLS in this run: the session class is never loaded, which is not a gap
     Path cbom = tmp.resolve("no-tls.json");
-    Run run = runAgent("output=" + cbom + ",summary=false", List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
+    ChildJvm.Result run = runAgent("output=" + cbom + ",summary=false", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
     Map<String, Targets.Status> missing =
         Targets.parse(Cbom.read(cbom).properties().get(Targets.MISSING_PROPERTY));
     assertThat(missing).containsEntry("sun.security.ssl.SSLSessionImpl", Targets.Status.NOT_LOADED);
@@ -148,14 +116,14 @@ class AgentIT {
     // Regression: shading relocated the property name, so -Dnet.bytebuddy.experimental had no
     // effect. The CBOM reports the value the shaded Byte Buddy actually reads.
     Path cbom = tmp.resolve("experimental-property.json");
-    Run run =
+    ChildJvm.Result run =
         runAgent(
             List.of(
                 "-Dnet.bytebuddy.experimental=true",
                 "-javaagent:" + agentJar() + "=output=" + cbom + ",summary=false"),
             List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
-    assertThat(run.stderr).contains("experimental mode");
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(run.stderr()).contains("experimental mode");
     assertThat(Cbom.read(cbom).properties())
         .containsEntry("cryptocensus:byteBuddyExperimental", "true")
         .containsEntry("cryptocensus:transformErrors", "0");
@@ -164,8 +132,9 @@ class AgentIT {
   @Test
   void experimentalAgentOptionEnablesIt() throws Exception {
     Path cbom = tmp.resolve("experimental-option.json");
-    Run run = runAgent("output=" + cbom + ",summary=false,experimental=true", List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
+    ChildJvm.Result run =
+        runAgent("output=" + cbom + ",summary=false,experimental=true", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
     assertThat(Cbom.read(cbom).properties())
         .containsEntry("cryptocensus:byteBuddyExperimental", "true");
   }
@@ -175,15 +144,16 @@ class AgentIT {
   void newerJdkIsInstrumentedOnlyInExperimentalModeAndSaysSo() throws Exception {
     // Without the switch the agent must not pretend: errors and gaps are reported.
     Path strict = tmp.resolve("newer-jdk-default.json");
-    Run failing = runAgent("output=" + strict + ",summary=false", List.of());
-    assertThat(failing.exitCode).as(failing.stderr).isZero();
+    ChildJvm.Result failing = runAgent("output=" + strict + ",summary=false", List.of());
+    assertThat(failing.exitCode()).as(failing.stderr()).isZero();
     Cbom.Document doc = Cbom.read(strict);
     assertThat(doc.health("cryptocensus:transformErrors")).isPositive();
-    assertThat(failing.stderr).contains("instrumentation gap");
+    assertThat(failing.stderr()).contains("instrumentation gap");
 
     Path experimental = tmp.resolve("newer-jdk-experimental.json");
-    Run run = runAgent("output=" + experimental + ",summary=false,experimental=true", List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
+    ChildJvm.Result run =
+        runAgent("output=" + experimental + ",summary=false,experimental=true", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
     Cbom.Document ok = Cbom.read(experimental);
     assertThat(ok.properties()).containsEntry("cryptocensus:transformErrors", "0");
     assertThat(ok.inventory().entries()).isNotEmpty();
@@ -388,13 +358,13 @@ class AgentIT {
   void repeatedJavaagentInstallsOnce() throws Exception {
     Path cbom = tmp.resolve("twice.json");
     String opts = "output=" + cbom + ",summary=false";
-    Run run =
+    ChildJvm.Result run =
         runAgent(
             List.of(
                 "-javaagent:" + agentJar() + "=" + opts, "-javaagent:" + agentJar() + "=" + opts),
             List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
-    assertThat(run.stderr).contains("already started");
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(run.stderr()).contains("already started");
     Inventory twice = Cbom.read(cbom).inventory();
     // counts are not doubled by a second transformer (MD5 by name, plus by OID where the JDK
     // supports it)
@@ -417,9 +387,9 @@ class AgentIT {
             .replace(",", "%2C")
             .replace("=", "%3D")
             .replace(" ", "%20");
-    Run run = runAgent("dir=" + encoded + ",summary=false,bogus=1", List.of());
-    assertThat(run.exitCode).as(run.stderr).isZero();
-    assertThat(run.stderr).contains("unknown option 'bogus'");
+    ChildJvm.Result run = runAgent("dir=" + encoded + ",summary=false,bogus=1", List.of());
+    assertThat(run.exitCode()).as(run.stderr()).isZero();
+    assertThat(run.stderr()).contains("unknown option 'bogus'");
     try (var files = Files.list(dir)) {
       assertThat(files.map(p -> p.getFileName().toString()).toList())
           .singleElement()
@@ -473,41 +443,21 @@ class AgentIT {
     return sb.toString();
   }
 
-  private record Run(int exitCode, String stderr) {}
-
-  private static Run runAgent(String agentOptions, List<String> args) throws Exception {
+  private static ChildJvm.Result runAgent(String agentOptions, List<String> args) throws Exception {
     return runAgent(List.of("-javaagent:" + agentJar() + "=" + agentOptions), args);
   }
 
-  private static Run runAgent(List<String> jvmArgs, List<String> args) throws Exception {
-    Path err = Files.createTempFile(tmp, "stderr", ".txt");
-    List<String> command = new ArrayList<>();
-    command.add(javaTool("java"));
-    command.addAll(jvmArgs);
-    command.add("-cp");
-    command.add(classpathEntry(CryptoWorkload.class));
-    command.add(CryptoWorkload.class.getName());
-    command.addAll(args);
-    Process process =
-        new ProcessBuilder(command)
-            .redirectError(err.toFile())
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .start();
-    assertThat(process.waitFor(120, TimeUnit.SECONDS)).isTrue();
-    return new Run(process.exitValue(), Files.readString(err, StandardCharsets.UTF_8));
+  private static ChildJvm.Result runAgent(List<String> jvmArgs, List<String> args)
+      throws Exception {
+    return ChildJvm.run(
+        tmp,
+        jvmArgs,
+        List.of(ChildJvm.classpathEntry(CryptoWorkload.class)),
+        CryptoWorkload.class,
+        args);
   }
 
   private static String agentJar() {
-    String jar = System.getProperty("census.agent.jar");
-    assertThat(jar).as("census.agent.jar system property").isNotBlank();
-    return jar;
-  }
-
-  private static String javaTool(String name) {
-    return Paths.get(System.getProperty("java.home"), "bin", name).toString();
-  }
-
-  static String classpathEntry(Class<?> type) throws Exception {
-    return new File(type.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+    return ChildJvm.agentJar();
   }
 }
