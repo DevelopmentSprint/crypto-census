@@ -324,7 +324,7 @@ public final class Cbom {
       if (parameterSet != null) {
         alg.put("parameterSetIdentifier", parameterSet);
       }
-      if (a.mode() != null && !"NONE".equalsIgnoreCase(a.mode())) {
+      if (CryptoAsset.isExplicitMode(a.mode())) {
         alg.put("mode", cdxMode(a.mode()));
       }
       if (a.padding() != null) {
@@ -661,6 +661,11 @@ public final class Cbom {
 
   // ---------------------------------------------------------------- CycloneDX enums
 
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "classifies canonical JCA algorithm and mode names into a CycloneDX primitive label by"
+              + " ASCII keyword; the label is descriptive and never feeds the risk assessment")
   static String cdxPrimitive(CryptoAsset a) {
     String alg = a.algorithm().toUpperCase(Locale.ROOT);
     switch (a.primitive()) {
@@ -770,6 +775,11 @@ public final class Cbom {
     }
   }
 
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "maps a JCA mode token onto a CycloneDX enum value by ASCII keyword; an exotic spelling"
+              + " can at worst be exported as another mode label, never change an assessment")
   private static String cdxMode(String mode) {
     String m = mode.toLowerCase(Locale.ROOT);
     return switch (m) {
@@ -778,6 +788,11 @@ public final class Cbom {
     };
   }
 
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "maps a JCA padding token onto a CycloneDX enum value by ASCII prefix; an exotic"
+              + " spelling can at worst be exported as another padding label")
   private static String cdxPadding(String padding) {
     String p = padding.toUpperCase(Locale.ROOT);
     if ("NOPADDING".equals(p)) {

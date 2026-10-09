@@ -61,6 +61,11 @@ final class AgentConfig {
     this.warnings = Collections.unmodifiableList(warnings);
   }
 
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "PATH_TRAVERSAL_IN",
+      justification =
+          "output/dir come from the operator's own -javaagent options, the same trust level as"
+              + " the command line itself; writing where they point is the feature")
   private static Path outputPath(Map<String, String> options, List<String> warnings) {
     String dir = options.get("dir");
     try {
@@ -110,6 +115,11 @@ final class AgentConfig {
     return new AgentConfig(options, warnings);
   }
 
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "parses the operator's own true/false option values; a value that only matches via"
+              + " Unicode case folding merely selects the same boolean the operator asked for")
   private static boolean bool(
       Map<String, String> options, String key, boolean dflt, List<String> warnings) {
     String v = options.get(key);

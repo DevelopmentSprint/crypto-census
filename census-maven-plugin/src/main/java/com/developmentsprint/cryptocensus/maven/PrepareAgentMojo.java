@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.maven;
 
 import com.developmentsprint.cryptocensus.core.Escapes;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -133,6 +134,11 @@ public class PrepareAgentMojo extends AbstractMojo {
    * Failsafe) reuses it, so check sees the unit-test JVMs too. New directories are created
    * exclusively with a 64-bit random name, so concurrent builds cannot share one by accident.
    */
+  @SuppressFBWarnings(
+      value = "PATH_TRAVERSAL_IN",
+      justification =
+          "destDir is the plugin's own parameter (POM or -Dcensus.destDir), set by the build owner,"
+              + " and the context value is the directory this mojo created earlier in the build")
   private File runDirectory() throws MojoExecutionException {
     Object existing = project.getContextValue(RUN_DIR_CONTEXT);
     if (existing != null) {

@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.agent;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.util.jar.JarFile;
@@ -44,6 +45,11 @@ public final class CensusAgent {
 
   // Catching Throwable is the agent's contract: observation must never break the host application.
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  @SuppressFBWarnings(
+      value = "PATH_TRAVERSAL_IN",
+      justification =
+          "the path is this agent jar's own code-source location, chosen by whoever wrote the"
+              + " -javaagent flag; no request or file content influences it")
   private static synchronized void start(String args, Instrumentation inst) {
     if (started) {
       System.err.println(

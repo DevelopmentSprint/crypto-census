@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.core;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -443,13 +444,24 @@ public final class Policy {
       return Assessment.of(Risk.UNKNOWN, "Unrecognized signature algorithm " + alg);
     }
 
-    Assessment hashVerdict;
-    if ("MD2".equals(digestName) || "MD5".equals(digestName)) {
-      hashVerdict =
-          Assessment.of(
-              Risk.BROKEN, digestName + " signatures are forgeable via digestName collisions");
-    } else if ("SHA1".equals(digestName)) {
-      hashVerdict =
+    Assessment hashVerdict = legacySignatureHash(digestName, op);
+    if (hashVerdict == null && !SIGNATURE_HASHES.contains(digestName)) {
+      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature hash in " + alg);
+    }
+    return worst(keyVerdict, hashVerdict);
+  }
+
+  /** The verdict on a broken or legacy signature hash (MD2, MD5, SHA-1), otherwise null. */
+  @SuppressFBWarnings(
+      value = "UNSAFE_HASH_EQUALS",
+      justification =
+          "compares the hash *algorithm name* parsed from a public signature algorithm name such"
+              + " as MD5withRSA, not a digest value; nothing secret is compared, so timing is moot")
+  private static Assessment legacySignatureHash(String digestName, Operation op) {
+    return switch (digestName) {
+      case "MD2", "MD5" ->
+          Assessment.of(Risk.BROKEN, digestName + " signatures are forgeable via hash collisions");
+      case "SHA1" ->
           op == Operation.VERIFY
               ? Assessment.of(
                   Risk.WEAK, "SHA-1 signature verification is legacy use only (SP 800-131A)")
@@ -457,12 +469,8 @@ public final class Policy {
                   Risk.BROKEN,
                   "SHA-1 signature generation is disallowed (SP 800-131A); collisions are"
                       + " practical");
-    } else if (SIGNATURE_HASHES.contains(digestName)) {
-      hashVerdict = null;
-    } else {
-      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature digestName in " + alg);
-    }
-    return worst(keyVerdict, hashVerdict);
+      default -> null;
+    };
   }
 
   // ---------------------------------------------------------------- symmetric
