@@ -11,8 +11,8 @@ import java.util.HexFormat;
  */
 public final class StatementExport {
 
-    public String checksum(String statement) throws GeneralSecurityException {
-        MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-        return HexFormat.of().formatHex(sha1.digest(statement.getBytes(StandardCharsets.UTF_8)));
-    }
+  public String checksum(String statement) throws GeneralSecurityException {
+    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+    return HexFormat.of().formatHex(sha1.digest(statement.getBytes(StandardCharsets.UTF_8)));
+  }
 }

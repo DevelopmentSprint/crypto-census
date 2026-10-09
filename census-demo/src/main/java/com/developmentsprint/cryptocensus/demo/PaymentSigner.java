@@ -12,25 +12,25 @@ import java.security.Signature;
  */
 public final class PaymentSigner {
 
-    private final KeyPair keys;
+  private final KeyPair keys;
 
-    public PaymentSigner() throws GeneralSecurityException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(2048);
-        this.keys = generator.generateKeyPair();
-    }
+  public PaymentSigner() throws GeneralSecurityException {
+    KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+    generator.initialize(2048);
+    this.keys = generator.generateKeyPair();
+  }
 
-    public byte[] sign(String instruction) throws GeneralSecurityException {
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initSign(keys.getPrivate());
-        signature.update(instruction.getBytes(StandardCharsets.UTF_8));
-        return signature.sign();
-    }
+  public byte[] sign(String instruction) throws GeneralSecurityException {
+    Signature signature = Signature.getInstance("SHA256withRSA");
+    signature.initSign(keys.getPrivate());
+    signature.update(instruction.getBytes(StandardCharsets.UTF_8));
+    return signature.sign();
+  }
 
-    public boolean verify(String instruction, byte[] sig) throws GeneralSecurityException {
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initVerify(keys.getPublic());
-        signature.update(instruction.getBytes(StandardCharsets.UTF_8));
-        return signature.verify(sig);
-    }
+  public boolean verify(String instruction, byte[] sig) throws GeneralSecurityException {
+    Signature signature = Signature.getInstance("SHA256withRSA");
+    signature.initVerify(keys.getPublic());
+    signature.update(instruction.getBytes(StandardCharsets.UTF_8));
+    return signature.verify(sig);
+  }
 }
