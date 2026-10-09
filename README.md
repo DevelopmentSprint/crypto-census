@@ -47,7 +47,7 @@ are not observed).
 
 ```xml
 <plugin>
-  <groupId>io.github.cryptocensus</groupId>
+  <groupId>com.developmentsprint</groupId>
   <artifactId>census-maven-plugin</artifactId>
   <version>0.1.0</version>
   <executions>
@@ -218,7 +218,7 @@ cryptography is reported as quantum-vulnerable.
   incomplete and fail `check`; call sites beyond `maxSites` lose only their attribution (the asset and
   its verdict are kept), so `check` warns. The CBOM parser bounds depth, total values, estimated
   retained memory and bytes read; raising `maxAssets` far beyond the default can exceed those bounds.
-- **Namespaced.** Every class in the agent jar lives under `io.github.cryptocensus.agent` (Byte Buddy and
+- **Namespaced.** Every class in the agent jar lives under `com.developmentsprint.cryptocensus.agent` (Byte Buddy and
   the core library are relocated), so adding it to the bootstrap class path cannot shadow your classes.
 - **Safe output.** A CBOM is written through the single handle that exclusively created a random
   temporary file (`CREATE_NEW`, which never follows or reuses an existing entry), then atomically renamed
@@ -286,6 +286,26 @@ Modules:
   composition, odd paths, missing data and failure modes.
 - `census-demo`: a toy payments service that runs the plugin on itself.
 
+## Contributing
+
+The project follows [gitflow](https://nvie.com/posts/a-successful-git-branching-model/): `main` only
+ever contains released versions, `develop` is the integration branch, and changes arrive through
+`feature/*` branches merged into `develop`. Releases are cut from `release/*` branches, fixes to a
+released version go through `hotfix/*`. Open pull requests against `develop`.
+
+## Releasing
+
+Artifacts are published to Maven Central under `com.developmentsprint` (`census-parent`, `census-core`,
+`census-agent`, `census-maven-plugin`; the demo is not published):
+
+```
+mvn -P release deploy
+```
+
+This builds sources and Javadoc jars, signs everything with GPG, and uploads one bundle to the
+Central Portal, where it is validated and waits for a manual "Publish". Configure a Central Portal user
+token as server id `central` in `~/.m2/settings.xml`.
+
 ## License
 
-[Apache License 2.0](LICENSE)
+Copyright 2026 Development Sprint, LLC. [Apache License 2.0](LICENSE)

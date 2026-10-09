@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.cryptocensus</groupId>
+        <groupId>com.developmentsprint</groupId>
         <artifactId>census-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
@@ -23,12 +23,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.cryptocensus</groupId>
+            <groupId>com.developmentsprint</groupId>
             <artifactId>census-core</artifactId>
         </dependency>
         <dependency>
             <!-- Not used on the plugin classpath; resolved so prepare-agent can point -javaagent at it. -->
-            <groupId>io.github.cryptocensus</groupId>
+            <groupId>com.developmentsprint</groupId>
             <artifactId>census-agent</artifactId>
             <scope>runtime</scope>
         </dependency>

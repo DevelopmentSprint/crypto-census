@@ -1,9 +1,11 @@
 name: CI
 
+# Gitflow: main holds releases, develop integrates features; release/* and hotfix/* are built too.
 on:
   push:
-    branches: [main]
+    branches: [main, develop, 'release/**', 'hotfix/**']
   pull_request:
+    branches: [main, develop]
 
 # Least privilege: the build only needs to read the repository.
 permissions:

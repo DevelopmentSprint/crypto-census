@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.cryptocensus</groupId>
+        <groupId>com.developmentsprint</groupId>
         <artifactId>census-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
@@ -19,7 +19,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.cryptocensus</groupId>
+            <groupId>com.developmentsprint</groupId>
             <artifactId>census-core</artifactId>
         </dependency>
         <dependency>
@@ -56,12 +56,12 @@
                             <relocations>
                                 <relocation>
                                     <pattern>net.bytebuddy</pattern>
-                                    <shadedPattern>io.github.cryptocensus.agent.shaded.bytebuddy</shadedPattern>
+                                    <shadedPattern>com.developmentsprint.cryptocensus.agent.shaded.bytebuddy</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <!-- the agent's private copy of core must not shadow an application's census-core -->
-                                    <pattern>io.github.cryptocensus.core</pattern>
-                                    <shadedPattern>io.github.cryptocensus.agent.shaded.core</shadedPattern>
+                                    <pattern>com.developmentsprint.cryptocensus.core</pattern>
+                                    <shadedPattern>com.developmentsprint.cryptocensus.agent.shaded.core</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
@@ -81,8 +81,8 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Premain-Class>io.github.cryptocensus.agent.CensusAgent</Premain-Class>
-                                        <Agent-Class>io.github.cryptocensus.agent.CensusAgent</Agent-Class>
+                                        <Premain-Class>com.developmentsprint.cryptocensus.agent.CensusAgent</Premain-Class>
+                                        <Agent-Class>com.developmentsprint.cryptocensus.agent.CensusAgent</Agent-Class>
                                         <Can-Retransform-Classes>true</Can-Retransform-Classes>
                                         <Can-Redefine-Classes>true</Can-Redefine-Classes>
                                         <Implementation-Title>Crypto Census Agent</Implementation-Title>
