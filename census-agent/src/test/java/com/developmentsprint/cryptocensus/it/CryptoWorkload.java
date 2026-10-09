@@ -22,6 +22,7 @@ import javax.crypto.spec.SecretKeySpec;
 public final class CryptoWorkload {
 
   public static void main(String[] args) throws Exception {
+    ChildJvmCoverage.dumpAfterAgentShutdown();
     byte[] data = "transfer 100 EUR".getBytes(StandardCharsets.UTF_8);
 
     // AES-256-GCM: quantum-safe symmetric

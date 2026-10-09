@@ -18,9 +18,14 @@
     </description>
 
     <properties>
-        <!-- coverage floors (unit tests only: the integration tests run the shaded agent in a child JVM, whose relocated classes JaCoCo cannot map back); raise when coverage rises, never lower -->
-        <jacoco.minimum.line>0.30</jacoco.minimum.line>
-        <jacoco.minimum.branch>0.38</jacoco.minimum.branch>
+        <!--
+            Unit-test coverage floors, measured on target/classes (73.7% line / 73.8% branch on
+            JDK 21, 74.2% / 75.3% on JDK 25). The agent as it runs in AgentIT's child JVMs has its own
+            gate, jacoco.runtime.minimum.* in the quality profile below. Raise when coverage rises,
+            never lower.
+        -->
+        <jacoco.minimum.line>0.73</jacoco.minimum.line>
+        <jacoco.minimum.branch>0.73</jacoco.minimum.branch>
     </properties>
 
     <dependencies>
@@ -119,4 +124,126 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            Coverage of the agent as it really runs (quality profile, JDK 21+ only, like the parent's).
+
+            AgentIT runs the packaged agent in child JVMs, where it is loaded from the shaded jar by
+            the bootstrap class loader. Relocation rewrites those classes, so they are not the bytes
+            in target/classes and the parent's unit-test report cannot see that execution at all.
+            Here instead:
+              1. prepare-agent-integration builds a JaCoCo -javaagent string for the child JVMs
+                 (bootstrap classes included, only the agent's own classes, not the shaded copies of
+                 Byte Buddy and census-core) into ${census.it.jacocoAgent}; Failsafe hands it to
+                 AgentIT as a system property, and ChildJvmCoverage puts it on each child command
+                 line. The children write target/jacoco-it.exec (deleted before each IT run, since the
+                 JaCoCo agent appends). JaCoCo dumps from a shutdown hook that races the census
+                 agent's own CBOM-writing hook, so CryptoWorkload dumps once more after that hook.
+              2. At verify, src/build/runtime-coverage.xml (JaCoCo's Ant report task; the Maven
+                 plugin can only analyze target/classes) analyzes the agent classes *inside the
+                 shaded jar*: byte for byte what the children loaded, and every class, executed or
+                 not. Execution data: jacoco-it.exec plus the unit tests' jacoco.exec. Unit-test data
+                 counts only for classes the shade left byte-identical (KeyInfo, CensusAgent); for
+                 the rest JaCoCo ignores it, so the result never overstates coverage. The Advices
+                 bodies are inlined into JDK methods and never run as their own classes, so they
+                 always show as uncovered.
+              3. The check fails the build below jacoco.runtime.minimum.*; the report is in
+                 target/site/jacoco-runtime. The parent's unit-test gate (jacoco.minimum.*) still
+                 applies on its own. Without test runs (-DskipTests, -DskipITs, -Djacoco.skip) the
+                 runtime gate is skipped; with tests it fails if no child-JVM data was written.
+        -->
+        <profile>
+            <id>quality</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <properties>
+                <!-- measured 80.5% line / 67.0% branch on JDK 21, 82.0% / 69.3% on JDK 25; raise when
+                     coverage rises, never lower -->
+                <jacoco.runtime.minimum.line>0.80</jacoco.runtime.minimum.line>
+                <jacoco.runtime.minimum.branch>0.66</jacoco.runtime.minimum.branch>
+                <census.it.jacocoExec>${project.build.directory}/jacoco-it.exec</census.it.jacocoExec>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jacoco-prepare-child-jvms</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <propertyName>census.it.jacocoAgent</propertyName>
+                                    <destFile>${census.it.jacocoExec}</destFile>
+                                    <inclBootstrapClasses>true</inclBootstrapClasses>
+                                    <includes>
+                                        <include>com.developmentsprint.cryptocensus.agent.*</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>com.developmentsprint.cryptocensus.agent.shaded.*</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <census.it.jacocoAgent>${census.it.jacocoAgent}</census.it.jacocoAgent>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <!-- the JaCoCo agent appends, so stale data from an earlier build must go first -->
+                                <id>jacoco-runtime-reset</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <delete file="${census.it.jacocoExec}" quiet="true"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>jacoco-runtime-check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <ant antfile="${project.basedir}/src/build/runtime-coverage.xml" target="check" inheritAll="false" inheritRefs="true">
+                                            <property name="it.exec" value="${census.it.jacocoExec}"/>
+                                            <property name="unit.exec" value="${project.build.directory}/jacoco.exec"/>
+                                            <property name="agent.jar" value="${project.build.directory}/${project.build.finalName}.jar"/>
+                                            <property name="source.dir" value="${project.build.sourceDirectory}"/>
+                                            <property name="report.dir" value="${project.reporting.outputDirectory}/jacoco-runtime"/>
+                                            <property name="minimum.line" value="${jacoco.runtime.minimum.line}"/>
+                                            <property name="minimum.branch" value="${jacoco.runtime.minimum.branch}"/>
+                                            <property name="skip.tests" value="${skipTests}"/>
+                                            <property name="skip.its" value="${skipITs}"/>
+                                            <property name="skip.test.compile" value="${maven.test.skip}"/>
+                                            <property name="skip.jacoco" value="${jacoco.skip}"/>
+                                        </ant>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

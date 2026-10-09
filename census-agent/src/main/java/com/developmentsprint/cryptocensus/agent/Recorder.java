@@ -5,6 +5,7 @@ import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Occurrence;
 import com.developmentsprint.cryptocensus.core.Operation;
 import com.developmentsprint.cryptocensus.core.Primitive;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.security.KeyPair;
@@ -103,6 +104,9 @@ public final class Recorder {
   }
 
   /** Test seam: runs between in-flight registration and the enabled check. Null in production. */
+  @SuppressFBWarnings(
+      value = "UWF_UNWRITTEN_FIELD",
+      justification = "test seam: only RecorderTest writes it; production code leaves it null")
   static volatile Runnable afterAdmissionHook;
 
   /**

@@ -5,6 +5,7 @@ import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Occurrence;
 import com.developmentsprint.cryptocensus.core.Report;
 import com.developmentsprint.cryptocensus.core.Risk;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -235,7 +236,7 @@ public class CheckMojo extends AbstractMojo {
       }
     }
 
-    if (!"none".equalsIgnoreCase(failOn.trim())) {
+    if (!isNone(failOn)) {
       Risk threshold;
       try {
         threshold = Risk.parse(failOn);
@@ -294,6 +295,16 @@ public class CheckMojo extends AbstractMojo {
     return files;
   }
 
+  /** Whether {@code failOn} is the keyword {@code none}, which turns the risk threshold off. */
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "failOn comes from the build owner's own POM or command line, the party the gate serves;"
+              + " no character outside ASCII case-folds to the letters of none anyway")
+  private static boolean isNone(String failOn) {
+    return "none".equalsIgnoreCase(failOn.trim());
+  }
+
   /** Saturating add: health counters must never wrap to a value that reads as healthy. */
   private static long add(long a, long b) {
     long r = a + b;
@@ -304,6 +315,11 @@ public class CheckMojo extends AbstractMojo {
    * Why it is certain that no tests ran, or null when that cannot be established: the module has no
    * compiled tests, or test execution was explicitly skipped (and no fresh report says otherwise).
    */
+  @SuppressFBWarnings(
+      value = "PATH_TRAVERSAL_IN",
+      justification =
+          "lists the module's own test output directory as configured in its POM; the build owner"
+              + " chooses that path")
   private String establishedNoTests() {
     File testClasses = new File(project.getBuild().getTestOutputDirectory());
     String[] children = testClasses.list();

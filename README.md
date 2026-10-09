@@ -297,13 +297,14 @@ Every build on JDK 21+ runs a strict static analysis suite; every tool fails the
 | compile | [Error Prone](https://errorprone.info) + `javac -Xlint:all -Werror` | bug patterns at compile time |
 | verify | [PMD](https://pmd.github.io) + CPD | error-prone, security and multithreading rules; copy-paste |
 | verify | [SpotBugs](https://spotbugs.github.io) + [FindSecBugs](https://find-sec-bugs.github.io) | bytecode bug and security patterns, effort max, threshold low |
-| verify | [JaCoCo](https://www.jacoco.org) | per-module coverage floors (the plugin's include the Invoker builds) |
+| verify | [JaCoCo](https://www.jacoco.org) | per-module coverage floors (the plugin's include the Invoker builds; the agent's also gate the shaded agent as it runs in the integration tests' child JVMs) |
 | always | Maven Enforcer | pinned plugin versions, dependency convergence, no duplicate classes, Java 17 bytecode |
 | CI | [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/) | known CVEs, fails on CVSS >= 7 (weekly and on `main`/`develop`) |
 | GitHub | Dependabot | weekly Maven and GitHub Actions updates |
 
-Exclusions live in [`config/`](config) and each one states why. The Maven Wrapper pins Maven 3.9.12
-and verifies its SHA-256.
+PMD and Checkstyle exclusions live in [`config/`](config); SpotBugs findings are suppressed only on
+the reviewed method or field, with `@SuppressFBWarnings` and a justification. Each one states why.
+The Maven Wrapper pins Maven 3.9.12 and verifies its SHA-256.
 
 **Git hooks** are installed by the first build (`core.hooksPath .githooks`):
 

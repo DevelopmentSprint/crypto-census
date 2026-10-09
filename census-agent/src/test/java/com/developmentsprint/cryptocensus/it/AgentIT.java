@@ -357,6 +357,7 @@ class AgentIT {
     Path err = Files.createTempFile(tmp, "stderr", ".txt");
     List<String> command = new ArrayList<>();
     command.add(javaTool("java"));
+    command.addAll(ChildJvmCoverage.jvmArgs());
     command.addAll(jvmArgs);
     command.add("-cp");
     command.add(classpathEntry(CryptoWorkload.class));

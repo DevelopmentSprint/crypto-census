@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.core;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -138,13 +139,23 @@ public record CryptoAsset(
       return protocolVersion + " " + algorithm;
     }
     StringBuilder sb = new StringBuilder(algorithm);
-    if (keySize > 0 && !algorithm.toUpperCase(Locale.ROOT).contains(String.valueOf(keySize))) {
+    if (keySize > 0 && !algorithm.contains(String.valueOf(keySize))) {
       sb.append('-').append(keySize);
     }
-    if (mode != null && !"NONE".equalsIgnoreCase(mode)) {
+    if (isExplicitMode(mode)) {
       sb.append('-').append(mode);
     }
     return sb.toString();
+  }
+
+  /** Whether {@code mode} names an actual cipher mode: neither absent nor {@code NONE}. */
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "matches a JCA mode token against the ASCII keyword NONE only to decide what to display"
+              + " and export; no security decision or identity check depends on it")
+  static boolean isExplicitMode(String mode) {
+    return mode != null && !"NONE".equalsIgnoreCase(mode);
   }
 
   /**

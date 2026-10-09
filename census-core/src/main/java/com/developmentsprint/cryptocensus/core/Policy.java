@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.core;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +55,9 @@ public final class Policy {
   private static final int MIN_EC_BITS = 224;
   private static final int MIN_LEGACY_EC_BITS = 160;
   private static final int MIN_MAC_KEY_BITS = 112;
+
+  /** HMAC keys from 256 bits keep at least 128-bit strength against Grover-style search. */
+  private static final int MIN_QUANTUM_SAFE_MAC_KEY_BITS = 256;
 
   private static final Set<String> RSA = Set.of("RSA", "RSASSA-PSS", "RSA-PSS");
   private static final Set<String> EC = Set.of("EC", "ECDH", "ECDSA", "ECMQV");
@@ -443,13 +447,24 @@ public final class Policy {
       return Assessment.of(Risk.UNKNOWN, "Unrecognized signature algorithm " + alg);
     }
 
-    Assessment hashVerdict;
-    if ("MD2".equals(digestName) || "MD5".equals(digestName)) {
-      hashVerdict =
-          Assessment.of(
-              Risk.BROKEN, digestName + " signatures are forgeable via digestName collisions");
-    } else if ("SHA1".equals(digestName)) {
-      hashVerdict =
+    Assessment hashVerdict = legacySignatureHash(digestName, op);
+    if (hashVerdict == null && !SIGNATURE_HASHES.contains(digestName)) {
+      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature hash in " + alg);
+    }
+    return worst(keyVerdict, hashVerdict);
+  }
+
+  /** The verdict on a broken or legacy signature hash (MD2, MD5, SHA-1), otherwise null. */
+  @SuppressFBWarnings(
+      value = "UNSAFE_HASH_EQUALS",
+      justification =
+          "compares the hash *algorithm name* parsed from a public signature algorithm name such"
+              + " as MD5withRSA, not a digest value; nothing secret is compared, so timing is moot")
+  private static Assessment legacySignatureHash(String digestName, Operation op) {
+    return switch (digestName) {
+      case "MD2", "MD5" ->
+          Assessment.of(Risk.BROKEN, digestName + " signatures are forgeable via hash collisions");
+      case "SHA1" ->
           op == Operation.VERIFY
               ? Assessment.of(
                   Risk.WEAK, "SHA-1 signature verification is legacy use only (SP 800-131A)")
@@ -457,12 +472,8 @@ public final class Policy {
                   Risk.BROKEN,
                   "SHA-1 signature generation is disallowed (SP 800-131A); collisions are"
                       + " practical");
-    } else if (SIGNATURE_HASHES.contains(digestName)) {
-      hashVerdict = null;
-    } else {
-      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature digestName in " + alg);
-    }
-    return worst(keyVerdict, hashVerdict);
+      default -> null;
+    };
   }
 
   // ---------------------------------------------------------------- symmetric
@@ -559,30 +570,29 @@ public final class Policy {
   }
 
   private static Assessment blockCipherStrength(String alg, int keySize, String what) {
-    boolean aes = "AES".equals(alg);
-    if (keySize == 256) {
-      return aes
-          ? Assessment.cnsa2(Risk.QUANTUM_SAFE, what + " with a 256-bit key (CNSA 2.0)", 5)
-          : Assessment.of(
-              Risk.QUANTUM_SAFE,
-              what + " with a 256-bit key; quantum-resistant, not a CNSA 2.0 algorithm",
-              5);
-    }
-    if (keySize == 192) {
-      return Assessment.of(Risk.ACCEPTABLE, what + "-192 is secure; CNSA 2.0 requires AES-256", 3);
-    }
-    if (keySize == 128) {
-      return Assessment.of(Risk.ACCEPTABLE, what + "-128 is secure; CNSA 2.0 requires AES-256", 1);
-    }
-    if (keySize == 0) {
+    // AES, Camellia and ARIA define exactly these three key sizes
+    return switch (keySize) {
+      case 256 ->
+          "AES".equals(alg)
+              ? Assessment.cnsa2(Risk.QUANTUM_SAFE, what + " with a 256-bit key (CNSA 2.0)", 5)
+              : Assessment.of(
+                  Risk.QUANTUM_SAFE,
+                  what + " with a 256-bit key; quantum-resistant, not a CNSA 2.0 algorithm",
+                  5);
+      case 192 ->
+          Assessment.of(Risk.ACCEPTABLE, what + "-192 is secure; CNSA 2.0 requires AES-256", 3);
+      case 128 ->
+          Assessment.of(Risk.ACCEPTABLE, what + "-128 is secure; CNSA 2.0 requires AES-256", 1);
       // these ciphers only accept 128/192/256-bit keys, so an unobserved size cannot hide a weak
       // key
-      return Assessment.of(
-          Risk.ACCEPTABLE,
-          what + ": key size not observed (128 bits or more); CNSA 2.0 requires AES-256");
-    }
-    return Assessment.of(
-        Risk.UNKNOWN, what + " with an unexpected key size of " + keySize + " bits");
+      case 0 ->
+          Assessment.of(
+              Risk.ACCEPTABLE,
+              what + ": key size not observed (128 bits or more); CNSA 2.0 requires AES-256");
+      default ->
+          Assessment.of(
+              Risk.UNKNOWN, what + " with an unexpected key size of " + keySize + " bits");
+    };
   }
 
   private static Assessment keyGeneration(String alg, int keySize) {
@@ -642,7 +652,7 @@ public final class Policy {
               Risk.UNKNOWN,
               alg + ": key length not observed; MAC keys below 112 bits are disallowed");
         }
-        if (keySize >= 256) {
+        if (keySize >= MIN_QUANTUM_SAFE_MAC_KEY_BITS) {
           return Assessment.of(Risk.QUANTUM_SAFE, "Strong MAC with a " + keySize + "-bit key");
         }
         return Assessment.of(Risk.ACCEPTABLE, "Strong hash; key length " + keySize + " bits");

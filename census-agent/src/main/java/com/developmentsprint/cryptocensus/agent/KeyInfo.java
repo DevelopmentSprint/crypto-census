@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.agent;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.reflect.Method;
 import java.security.cert.Certificate;
 import java.security.interfaces.DSAKey;
@@ -11,6 +12,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.NamedParameterSpec;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import javax.crypto.SecretKey;
 import javax.crypto.interfaces.DHKey;
@@ -29,6 +31,10 @@ final class KeyInfo {
 
   /** {@code java.security.AsymmetricKey#getParams()}, JDK 22+. Used for ML-KEM / ML-DSA keys. */
   private static final Method ASYMMETRIC_GET_PARAMS = lookupAsymmetricGetParams();
+
+  /** Sizes of the RFC 7748 / RFC 8032 curves, whose keys carry only a parameter-set name. */
+  private static final Map<String, Integer> NAMED_CURVE_BITS =
+      Map.of("X25519", 255, "ED25519", 255, "X448", 448, "ED448", 448);
 
   private KeyInfo() {}
 
@@ -56,11 +62,7 @@ final class KeyInfo {
       }
       String named = parameterSet(key);
       if (named != null) {
-        return switch (named.toUpperCase(Locale.ROOT)) {
-          case "X25519", "ED25519" -> 255;
-          case "X448", "ED448" -> 448;
-          default -> 0;
-        };
+        return NAMED_CURVE_BITS.getOrDefault(named.toUpperCase(Locale.ROOT), 0);
       }
       if (key instanceof SecretKey secretKey && isExportableSoftwareKey(key)) {
         return secretKeyBits(secretKey);
@@ -94,6 +96,13 @@ final class KeyInfo {
     return key.getClass().getName().startsWith("sun.security.pkcs11.");
   }
 
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "matches the key's JCA algorithm and format names (PBE, RAW, DES) to derive a bit count;"
+              + " only reviewed JDK key classes get here and the result is a number in the report,"
+              + " so an exotic spelling can at worst misreport a size, never expose or admit"
+              + " anything")
   private static int secretKeyBits(SecretKey key) {
     String algorithm =
         key.getAlgorithm() == null ? "" : key.getAlgorithm().toUpperCase(Locale.ROOT);
@@ -123,6 +132,11 @@ final class KeyInfo {
    * Replaces a family name with the concrete parameter set where the key reveals it: {@code XDH ->
    * X25519}, {@code ML-KEM -> ML-KEM-768}, {@code ML-DSA -> ML-DSA-65}.
    */
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "compares a JCA algorithm family with the key's NamedParameterSpec name, both reported by"
+              + " the provider, only to choose the more specific of the two for the inventory")
   static String refine(String algorithm, Object keyOrCertificate) {
     Object key =
         keyOrCertificate instanceof Certificate certificate
