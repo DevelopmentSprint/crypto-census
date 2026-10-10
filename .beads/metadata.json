@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "census",
+  "project_id": "b63e75b9-2dc2-4107-95eb-c19d9011c2fe"
+}
