@@ -110,8 +110,8 @@ class AgentConfigParsingTest {
             "option 'summary' must be true or false, got 'yes'; using true",
             "option 'tls' must be true or false, got ''; using true",
             "option 'debug' must be true or false, got '1'; using false",
-            "option 'maxAssets' must be a positive integer, got '0'; using 500",
-            "option 'maxSites' must be a positive integer, got '-5'; using 50");
+            "option 'maxAssets' must be an integer between 1 and 2000, got '0'; using 500",
+            "option 'maxSites' must be an integer between 1 and 100, got '-5'; using 50");
   }
 
   @Test
@@ -120,6 +120,18 @@ class AgentConfigParsingTest {
     assertThat(config.maxAssets).isEqualTo(500);
     assertThat(config.maxSites).isEqualTo(50);
     assertThat(config.warnings).hasSize(2);
+  }
+
+  @Test
+  void enforcesSupportedUpperBounds() {
+    AgentConfig invalid = AgentConfig.parse("maxAssets=2001,maxSites=101");
+    assertThat(invalid.maxAssets).isEqualTo(500);
+    assertThat(invalid.maxSites).isEqualTo(50);
+    assertThat(invalid.warnings).hasSize(2);
+    AgentConfig maximum = AgentConfig.parse("maxAssets=2000,maxSites=100");
+    assertThat(maximum.maxAssets).isEqualTo(2000);
+    assertThat(maximum.maxSites).isEqualTo(100);
+    assertThat(maximum.warnings).isEmpty();
   }
 
   @Test

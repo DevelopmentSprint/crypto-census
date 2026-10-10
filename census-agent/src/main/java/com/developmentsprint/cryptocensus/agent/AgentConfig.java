@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.agent;
 
 import com.developmentsprint.cryptocensus.core.Escapes;
+import com.developmentsprint.cryptocensus.core.Inventory;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,8 +71,8 @@ final class AgentConfig {
     this.tls = bool(options, "tls", true, warnings);
     this.debug = bool(options, "debug", false, warnings);
     this.experimental = bool(options, "experimental", false, warnings);
-    this.maxAssets = positiveInt(options, "maxAssets", 500, warnings);
-    this.maxSites = positiveInt(options, "maxSites", 50, warnings);
+    this.maxAssets = positiveInt(options, "maxAssets", 500, Inventory.MAX_ASSETS, warnings);
+    this.maxSites = positiveInt(options, "maxSites", 50, Inventory.MAX_SITES, warnings);
     this.warnings = Collections.unmodifiableList(warnings);
   }
 
@@ -151,20 +152,28 @@ final class AgentConfig {
   }
 
   private static int positiveInt(
-      Map<String, String> options, String key, int dflt, List<String> warnings) {
+      Map<String, String> options, String key, int dflt, int maximum, List<String> warnings) {
     String v = options.get(key);
     if (v == null) {
       return dflt;
     }
     try {
       int n = Integer.parseInt(v);
-      if (n > 0) {
+      if (n > 0 && n <= maximum) {
         return n;
       }
     } catch (NumberFormatException ignored) {
       // fall through
     }
-    warnings.add("option '" + key + "' must be a positive integer, got '" + v + "'; using " + dflt);
+    warnings.add(
+        "option '"
+            + key
+            + "' must be an integer between 1 and "
+            + maximum
+            + ", got '"
+            + v
+            + "'; using "
+            + dflt);
     return dflt;
   }
 }

@@ -176,7 +176,7 @@ public class CheckMojo extends AbstractMojo {
       throw new MojoFailureException(message + " Set failOnMissingData=false to accept this.");
     }
 
-    final List<Inventory.Entry> snapshot = merged.entries();
+    final List<Inventory.Entry> snapshot;
     final long dropped = merged.droppedObservations();
     Map<String, String> meta = new LinkedHashMap<>();
     meta.put(
@@ -190,9 +190,10 @@ public class CheckMojo extends AbstractMojo {
     meta.put(Targets.MISSING_PROPERTY, Targets.format(Targets.missing(mergedTargets)));
     inputs.forEach((name, hash) -> meta.put("cryptocensus:input:" + name, "sha256:" + hash));
     try {
-      Cbom.write(
-          snapshot, dropped, new Cbom.Metadata(project.getArtifactId(), meta), output.toPath());
-    } catch (IOException e) {
+      Cbom.Metadata metadata = new Cbom.Metadata(project.getArtifactId(), meta);
+      snapshot = Cbom.boundedEntries(merged.entries(), dropped, metadata);
+      Cbom.write(snapshot, dropped, metadata, output.toPath());
+    } catch (IOException | IllegalArgumentException e) {
       throw new MojoExecutionException("Could not write " + output, e);
     }
 
@@ -210,14 +211,14 @@ public class CheckMojo extends AbstractMojo {
                 + ")");
 
     List<String> problems = new ArrayList<>();
-    long overflowed = merged.overflowedSites();
+    long overflowed = Cbom.overflowedSites(snapshot);
     if (overflowed > 0) {
       // every asset and verdict is still present; only where-it-was-called is truncated
       getLog()
           .warn(
               overflowed
-                  + " observation(s) lost their call-site attribution (more than maxSites call"
-                  + " sites per asset)");
+                  + " observation(s) lost their call-site attribution (collection limits or CBOM"
+                  + " serialization budget)");
     }
     if (transformErrors > 0 || recordingFailures > 0 || dropped > 0 || drainTimedOut > 0) {
       String message =
@@ -468,7 +469,7 @@ public class CheckMojo extends AbstractMojo {
         .anyMatch(a -> a.equals(algorithm) || a.equals(display));
   }
 
-  private static boolean jdkOnly(Inventory.Entry e) {
+  static boolean jdkOnly(Inventory.Entry e) {
     return e.occurrences().keySet().stream()
         .allMatch(o -> Occurrence.JDK_LOCATION.equals(o.location()));
   }

@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.maven;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,20 @@ class PrepareAgentMojoTest {
       "-javaagent:/repo/census-agent-0.1.0.jar=dir=/t/run1,app=x,summary=false,tls=true";
   private static final String AGENT2 =
       "-javaagent:/repo/census-agent-0.1.0.jar=dir=/t/run2,app=x,summary=false,tls=true";
+
+  @Test
+  void validatesCollectionLimitsBeforeAttaching() throws Exception {
+    PrepareAgentMojo.validateLimits(1, 1);
+    PrepareAgentMojo.validateLimits(2000, 100);
+    for (int invalid : new int[] {0, -1, 2001}) {
+      assertThatThrownBy(() -> PrepareAgentMojo.validateLimits(invalid, 50))
+          .hasMessageContaining("census.maxAssets");
+    }
+    for (int invalid : new int[] {0, -1, 101}) {
+      assertThatThrownBy(() -> PrepareAgentMojo.validateLimits(500, invalid))
+          .hasMessageContaining("census.maxSites");
+    }
+  }
 
   @Test
   void appendsToAnExistingArgLine() {

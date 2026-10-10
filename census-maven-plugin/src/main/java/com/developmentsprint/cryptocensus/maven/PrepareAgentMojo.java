@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.maven;
 
 import com.developmentsprint.cryptocensus.core.Escapes;
+import com.developmentsprint.cryptocensus.core.Inventory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.security.SecureRandom;
@@ -75,6 +76,18 @@ public class PrepareAgentMojo extends AbstractMojo {
   @Parameter(property = "census.tls", defaultValue = "true")
   private boolean tls;
 
+  /** Maximum distinct assets retained per test JVM (1..2000). */
+  @Parameter(property = "census.maxAssets", defaultValue = "500")
+  private int maxAssets;
+
+  /** Maximum call sites retained per asset (1..100). */
+  @Parameter(property = "census.maxSites", defaultValue = "50")
+  private int maxSites;
+
+  /** Log agent instrumentation errors to aid diagnosis. */
+  @Parameter(property = "census.debug", defaultValue = "false")
+  private boolean debug;
+
   @Parameter(property = "census.skip", defaultValue = "false")
   private boolean skip;
 
@@ -84,6 +97,7 @@ public class PrepareAgentMojo extends AbstractMojo {
       getLog().info("Skipping Crypto Census");
       return;
     }
+    validateLimits(maxAssets, maxSites);
     Artifact agent = pluginArtifactMap.get(AGENT_KEY);
     if (agent == null || agent.getFile() == null) {
       throw new MojoExecutionException(
@@ -108,7 +122,13 @@ public class PrepareAgentMojo extends AbstractMojo {
             + Escapes.encode(project.getArtifactId())
             + ",summary=false"
             + ",tls="
-            + tls;
+            + tls
+            + ",maxAssets="
+            + maxAssets
+            + ",maxSites="
+            + maxSites
+            + ",debug="
+            + debug;
     String option =
         jar.chars().anyMatch(Character::isWhitespace) ? "\"" + javaagent + "\"" : javaagent;
 
@@ -165,6 +185,17 @@ public class PrepareAgentMojo extends AbstractMojo {
       throw new MojoExecutionException("Could not create a run directory under " + destDir, e);
     }
     throw new MojoExecutionException("Could not allocate a unique run directory under " + destDir);
+  }
+
+  static void validateLimits(int assets, int sites) throws MojoExecutionException {
+    if (assets < 1 || assets > Inventory.MAX_ASSETS) {
+      throw new MojoExecutionException(
+          "census.maxAssets must be between 1 and " + Inventory.MAX_ASSETS);
+    }
+    if (sites < 1 || sites > Inventory.MAX_SITES) {
+      throw new MojoExecutionException(
+          "census.maxSites must be between 1 and " + Inventory.MAX_SITES);
+    }
   }
 
   static String commandLineOverrideHint(String propertyName) {

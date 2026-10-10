@@ -163,6 +163,12 @@ class PolicyTest {
     "SHA256withECDSA, 192,  SIGN,   BROKEN",
     "SHA256withECDSA, 128,  VERIFY, BROKEN",
     "SHA256withFOO,   2048, SIGN,   UNKNOWN", // unknown key type is not approved by prefix
+    "MD5withFOO,      2048, SIGN,   BROKEN", // a broken hash cannot be hidden by unknown key type
+    "MD2withFOO,      2048, SIGN,   BROKEN",
+    "SHA1withFOO,     2048, SIGN,   BROKEN",
+    "SHA1withFOO,     2048, VERIFY, UNKNOWN", // unknown still wins over legacy-use WEAK
+    "MD5withRSA/ISO9796-2, 2048, SIGN, BROKEN", // real Bouncy Castle signature name
+    "SHA256withRSA/ISO9796-2, 2048, SIGN, UNKNOWN",
     "SHA256withDSA,   512,  VERIFY, WEAK", // SP 800-131A Table 2: DSA legacy verification from 512
     // bits
     "SHA256withDSA,   256,  VERIFY, BROKEN",
@@ -172,6 +178,23 @@ class PolicyTest {
     // unknown strength
     "SHA1withDSA,     0,    VERIFY, UNKNOWN",
     "MD5withRSA,      0,    SIGN,   BROKEN", // a definite BROKEN still wins over unknown
+    "RIPEMD160withRSA, 1024, SIGN, BROKEN", // unknown hash must not hide a broken key
+    "RIPEMD160withRSA, 512, VERIFY, BROKEN",
+    "RIPEMD160withRSA, 1024, VERIFY, UNKNOWN", // unknown wins over legacy-use WEAK
+    "RIPEMD160withRSA, 2048, SIGN, UNKNOWN",
+    "RIPEMD160withRSA, 0, SIGN, UNKNOWN",
+    "SHA999withECDSA, 128, VERIFY, BROKEN",
+    "SHA999withDSA, 2048, SIGN, BROKEN",
+    "NONEwithRSA, 1024, SIGN, BROKEN",
+    "NONEwithRSA, 2048, SIGN, UNKNOWN",
+    "NONEwithRSA, 1024, VERIFY, UNKNOWN",
+    "NONEwithECDSA, 256, SIGN, UNKNOWN",
+    "NONEwithECDSA, 256, VERIFY, UNKNOWN",
+    "NONEwithECDSAinP1363Format, 256, SIGN, UNKNOWN",
+    "NONEwithECDSA, 192, SIGN, BROKEN",
+    "NONEwithECDSA, 128, VERIFY, BROKEN",
+    "NONEwithDSA, 2048, SIGN, BROKEN",
+    "NONEwithDSA, 1024, VERIFY, UNKNOWN",
   })
   void signatureRulesCombineHashKeyAndOperation(
       String algorithm, int bits, String op, Risk expected) {
@@ -184,6 +207,14 @@ class PolicyTest {
     // sides
     "RSA/ECB/OAEPPadding, 512,  DECRYPT, BROKEN",
     "RSA/ECB/FooPadding,  2048, ENCRYPT, UNKNOWN",
+    "RSA/ECB/FooPadding,  1024, ENCRYPT, BROKEN",
+    "RSA/ECB/FooPadding,  1024, DECRYPT, BROKEN",
+    "RSA/BOGUS/OAEPPadding, 1024, ENCRYPT, BROKEN",
+    "RSA/BOGUS/FooPadding, 1024, UNWRAP, BROKEN",
+    "RSA/BOGUS/NoPadding, 2048, ENCRYPT, BROKEN",
+    "RSA/BOGUS/PKCS1Padding, 2048, DECRYPT, BROKEN",
+    "RSA/BOGUS/NoPadding, 0, ENCRYPT, BROKEN",
+    "RSA/BOGUS/OAEPPadding, 0, ENCRYPT, UNKNOWN",
     "RSA/ECB/OAEPPadding, 2048, UNWRAP,  QUANTUM_VULNERABLE",
     "RSA/ECB/PKCS1Padding,2048, UNWRAP,  BROKEN",
     "RSA/BOGUS/OAEPPadding, 2048, ENCRYPT, UNKNOWN",

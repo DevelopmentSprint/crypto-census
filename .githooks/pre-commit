@@ -12,7 +12,23 @@ if ! git diff --cached --name-only --diff-filter=ACMR | grep -qE '(\.java|pom\.x
 fi
 
 # Error Prone and google-java-format need JDK 21+ to run; refuse rather than silently skip checks.
-java_major=$(java -XshowSettings:properties -version 2>&1 | awk -F'= ' '/java.specification.version/ {print $2}' | cut -d. -f1)
+java_cmd=java
+if [ -n "${JAVA_HOME:-}" ]; then
+  hook_java_home="$JAVA_HOME"
+  case "$(uname)" in
+    CYGWIN* | MINGW*) hook_java_home=$(cygpath --unix "$hook_java_home") ;;
+  esac
+  if [ -x "$hook_java_home/jre/sh/java" ]; then
+    java_cmd="$hook_java_home/jre/sh/java"
+  else
+    java_cmd="$hook_java_home/bin/java"
+  fi
+fi
+if ! java_properties=$("$java_cmd" -XshowSettings:properties -version 2>&1); then
+  echo "pre-commit: could not run $java_cmd. Check JAVA_HOME and PATH." >&2
+  exit 1
+fi
+java_major=$(awk -F'= ' '/java.specification.version/ {print $2}' <<< "$java_properties" | cut -d. -f1)
 if [ -z "${java_major}" ] || [ "${java_major}" -lt 21 ]; then
   echo "pre-commit: static analysis needs JDK 21+ (found: ${java_major:-unknown}). Set JAVA_HOME to a newer JDK." >&2
   exit 1

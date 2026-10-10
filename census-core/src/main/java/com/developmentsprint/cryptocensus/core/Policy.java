@@ -39,7 +39,7 @@ public final class Policy {
    */
   public static final String ID = "cryptocensus-default";
 
-  public static final String VERSION = "5";
+  public static final String VERSION = "6";
 
   private static final int MIN_RSA_DH_DSA_BITS = 2048;
 
@@ -77,8 +77,7 @@ public final class Policy {
           "SHA3224",
           "SHA3256",
           "SHA3384",
-          "SHA3512",
-          "NONE");
+          "SHA3512");
 
   private static final Set<String> RSA_SIGNATURE_KEYS =
       Set.of("RSA", "RSA/PSS", "RSAANDMGF1", "RSASSA-PSS");
@@ -452,24 +451,26 @@ public final class Policy {
     } else if (DSA_SIGNATURE_KEYS.contains(key)) {
       keyVerdict = asymmetric("DSA", keySize, op);
     } else {
-      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature algorithm " + alg);
+      keyVerdict = Assessment.of(Risk.UNKNOWN, "Unrecognized signature key type in " + alg);
     }
 
-    Assessment hashVerdict = legacySignatureHash(digestName, op);
+    Assessment hashVerdict = signatureHashFinding(digestName, op);
     if (hashVerdict == null && !SIGNATURE_HASHES.contains(digestName)) {
-      return Assessment.of(Risk.UNKNOWN, "Unrecognized signature hash in " + alg);
+      hashVerdict = Assessment.of(Risk.UNKNOWN, "Unrecognized signature hash in " + alg);
     }
     return worst(keyVerdict, hashVerdict);
   }
 
-  /** The verdict on a broken or legacy signature hash (MD2, MD5, SHA-1), otherwise null. */
+  /** The finding for a broken, legacy or unobserved signature hash, otherwise null. */
   @SuppressFBWarnings(
       value = "UNSAFE_HASH_EQUALS",
       justification =
           "compares the hash *algorithm name* parsed from a public signature algorithm name such"
               + " as MD5withRSA, not a digest value; nothing secret is compared, so timing is moot")
-  private static Assessment legacySignatureHash(String digestName, Operation op) {
+  private static Assessment signatureHashFinding(String digestName, Operation op) {
     return switch (digestName) {
+      case "NONE" ->
+          Assessment.of(Risk.UNKNOWN, "Raw signature; hash computed outside JCA, not observed");
       case "MD2", "MD5" ->
           Assessment.of(Risk.BROKEN, digestName + " signatures are forgeable via hash collisions");
       case "SHA1" ->
@@ -502,8 +503,9 @@ public final class Policy {
           Risk.UNKNOWN, "Password-based encryption; work factor (iteration count) not observed");
     }
     if ("RSA".equals(alg)) {
+      Assessment verdict = rsaTransportSize(keySize);
       if (mode != null && !"ECB".equals(mode) && !"NONE".equals(mode)) {
-        return Assessment.of(Risk.UNKNOWN, "Unrecognized RSA mode " + mode);
+        verdict = worst(verdict, Assessment.of(Risk.UNKNOWN, "Unrecognized RSA mode " + mode));
       }
       Assessment pad;
       if ("NOPADDING".equals(padding)) {
@@ -520,9 +522,9 @@ public final class Policy {
       } else if (OAEP_PADDINGS.contains(padding)) {
         pad = null;
       } else {
-        return Assessment.of(Risk.UNKNOWN, "Unrecognized RSA padding " + padding);
+        pad = Assessment.of(Risk.UNKNOWN, "Unrecognized RSA padding " + padding);
       }
-      return worst(rsaTransportSize(keySize), pad);
+      return worst(verdict, pad);
     }
     if ("DES".equals(alg) || "RC2".equals(alg) || "RC4".equals(alg) || "ARCFOUR".equals(alg)) {
       return Assessment.of(Risk.BROKEN, alg + " is cryptographically broken");

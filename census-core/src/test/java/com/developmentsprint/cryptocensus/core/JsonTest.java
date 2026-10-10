@@ -12,6 +12,31 @@ import org.junit.jupiter.params.provider.ValueSource;
 class JsonTest {
 
   @Test
+  void rejectsNonAsciiHexDigitsInUnicodeEscapes() {
+    assertThatThrownBy(() -> Json.parse("\"\\u００４１\""))
+        .hasMessageContaining("Invalid unicode escape");
+    assertThatThrownBy(() -> Json.parse("\"\\u0Ｆ４１\""))
+        .hasMessageContaining("Invalid unicode escape");
+    assertThat(Json.parse("\"\\u00aF\"")).isEqualTo("¯");
+  }
+
+  @Test
+  void measuresExactUtf8SizeIncludingEscapesAndIndentation() {
+    Object tree =
+        java.util.Map.of(
+            "é中😀",
+            java.util.List.of(
+                java.util.Map.of("a", "\"\\\n\r\t\u0001" + Character.toString((char) 0xd800)),
+                true,
+                17,
+                java.util.List.of()));
+    assertThat(Json.measure(tree, 0).bytes() + 1)
+        .isEqualTo(Json.write(tree).getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+    assertThat(Json.measure(java.util.Map.of("a", 1), 0).retained()).isEqualTo(170);
+    assertThat(Json.measure(java.util.Map.of("a", 1), 0).values()).isEqualTo(2);
+  }
+
+  @Test
   void escapesStringsSafely() {
     Object parsed = Json.parse(Json.write(Map.of("k", "quote\" back\\slash\nnewline\u0001")));
     assertThat(parsed).isEqualTo(Map.of("k", "quote\" back\\slash\nnewline\u0001"));

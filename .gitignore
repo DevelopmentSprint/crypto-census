@@ -8,3 +8,12 @@ dependency-reduced-pom.xml
 
 # Claude Code agent worktrees
 .claude/
+
+# Isolated agent and contributor checkouts
+.worktrees/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/

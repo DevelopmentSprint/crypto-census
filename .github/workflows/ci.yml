@@ -14,7 +14,7 @@ permissions:
 jobs:
   # ---------------------------------------------------------------------------------------------
   # Conformance matrix. This list is the single source of truth for "supported": every row is
-  # built and tested on every push and pull request, and README.md / docs/CONFORMANCE.md mirror it.
+  # built and tested on each configured CI event; docs/COMPATIBILITY.md and docs/CONFORMANCE.md mirror it.
   # Ratchet rule: rows are only ever added. Removing one requires a deprecation announced in
   # CHANGELOG.md first (see docs/CONFORMANCE.md).
   # ---------------------------------------------------------------------------------------------
@@ -64,6 +64,50 @@ jobs:
           name: cbom-jdk${{ matrix.java }}-${{ matrix.distribution }}-${{ matrix.os }}
           path: census-demo/target/cryptocensus/cbom.json
           if-no-files-found: ignore
+
+  # Dogfood the plugin as a consumer, using the current checkout rather than a cached release.
+  # The demo's payments tests exercise signing, encryption and checksums in a forked JVM.
+  dogfood:
+    name: Maven plugin dogfood / runtime CBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      # Tests and static analysis run in the full matrix above. This first invocation only
+      # bootstraps the plugin and its dependencies before a separate consumer invocation.
+      - name: Install this checkout's Maven plugin and agent
+        run: ./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -Dinvoker.skip=true
+      - name: Scan the payments workload with the Maven plugin
+        run: ./mvnw -B -ntp -pl census-demo clean verify
+      # check writes the merged CBOM before failing a risk policy. Keep that evidence while
+      # preserving Maven's failure. Test failures before check may leave only raw JVM reports.
+      - name: Require a nonempty cryptographic inventory
+        if: always()
+        run: |
+          jq -e '.bomFormat == "CycloneDX" and any(.components[]; .type == "cryptographic-asset")' \
+            census-demo/target/cryptocensus/cbom.json
+      - name: Publish merged runtime CBOM
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: crypto-census-cbom
+          path: census-demo/target/cryptocensus/cbom.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve individual JVM reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: crypto-census-cbom-jvm-reports
+          path: census-demo/target/cryptocensus/*/cbom-*.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   # Application servers in containers (Docker is preinstalled on GitHub's Ubuntu runners):
   # Open Liberty on IBM Semeru and WildFly, images pinned by digest in AppServerIT.

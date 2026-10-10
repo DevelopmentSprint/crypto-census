@@ -1,0 +1,9 @@
+Crypto Census
+Copyright 2026 Development Sprint, LLC
+
+Licensed under the Apache License, Version 2.0.
+See the accompanying LICENSE file for the license terms.
+
+The shaded agent includes Byte Buddy (Apache License 2.0) and ASM
+(BSD 3-Clause). Byte Buddy notices are merged into this file.
+The ASM license and copyright notices are in META-INF/licenses/ASM.

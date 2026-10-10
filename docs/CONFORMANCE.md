@@ -7,14 +7,14 @@ on, how each one is verified, and the rules for changing the list.
 
 The source of truth is the `build` job's matrix in
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). The tables below and the
-[Compatibility](../README.md#compatibility) section of the README mirror it. If they ever disagree,
+[Compatibility](COMPATIBILITY.md) guide mirror it. If they ever disagree,
 the workflow is right and the documents are a bug.
 
 ## The matrix
 
 ### JDKs
 
-Every row runs the complete build on every push and pull request (CI job name in the last column).
+Every gate row runs the complete build in every configured CI run (CI job name in the last column). Push triggers cover `main`, `develop`, `release/**`, and `hotfix/**`; pull-request triggers target `main` and `develop`. A local feature/integration branch has no fresh hosted CI evidence until a configured event runs.
 
 | JDK | Vendor / VM                | OS      | Tier     | CI job                                       |
 |-----|----------------------------|---------|----------|----------------------------------------------|
@@ -127,7 +127,7 @@ only through an explicit deprecation:
    row, the reason (for example: the vendor no longer publishes builds of that JDK), and the release
    after which it will be removed. The row stays in the matrix and keeps passing meanwhile.
 2. Only after a release that carries that notice may a second pull request remove the row from
-   `ci.yml`, this document and the README, recording the removal under "Removed" in the changelog.
+   `ci.yml`, this document and the compatibility guide, recording the removal under "Removed" in the changelog.
 
 A failing row is fixed, not removed, skipped or downgraded to advisory. Moving a row from *gate* to
 *advisory* counts as a removal.
@@ -138,7 +138,7 @@ A failing row is fixed, not removed, skipped or downgraded to advisory. Moving a
    understood by `actions/setup-java`, `java`).
 2. Run `./mvnw -B clean verify` on that runtime locally if you can, and fix what fails: in the
    agent if it is the agent's fault, never by weakening an assertion.
-3. Add the row to the tables here and in the README, and an "Added" line to the changelog.
+3. Add the row to the tables here and in the compatibility guide, and an "Added" line to the changelog.
 
 When a JDK that was early access is released: add it as a gate row (step 1) and move the
 `early-access` job to the next feature release's EA build.

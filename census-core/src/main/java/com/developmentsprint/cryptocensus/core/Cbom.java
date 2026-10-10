@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -18,6 +20,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,12 +45,14 @@ public final class Cbom {
   public static final String SPEC_VERSION = "1.6";
   public static final String TOOL_NAME = "crypto-census";
 
-  /**
-   * CBOMs larger than this are refused rather than parsed. A CBOM at the agent's default caps (500
-   * assets x 50 call sites) is about 5 MB, so this leaves ample room while keeping the input, its
-   * decoded string and the parsed tree well inside a small Maven heap.
-   */
+  /** Maximum accepted UTF-8 document size. */
   public static final long MAX_INPUT_BYTES = 16L * 1024 * 1024;
+
+  /** Output leaves headroom for decoding, parsing and merging in a small Maven heap. */
+  public static final long MAX_OUTPUT_BYTES = 8L * 1024 * 1024;
+
+  /** Maximum estimated parser tree size produced by the writer. */
+  public static final long MAX_OUTPUT_RETAINED_BYTES = 32L * 1024 * 1024;
 
   static final String P = "cryptocensus:";
 
@@ -187,8 +192,12 @@ public final class Cbom {
     if (Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException(target + " is a directory");
     }
-    byte[] content =
-        toJson(entries, droppedObservations, metadata).getBytes(StandardCharsets.UTF_8);
+    final byte[] content;
+    try {
+      content = toJson(entries, droppedObservations, metadata).getBytes(StandardCharsets.UTF_8);
+    } catch (IllegalArgumentException e) {
+      throw new IOException("Cannot serialize CBOM: " + e.getMessage(), e);
+    }
     boolean posix = dir.getFileSystem().supportedFileAttributeViews().contains("posix");
     Files.createDirectories(
         dir,
@@ -256,6 +265,103 @@ public final class Cbom {
    */
   public static String toJson(
       List<Inventory.Entry> entries, long droppedObservations, Metadata metadata) {
+    List<Inventory.Entry> bounded = boundedEntries(entries, droppedObservations, metadata);
+    Map<String, Object> bom = envelope(bounded, droppedObservations, metadata);
+    List<Object> components = new ArrayList<>();
+    for (Inventory.Entry entry : bounded) {
+      components.add(component(entry));
+    }
+    bom.put("components", components);
+    return Json.write(bom);
+  }
+
+  /**
+   * Produces a snapshot that fits both the output and parser budgets. Largest attribution groups
+   * are folded into {@link Occurrence#OVERFLOW}, preserving assets, verdicts and observation
+   * counts. Overflow cannot establish JDK-only use, so filtering it must remain conservative. Pass
+   * this snapshot to both the writer and console report. Metadata is included in the budget.
+   *
+   * @throws IllegalArgumentException if asset evidence and metadata alone cannot fit
+   */
+  public static List<Inventory.Entry> boundedEntries(
+      List<Inventory.Entry> entries, long droppedObservations, Metadata metadata) {
+    // Reserve the maximum growth of the overflow observation counter (0 -> Long.MAX_VALUE),
+    // plus the final newline and the nonempty components array's surrounding whitespace.
+    int counterGrowth = 19 - Long.toString(overflowedSites(entries)).length();
+    Json.Cost total =
+        Json.measure(envelope(entries, droppedObservations, metadata), 0)
+            .plus(new Json.Cost(counterGrowth + 3L, 2L * counterGrowth, 0, 0));
+    List<Reduction> reductions = new ArrayList<>();
+    for (int i = 0; i < entries.size(); i++) {
+      Inventory.Entry entry = entries.get(i);
+      Json.Cost full = Json.measure(component(entry), 2);
+      total = total.plus(full).plus(new Json.Cost(6, 8, 0, 0));
+      if (!entry.occurrences().isEmpty()) {
+        Inventory.Entry folded =
+            new Inventory.Entry(
+                entry.asset(), entry.assessment(), Map.of(Occurrence.OVERFLOW, entry.total()));
+        Json.Cost small = Json.measure(component(folded), 2);
+        reductions.add(
+            new Reduction(
+                i,
+                folded,
+                full.bytes() - small.bytes(),
+                full.retained() - small.retained(),
+                full.values() - small.values()));
+      }
+    }
+    if (fits(total)) {
+      return List.copyOf(entries);
+    }
+    reductions.sort(Comparator.comparingLong(Reduction::saving).reversed());
+    List<Inventory.Entry> result = new ArrayList<>(entries);
+    for (Reduction reduction : reductions) {
+      if (reduction.bytes() < 0 || reduction.retained() < 0) {
+        continue;
+      }
+      result.set(reduction.index(), reduction.folded());
+      total =
+          total.plus(
+              new Json.Cost(-reduction.bytes(), -reduction.retained(), -reduction.values(), 0));
+      if (fits(total)) {
+        return List.copyOf(result);
+      }
+    }
+    throw new IllegalArgumentException(
+        "CBOM asset evidence and metadata exceed serialization "
+            + "budgets even without call-site attribution ("
+            + MAX_OUTPUT_BYTES
+            + " UTF-8 bytes, "
+            + MAX_OUTPUT_RETAINED_BYTES
+            + " retained bytes); split the collection or merged run");
+  }
+
+  /** Saturating count of observations whose attribution has been folded away. */
+  public static long overflowedSites(List<Inventory.Entry> entries) {
+    long count = 0;
+    for (Inventory.Entry entry : entries) {
+      count =
+          Inventory.saturatingAdd(count, entry.occurrences().getOrDefault(Occurrence.OVERFLOW, 0L));
+    }
+    return count;
+  }
+
+  private record Reduction(
+      int index, Inventory.Entry folded, long bytes, long retained, long values) {
+    long saving() {
+      return bytes + retained;
+    }
+  }
+
+  private static boolean fits(Json.Cost cost) {
+    return cost.bytes() <= MAX_OUTPUT_BYTES
+        && cost.retained() <= MAX_OUTPUT_RETAINED_BYTES
+        && cost.values() <= Json.MAX_VALUES
+        && cost.depth() <= Json.MAX_DEPTH;
+  }
+
+  private static Map<String, Object> envelope(
+      List<Inventory.Entry> entries, long droppedObservations, Metadata metadata) {
     Map<String, Object> bom = new LinkedHashMap<>();
     bom.put("bomFormat", "CycloneDX");
     bom.put("specVersion", SPEC_VERSION);
@@ -274,29 +380,17 @@ public final class Cbom {
     }
     Map<String, String> metaProps = new LinkedHashMap<>();
     metaProps.put(P + "policy", Policy.ID + "/" + Policy.VERSION);
+    metaProps.putAll(metadata.properties());
+    // Computed counters cannot be overridden by caller metadata, including after trimming.
     metaProps.put(P + "dropped", String.valueOf(droppedObservations));
-    long overflowed = 0;
-    for (Inventory.Entry e : entries) {
-      Long n = e.occurrences().get(Occurrence.OVERFLOW);
-      if (n != null) {
-        overflowed = Inventory.saturatingAdd(overflowed, n);
-      }
-    }
-    metaProps.put(P + "overflowedSites", String.valueOf(overflowed));
-    if (metadata.properties() != null) {
-      metaProps.putAll(metadata.properties());
-    }
+    metaProps.put(P + "overflowedSites", String.valueOf(overflowedSites(entries)));
     List<Object> props = new ArrayList<>();
     metaProps.forEach((k, v) -> props.add(map("name", k, "value", v)));
     meta.put("properties", props);
     bom.put("metadata", meta);
 
-    List<Object> components = new ArrayList<>();
-    for (Inventory.Entry entry : entries) {
-      components.add(component(entry));
-    }
-    bom.put("components", components);
-    return Json.write(bom);
+    bom.put("components", List.of());
+    return bom;
   }
 
   private static Map<String, Object> component(Inventory.Entry entry) {
@@ -432,7 +526,20 @@ public final class Cbom {
    * @throws IllegalArgumentException on malformed JSON or an invalid Crypto Census component
    */
   public static Document parse(byte[] json) {
-    return parse(new String(json, StandardCharsets.UTF_8));
+    if (json.length > MAX_INPUT_BYTES) {
+      throw new IllegalArgumentException("CBOM exceeds " + MAX_INPUT_BYTES + " bytes");
+    }
+    try {
+      return parse(
+          StandardCharsets.UTF_8
+              .newDecoder()
+              .onMalformedInput(CodingErrorAction.REPORT)
+              .onUnmappableCharacter(CodingErrorAction.REPORT)
+              .decode(ByteBuffer.wrap(json))
+              .toString());
+    } catch (CharacterCodingException e) {
+      throw new IllegalArgumentException("CBOM is not valid UTF-8", e);
+    }
   }
 
   /**
