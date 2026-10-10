@@ -33,7 +33,7 @@ The destination directory must allow the JVM user to create and rename files. Th
 
 ## After 0.1.0 is published
 
-Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-agent`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
+Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-agent`, `census-delivery`, `census-cli`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
 
 Use `<version>0.1.0</version>` in the plugin snippet. To acquire the standalone artifact through Maven from an empty working directory:
 

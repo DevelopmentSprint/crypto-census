@@ -103,3 +103,7 @@ Not detected (by design or not yet):
 - tests run with reporting disabled *and* an explicit skip property set;
 - code paths your tests never exercise;
 - hostile code inside the observed JVM (see [safety and limitations](SAFETY.md)).
+
+## Enterprise evidence delivery
+
+Use the explicit [`publish` goal](DELIVERY.md) to send an existing report to a company HTTPS receiver. It shares the standalone CLI delivery engine and requires an expected digest and caller-supplied run identity. It does not run tests or replace crypto-policy enforcement.

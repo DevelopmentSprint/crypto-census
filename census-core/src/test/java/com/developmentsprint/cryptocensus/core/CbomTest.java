@@ -310,6 +310,39 @@ class CbomTest {
   }
 
   @Test
+  void strictEvidenceParsingValidatesMergedComponentsWithoutManufacturingAnAgentEnvelope() {
+    byte[] original = Cbom.toJson(sample(), META).getBytes(StandardCharsets.UTF_8);
+    Cbom.Document parsed = Cbom.parseEvidence(original);
+    assertThat(parsed.inventory().entries()).hasSize(4);
+    assertThat(parsed.properties()).doesNotContainKey(Cbom.SCHEMA_PROPERTY);
+    assertThat(parsed.hasAgentHealth()).isFalse();
+
+    String json = new String(original, StandardCharsets.UTF_8);
+    for (String broken :
+        List.of(
+            json.replace("\"cryptographic-asset\"", "\"library\""),
+            json.replace("\"assetType\": \"algorithm\"", "\"assetType\": \"protocol\""),
+            json.replace("\"primitive\": \"ae\"", "\"primitive\": \"hash\""),
+            json.replace("\"mode\": \"gcm\"", "\"mode\": \"cbc\""))) {
+      assertThat(broken).isNotEqualTo(json);
+      assertThatThrownBy(() -> Cbom.parseEvidence(broken.getBytes(StandardCharsets.UTF_8)))
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+    assertThat(original).isEqualTo(json.getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void strictEvidenceParsingRejectsForeignComponentsWhileGenericParsingRemainsCompatible() {
+    byte[] json =
+        ("{\"bomFormat\":\"CycloneDX\",\"specVersion\":\"1.6\","
+                + "\"components\":[{\"type\":\"library\",\"name\":\"foreign-library\"}]}")
+            .getBytes(StandardCharsets.UTF_8);
+    assertThat(Cbom.parse(json).inventory().entries()).isEmpty();
+    assertThatThrownBy(() -> Cbom.parseEvidence(json))
+        .hasMessageContaining("lacks cryptocensus properties");
+  }
+
+  @Test
   void healthEnvelopeIsRequiredAndNeverDefaultsToHealthy() {
     // regression: a header-only document parsed as an empty, apparently healthy input
     Cbom.Document headerOnly = Cbom.parse("{\"bomFormat\":\"CycloneDX\",\"specVersion\":\"1.6\"}");

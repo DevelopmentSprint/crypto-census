@@ -10,7 +10,10 @@ Modules:
   output is validated against the official CycloneDX 1.6 schema in tests.
 - `census-agent`: the `-javaagent` (shaded jar), with integration tests that run real JVMs, including
   the conformance tests with the OpenTelemetry Java agent and embedded Tomcat.
-- `census-maven-plugin`: `prepare-agent` and `check` goals, with Maven Invoker tests for argLine
+- `census-delivery`: shared HTTPS transport, evidence validation and private delivery receipts. It
+  depends on core and stays outside the agent. Test fixtures generate temporary TLS identities.
+- `census-cli`: standalone executable delivery JAR using the shared engine.
+- `census-maven-plugin`: `prepare-agent`, `check` and explicit `publish` goals, with Maven Invoker tests for argLine
   composition, odd paths, missing data and failure modes.
 - `census-demo`: a toy payments service that runs the plugin on itself.
 - `census-app-servers`: Open Liberty and WildFly in containers; only with `-P app-servers` (needs

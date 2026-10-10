@@ -55,6 +55,8 @@
     <modules>
         <module>census-core</module>
         <module>census-agent</module>
+        <module>census-delivery</module>
+        <module>census-cli</module>
         <module>census-maven-plugin</module>
         <module>census-demo</module>
     </modules>
@@ -93,6 +95,19 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Override older validator transitives with the patched Jackson release family. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>2.22.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.developmentsprint</groupId>
+                <artifactId>census-delivery</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.developmentsprint</groupId>
                 <artifactId>census-core</artifactId>
