@@ -25,6 +25,11 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class Inventory {
 
+  /** Supported per-JVM collection limits exposed by the agent and Maven plugin. */
+  public static final int MAX_ASSETS = 2000;
+
+  public static final int MAX_SITES = 100;
+
   // ConcurrentMap (not Map): computeIfAbsent below must be atomic
   private final ConcurrentMap<CryptoAsset, ConcurrentMap<Occurrence, AtomicLong>> data =
       new ConcurrentHashMap<>();

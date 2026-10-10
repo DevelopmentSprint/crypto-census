@@ -116,6 +116,75 @@ final class Json {
     sb.append('"');
   }
 
+  /** Exact output size and the parser's conservative retained-memory/value charges. */
+  record Cost(long bytes, long retained, long values, int depth) {
+    Cost plus(Cost other) {
+      return new Cost(
+          bytes + other.bytes,
+          retained + other.retained,
+          values + other.values,
+          Math.max(depth, other.depth));
+    }
+  }
+
+  static Cost measure(Object value, int indent) {
+    if (value instanceof Map<?, ?> map) {
+      Cost cost = new Cost(map.isEmpty() ? 2 : 3 + 2L * indent, 64, 1, indent);
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        String key = String.valueOf(entry.getKey());
+        cost =
+            cost.plus(
+                new Cost(
+                    2L * (indent + 1) + quotedBytes(key) + 4,
+                    48 + 40 + 2L * key.length(),
+                    0,
+                    indent));
+        cost = cost.plus(measure(entry.getValue(), indent + 1));
+      }
+      return map.isEmpty()
+          ? cost
+          : new Cost(cost.bytes - 1, cost.retained, cost.values, cost.depth);
+    }
+    if (value instanceof List<?> list) {
+      Cost cost = new Cost(list.isEmpty() ? 2 : 3 + 2L * indent, 40, 1, indent);
+      for (Object item : list) {
+        cost = cost.plus(new Cost(2L * (indent + 1) + 2, 8, 0, indent));
+        cost = cost.plus(measure(item, indent + 1));
+      }
+      return list.isEmpty()
+          ? cost
+          : new Cost(cost.bytes - 1, cost.retained, cost.values, cost.depth);
+    }
+    if (value instanceof String string) {
+      return new Cost(quotedBytes(string), 40 + 2L * string.length(), 1, indent);
+    }
+    return new Cost(String.valueOf(value).length(), value instanceof Number ? 16 : 0, 1, indent);
+  }
+
+  private static long quotedBytes(String value) {
+    long bytes = 2;
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c == '"' || c == '\\' || c == '\n' || c == '\r' || c == '\t') {
+        bytes += 2;
+      } else if (c < 0x20) {
+        bytes += 6;
+      } else if (c < 0x80) {
+        bytes++;
+      } else if (c < 0x800) {
+        bytes += 2;
+      } else if (Character.isHighSurrogate(c)
+          && i + 1 < value.length()
+          && Character.isLowSurrogate(value.charAt(i + 1))) {
+        bytes += 4;
+        i++;
+      } else {
+        bytes += Character.isSurrogate(c) ? 1 : 3;
+      }
+    }
+    return bytes;
+  }
+
   // ---------------------------------------------------------------- parsing
 
   static Object parse(String text) {
@@ -322,7 +391,13 @@ final class Json {
             }
             int cp = 0;
             for (int i = 0; i < 4; i++) {
-              int d = Character.digit(text.charAt(pos + i), 16);
+              char hex = text.charAt(pos + i);
+              int d =
+                  hex >= '0' && hex <= '9'
+                      ? hex - '0'
+                      : hex >= 'a' && hex <= 'f'
+                          ? hex - 'a' + 10
+                          : hex >= 'A' && hex <= 'F' ? hex - 'A' + 10 : -1;
               if (d < 0) {
                 throw error("Invalid unicode escape");
               }

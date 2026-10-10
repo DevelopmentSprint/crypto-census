@@ -6,7 +6,7 @@
 
     <groupId>com.developmentsprint</groupId>
     <artifactId>census-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
 
     <name>Crypto Census</name>
@@ -44,7 +44,7 @@
         <url>https://github.com/DevelopmentSprint/crypto-census</url>
         <connection>scm:git:https://github.com/DevelopmentSprint/crypto-census.git</connection>
         <developerConnection>scm:git:git@github.com:DevelopmentSprint/crypto-census.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v0.1.0</tag>
     </scm>
 
     <issueManagement>
@@ -650,6 +650,22 @@
             <id>release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>require-release-versions</id>
+                                <goals><goal>enforce</goal></goals>
+                                <configuration>
+                                    <rules>
+                                        <requireReleaseVersion/>
+                                        <requireReleaseDeps/>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>

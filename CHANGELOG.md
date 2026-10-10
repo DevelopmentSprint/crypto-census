@@ -4,9 +4,15 @@ All notable changes to Crypto Census. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Removing a row from the
 [conformance matrix](docs/CONFORMANCE.md) requires a "Deprecated" entry here first.
 
-## [Unreleased]
+## [0.1.0] — Unreleased candidate
 
 ### Added
+
+- Project license/notice resources in each published main JAR, with project and Byte Buddy notices merged in the shaded agent. Release-profile checks reject snapshot project/dependency versions, and candidate SCM metadata identifies the intended `v0.1.0` tag.
+
+- Validated `prepare-agent` parameters `maxAssets` (1–2000), `maxSites` (1–100), and `debug`, with collection limits recorded in agent CBOM metadata.
+- Executable README quickstart regression coverage, standalone acquisition instructions, Maven/agent parameter references, integration recipes, operator guidance, and a staged release runbook.
+- A security policy defining support and response targets; confirmation of the private reporting channel remains a public-release prerequisite.
 
 - Conformance matrix, enforced in CI on every build: Eclipse Temurin 17, 21, 25, 26 and 27 on Linux;
   Temurin 17, 25 and 27 on Windows; IBM Semeru 17, 21 and 25 on Linux; the next JDK's early-access
@@ -23,6 +29,10 @@ All notable changes to Crypto Census. The format follows
 
 ### Changed
 
+- Policy `cryptocensus-default/6` treats raw `NONEwith*` signatures as unknown when the external hash is not observable. Definite broken key or hash findings still win when the other signature component is unknown; RSA key findings also survive unknown modes or padding.
+- Generated CBOMs enforce an 8 MiB UTF-8 budget and a 32 MiB estimated parser-memory budget. When needed, whole call-site groups fold into `<overflow>` while preserving assets, verdicts, and observation counts; impossible asset/metadata payloads fail without replacing existing output. `overflowedSites` continues to count observations that lost attribution, including serialization trimming.
+- Standalone collection limits now have supported upper bounds: 2000 assets and 100 sites per asset. Invalid options warn and fall back; Maven rejects invalid limits before test launch.
+
 - An RSASSA-PSS signature whose hash could not be observed is now `unknown` instead of being judged
   on its RSA key alone (SHA-1 is a valid PSS hash). When the PSS parameters are set before `init`,
   the hash is recorded (`SHA256withRSASSA-PSS`) and judged like `SHA256withRSA`, so SHA-1 PSS
@@ -36,6 +46,12 @@ All notable changes to Crypto Census. The format follows
   not run, instead of passing on a skip. Testcontainers' Ryuk image is pinned by digest.
 
 ### Fixed
+
+- Unknown signature hashes no longer hide independently broken signing keys when unknown verdicts are permitted. Raw signatures no longer bypass the default unknown-hash safeguard.
+- The quickstart no longer hardcodes a policy threshold or silently permits SHA-1; documented command-line overrides now change enforcement.
+- Oversized default-limit inventories remain readable by compacting attribution, with consistent console/CBOM reporting and conservative JDK-only filtering.
+- CBOM parsing rejects malformed UTF-8 and non-ASCII hexadecimal digits in JSON Unicode escapes.
+- The pre-commit hook selects Java consistently with Maven Wrapper using `JAVA_HOME` before PATH.
 
 - Recording a key generation disabled the JDK's provider failover: the agent called
   `KeyGenerator.getProvider()` / `KeyPairGenerator.getProvider()`, which turn it off, so a provider
@@ -53,3 +69,9 @@ All notable changes to Crypto Census. The format follows
 ### Deprecated
 
 - Nothing.
+
+### Deferred
+
+- Production overhead benchmarks (startup, allocation, throughput, latency, concurrency, virtual threads, shutdown); periodic/on-demand CBOM output and live collection health.
+- Artifact SBOMs, source-linked provenance, reproducible-build configuration, and release automation.
+- Evidence from one instrumented test execution still cannot establish attachment in another execution; see [Maven evidence coverage](docs/SAFETY.md#maven-evidence-coverage).

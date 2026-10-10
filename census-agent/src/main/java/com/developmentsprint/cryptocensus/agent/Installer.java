@@ -329,7 +329,7 @@ public final class Installer {
     try {
       Inventory inventory = Recorder.inventory();
       // one consistent snapshot, taken before anything else, feeds both the CBOM and the summary
-      final List<Inventory.Entry> snapshot = inventory.entries();
+      final List<Inventory.Entry> collected = inventory.entries();
       final long dropped = inventory.droppedObservations();
 
       Map<String, String> props = new LinkedHashMap<>();
@@ -352,7 +352,11 @@ public final class Installer {
       props.put(
           "cryptocensus:byteBuddyExperimental",
           String.valueOf(Boolean.getBoolean(OpenedClassReader.EXPERIMENTAL_PROPERTY)));
-      Cbom.write(snapshot, dropped, new Cbom.Metadata(config.app, props), config.output);
+      props.put("cryptocensus:maxAssets", String.valueOf(config.maxAssets));
+      props.put("cryptocensus:maxSites", String.valueOf(config.maxSites));
+      Cbom.Metadata metadata = new Cbom.Metadata(config.app, props);
+      List<Inventory.Entry> snapshot = Cbom.boundedEntries(collected, dropped, metadata);
+      Cbom.write(snapshot, dropped, metadata, config.output);
       if (config.summary) {
         System.err.print(Report.text(snapshot, dropped));
         System.err.println(PREFIX + "CBOM written to " + config.output.toAbsolutePath());
