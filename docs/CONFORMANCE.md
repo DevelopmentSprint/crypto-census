@@ -45,7 +45,10 @@ it on the day of the run.
 
 Versions are pinned in the root `pom.xml` (`tomcat.version`, `opentelemetry-javaagent.version`,
 `testcontainers.version`) and, for the container images, by digest in
-`census-app-servers/src/test/java/.../AppServerIT.java`.
+`census-app-servers/src/test/java/.../AppServerIT.java`. Testcontainers' own Ryuk reaper, which runs
+with the Docker socket mounted, is pinned by digest in
+`census-app-servers/src/test/resources/testcontainers.properties`; when `testcontainers.version`
+moves, move it to the Ryuk version that release asks for.
 
 ### Tiers
 
@@ -76,8 +79,10 @@ The `App servers` job runs `./mvnw -B -ntp -P app-servers -pl census-app-servers
 way an operator would (`jvm.options` for Liberty, `JAVA_OPTS` for WildFly), calls the servlet, stops
 the container gracefully so shutdown hooks run, and asserts on the CBOM copied out of the stopped
 container: zero health counters, no instrumentation gaps, servlet call-site attribution. Without
-Docker the test class is skipped, not failed (`@Testcontainers(disabledWithoutDocker = true)`), and
-without `-P app-servers` the module is not built at all, so local builds never need Docker.
+Docker the test class is skipped locally, and without `-P app-servers` the module is not built at
+all, so local builds never need Docker. CI passes `-Dcensus.requireDocker=true`, which turns missing
+Docker into a failure, and then checks the Failsafe report: the gate fails unless both app-server
+tests ran and none was skipped.
 
 The early-access job runs `./mvnw -B -ntp verify -P '!quality'`: the static analyzers lag behind
 new JDKs and say nothing about whether the agent works.

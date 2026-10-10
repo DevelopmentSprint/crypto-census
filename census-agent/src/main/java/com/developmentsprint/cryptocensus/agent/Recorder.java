@@ -8,12 +8,17 @@ import com.developmentsprint.cryptocensus.core.Primitive;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
+import java.security.AlgorithmParameters;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.Provider;
 import java.security.Signature;
+import java.security.spec.PSSParameterSpec;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import javax.crypto.Cipher;
@@ -41,6 +46,13 @@ public final class Recorder {
 
   private static final LongAdder FAILURES = new LongAdder();
   private static final AtomicInteger IN_FLIGHT = new AtomicInteger();
+
+  /** Upper-cased signature names whose hash is a parameter: RSASSA-PSS and its aliases. */
+  private static final Set<String> PSS = Set.of("RSASSA-PSS", "RSA-PSS", "RSAPSS");
+
+  /** The JDK's failover wrapper behind {@code KeyPairGenerator.getInstance}. */
+  static final String KEY_PAIR_GENERATOR_DELEGATE = "java.security.KeyPairGenerator$Delegate";
+
   private static volatile boolean enabled;
 
   private Recorder() {}
@@ -273,7 +285,7 @@ public final class Recorder {
       Provider p = s.getProvider();
       return CryptoAsset.of(
           Primitive.SIGNATURE,
-          KeyInfo.refine(resolve(p, "Signature", s.getAlgorithm()), arg),
+          pssHash(s, KeyInfo.refine(resolve(p, "Signature", s.getAlgorithm()), arg)),
           KeyInfo.size(arg),
           name(p),
           op);
@@ -295,21 +307,23 @@ public final class Recorder {
           name(k.getProvider()));
     }
     if (self instanceof KeyGenerator g) {
-
+      // Never g.getProvider(): it disables provider failover for every later generateKey(). The
+      // advice reads the provider field instead and passes it as the detail.
+      Provider p = detail instanceof Provider provider ? provider : null;
       return CryptoAsset.of(
           Primitive.KEY_GENERATION,
-          resolve(g.getProvider(), "KeyGenerator", g.getAlgorithm()),
+          resolve(p, "KeyGenerator", g.getAlgorithm()),
           KeyInfo.size(arg),
-          name(g.getProvider()));
+          name(p));
     }
     if (self instanceof KeyPairGenerator g) {
-
+      Provider p = detail instanceof Provider provider ? provider : providerWithoutFailover(g);
       Object publicKey = arg instanceof KeyPair keyPair ? keyPair.getPublic() : null;
       return CryptoAsset.of(
           Primitive.KEY_PAIR_GENERATION,
-          KeyInfo.refine(resolve(g.getProvider(), "KeyPairGenerator", g.getAlgorithm()), publicKey),
+          KeyInfo.refine(resolve(p, "KeyPairGenerator", g.getAlgorithm()), publicKey),
           KeyInfo.size(publicKey),
-          name(g.getProvider()));
+          name(p));
     }
     if (self instanceof MessageDigest d) {
 
@@ -360,6 +374,45 @@ public final class Recorder {
     } catch (ReflectiveOperationException e) {
       return "KEM";
     }
+  }
+
+  /**
+   * Names the hash of an RSASSA-PSS signature, which lives in its parameters rather than its name:
+   * {@code RSASSA-PSS} with SHA-256 becomes {@code SHA-256withRSASSA-PSS} (canonicalized to {@code
+   * SHA256withRSASSA-PSS}), so the policy can judge the hash as it does for {@code SHA1withRSA}.
+   * Read after init, when the provider is fixed. Parameters set only after init are not seen; the
+   * bare name then leaves the hash unknown, which the policy reports as such.
+   */
+  // Any failure reading the parameters leaves the name as it was: recording must never throw.
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  static String pssHash(Signature signature, String algorithm) {
+    if (algorithm == null || !PSS.contains(algorithm.toUpperCase(Locale.ROOT))) {
+      return algorithm;
+    }
+    try {
+      AlgorithmParameters parameters = signature.getParameters();
+      if (parameters == null) {
+        return algorithm;
+      }
+      String digest = parameters.getParameterSpec(PSSParameterSpec.class).getDigestAlgorithm();
+      return digest == null || digest.isBlank() ? algorithm : digest + "with" + algorithm;
+    } catch (GeneralSecurityException | RuntimeException e) {
+      return algorithm;
+    }
+  }
+
+  /**
+   * The provider of a {@link KeyPairGenerator} that is not the JDK's failover {@code Delegate}.
+   * {@code getProvider()} disables failover, which only {@code Delegate} implements; a provider's
+   * own subclass has no failover, so asking it changes nothing. The {@code Delegate}'s provider
+   * comes from its field, read by the advice.
+   */
+  // Provider extends Properties, so PMD takes it for a collection; null means "unknown provider".
+  @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
+  private static Provider providerWithoutFailover(KeyPairGenerator generator) {
+    return KEY_PAIR_GENERATOR_DELEGATE.equals(generator.getClass().getName())
+        ? null
+        : generator.getProvider();
   }
 
   private static String name(Provider provider) {

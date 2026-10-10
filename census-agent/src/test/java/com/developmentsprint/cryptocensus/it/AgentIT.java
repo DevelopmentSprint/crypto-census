@@ -307,6 +307,16 @@ class AgentIT {
         .noneSatisfy(o -> assertThat(o.via()).isEqualTo("java.math.BigInteger"));
   }
 
+  @Test
+  void generatorsReportTheirProviderWithoutAskingForIt() {
+    // KeyGenerator and KeyPairGenerator$Delegate disable failover in getProvider(), so the advice
+    // reads the provider field instead (vendor-dependent, so only its presence is checked).
+    assertThat(find(Primitive.KEY_GENERATION, "AES", 256, null, null).orElseThrow().asset())
+        .satisfies(a -> assertThat(a.provider()).as(stderr).isNotBlank());
+    assertThat(find(Primitive.KEY_PAIR_GENERATION, "RSA", 2048, null, null).orElseThrow().asset())
+        .satisfies(a -> assertThat(a.provider()).as(stderr).isNotBlank());
+  }
+
   // ------------------------------------------------------------------ TLS
 
   @Test

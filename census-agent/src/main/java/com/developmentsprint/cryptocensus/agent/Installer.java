@@ -163,12 +163,25 @@ public final class Installer {
           .assureReadEdgeTo(inst, Recorder.class)
           .type(named("javax.crypto.KeyGenerator"))
           .transform(
-              advice(locator, Advices.ReturnsKey.class, named("generateKey").and(isPublic())))
+              advice(
+                  locator,
+                  Advices.ReturnsKeyWithProvider.class,
+                  named("generateKey").and(isPublic())))
           .assureReadEdgeTo(inst, Recorder.class)
 
-          // KeyPairGenerator.getInstance returns provider subclasses that override
-          // generateKeyPair
-          .type(isSubTypeOf(KeyPairGenerator.class))
+          // KeyPairGenerator.getInstance returns either the JDK's failover Delegate or a
+          // provider's own subclass overriding generateKeyPair. Only the Delegate has failover,
+          // which its getProvider() would disable, so its advice reads the field instead.
+          .type(named(Recorder.KEY_PAIR_GENERATOR_DELEGATE))
+          .transform(
+              advice(
+                  locator,
+                  Advices.ReturnsKeyWithProvider.class,
+                  named("generateKeyPair").and(isPublic())))
+          .assureReadEdgeTo(inst, Recorder.class)
+          .type(
+              isSubTypeOf(KeyPairGenerator.class)
+                  .and(not(named(Recorder.KEY_PAIR_GENERATOR_DELEGATE))))
           .transform(
               advice(
                   locator,

@@ -140,7 +140,8 @@ public class CheckMojo extends AbstractMojo {
         byte[] bytes = Cbom.readBytes(file); // read once ...
         Cbom.Document doc = Cbom.parse(bytes); // ... parse those bytes ...
         doc.validateAgentHealth(); // schema, every counter present and numeric, counters consistent
-        // absent (an older agent) parses as no targets
+        // absent (an older agent, or one that could not determine its targets) parses as empty,
+        // which targetReport counts as a gap: no evidence of coverage is not evidence of coverage
         targets.add(Targets.parse(doc.properties().get(Targets.PROPERTY)));
         merged.mergeFrom(doc.inventory());
         transformErrors = add(transformErrors, doc.health("cryptocensus:transformErrors"));
@@ -347,7 +348,16 @@ public class CheckMojo extends AbstractMojo {
     if (!notLoaded.isEmpty()) {
       info.add("Not exercised by any test JVM (never loaded): " + String.join(", ", notLoaded));
     }
-    List<String> gaps = Targets.describeGaps(perJvm);
+    List<String> gaps = new ArrayList<>(Targets.describeGaps(perJvm));
+    long unreported = perJvm.stream().filter(Map::isEmpty).count();
+    if (unreported > 0) {
+      gaps.add(
+          unreported
+              + " of "
+              + perJvm.size()
+              + " test JVM(s) reported no instrumentation targets (an older agent, or the agent"
+              + " could not determine them), so their coverage is unknown");
+    }
     if (gaps.isEmpty()) {
       return new TargetReport(info, List.of(), Optional.empty());
     }
@@ -370,7 +380,8 @@ public class CheckMojo extends AbstractMojo {
 
   /**
    * Why it is certain that no tests ran, or null when that cannot be established: the module has no
-   * compiled tests, or test execution was explicitly skipped (and no fresh report says otherwise).
+   * compiled tests, or all test execution was explicitly skipped (and no fresh report says
+   * otherwise). {@code skipITs} alone is not enough: it skips Failsafe, never Surefire.
    */
   @SuppressFBWarnings(
       value = "PATH_TRAVERSAL_IN",
@@ -383,7 +394,7 @@ public class CheckMojo extends AbstractMojo {
     if (children == null || children.length == 0) {
       return "No compiled tests in " + project.getArtifactId();
     }
-    for (String key : new String[] {"skipTests", "maven.test.skip", "skipITs"}) {
+    for (String key : new String[] {"skipTests", "maven.test.skip"}) {
       String v =
           session.getUserProperties().getProperty(key, project.getProperties().getProperty(key));
       if (v != null && (v.isEmpty() || Boolean.parseBoolean(v))) {

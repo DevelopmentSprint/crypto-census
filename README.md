@@ -151,8 +151,9 @@ mvn verify -Dcensus.failOn=quantum-vulnerable
    running at shutdown (`failOnIncompleteCollection`);
 4. there is no evidence at all and it cannot be *established* that no tests ran
    (`failOnMissingData`). Established means: no compiled tests, or an explicit `skipTests` /
-   `maven.test.skip` / `skipITs` with no test report written during this build. Silence does not
-   count, so `forkCount=0` with reports disabled still fails.
+   `maven.test.skip` with no test report written during this build. `skipITs` alone does not count
+   (it skips Failsafe, not Surefire), and silence does not count either, so `forkCount=0` with
+   reports disabled still fails.
 
 The run directory is bound to the current build (Maven project context), so neither a POM property
 nor evidence from an earlier build can satisfy `check`. Running `prepare-agent` again before Failsafe
@@ -164,7 +165,8 @@ keeps the unit-test results.
 - **never loaded** by any test JVM (for example no test used TLS): logged as information;
 - **instrumentation gap**: the class does not exist in this JDK (renamed or removed), was loaded but
   never transformed, or was transformed but none of the expected methods exist. Uses of it were not
-  observed. This is a **warning** by default, because an unfamiliar JDK build can legitimately lack a
+  observed. A test JVM whose CBOM carries no target report at all (an older agent, or one that could
+  not determine its targets) is a gap too: its coverage is unknown. This is a **warning** by default, because an unfamiliar JDK build can legitimately lack a
   JDK-internal class such as `SSLSessionImpl`; set `failOnMissingTargets=true` to fail instead. (A
   target that *failed* to transform also counts as an instrumentation error, which fails the build
   through `failOnIncompleteCollection`.)
@@ -283,6 +285,9 @@ cryptography is reported as quantum-vulnerable.
   return values or exceptions. Secret key material is only read from a short list of reviewed JDK key
   classes (`SecretKeySpec`, SunJCE's DES/DESede keys), whose `getEncoded()` returns a copy that is then
   wiped. Third-party keys are never exported; PKCS#11 (HSM/token) keys are not inspected at all.
+  The agent also avoids JCA accessors that change state: `KeyGenerator.getProvider()` and the
+  `KeyPairGenerator` delegate's `getProvider()` switch off provider failover, so their provider is
+  read from the field instead, and other providers are asked only after `init` has fixed them.
 - **Bounded memory.** Distinct assets and call sites are capped (`maxAssets`, `maxSites`); names are
   truncated (after normalization, on character boundaries). Dropped assets make the collection
   incomplete and fail `check`; call sites beyond `maxSites` lose only their attribution (the asset and
@@ -322,7 +327,9 @@ cryptography is reported as quantum-vulnerable.
 - **TLS sessions are recorded when JSSE creates them**, which is before the handshake has finished
   authenticating; a handshake that later fails is still counted. TLS 1.3 resumption tickets add
   session objects.
-- **Not captured:** PSS/OAEP parameters, GCM tag length, PBE iteration counts, the named curve behind
+- **Not captured:** OAEP parameters, the MGF1 hash of RSASSA-PSS, PSS parameters set only after
+  `init` (the PSS hash set before `init` is captured, as `SHA256withRSASSA-PSS`; when it is not, the
+  signature is reported as unknown rather than judged on the key alone), GCM tag length, PBE iteration counts, the named curve behind
   an EC key (only its size), and a DSA key's subgroup size N (only the modulus L), so the N conditions
   of SP 800-131A Table 2 are not assessed.
 - **Shutdown boundary.** Collection ends when the agent's shutdown hook runs; crypto performed by other

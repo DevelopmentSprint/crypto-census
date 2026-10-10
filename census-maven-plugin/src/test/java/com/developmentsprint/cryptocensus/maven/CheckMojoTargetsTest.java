@@ -57,10 +57,13 @@ class CheckMojoTargetsTest {
   }
 
   @Test
-  void cbomsFromOlderAgentsContributeNothing() {
-    CheckMojo.TargetReport report = CheckMojo.targetReport(List.of(Map.of()), true);
+  void jvmWithoutTargetReportIsGap() {
+    // An older agent, or one that could not determine its targets, proves no coverage at all.
+    CheckMojo.TargetReport strict = CheckMojo.targetReport(List.of(HEALTHY, Map.of()), true);
+    assertThat(strict.failure()).get().asString().contains("1 of 2 test JVM(s)", "unknown");
 
-    assertThat(report.info()).isEmpty();
-    assertThat(report.failure()).isEmpty();
+    CheckMojo.TargetReport lenient = CheckMojo.targetReport(List.of(Map.of()), false);
+    assertThat(lenient.failure()).isEmpty();
+    assertThat(lenient.warnings()).singleElement().asString().contains("1 of 1 test JVM(s)");
   }
 }

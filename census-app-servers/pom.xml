@@ -21,6 +21,7 @@
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.install.skip>true</maven.install.skip>
+        <census.requireDocker>false</census.requireDocker>
     </properties>
 
     <dependencies>
@@ -104,6 +105,8 @@
                     </classpathDependencyExcludes>
                     <systemPropertyVariables>
                         <census.agent.jar>${project.build.directory}/it-agents/census-agent.jar</census.agent.jar>
+                        <!-- CI sets true: missing Docker then fails the conformance gate instead of skipping it -->
+                        <census.requireDocker>${census.requireDocker}</census.requireDocker>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

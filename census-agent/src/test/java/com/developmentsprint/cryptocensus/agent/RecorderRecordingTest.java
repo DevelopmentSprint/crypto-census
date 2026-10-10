@@ -11,9 +11,12 @@ import com.developmentsprint.cryptocensus.core.Primitive;
 import java.lang.reflect.Proxy;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PSSParameterSpec;
 import java.util.List;
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
@@ -95,6 +98,31 @@ class RecorderRecordingTest {
         .extracting(CryptoAsset::algorithm, CryptoAsset::operation)
         .containsExactlyInAnyOrder(
             tuple("SHA256withRSA", Operation.SIGN), tuple("SHA384withRSA", null));
+  }
+
+  @Test
+  void namesTheHashOfRsassaPssFromItsParameters() throws Exception {
+    KeyPairGenerator rsa = KeyPairGenerator.getInstance("RSA");
+    rsa.initialize(2048);
+    PrivateKey key = rsa.generateKeyPair().getPrivate();
+
+    Signature sha1 = Signature.getInstance("RSASSA-PSS");
+    sha1.setParameter(
+        new PSSParameterSpec(
+            "SHA-1", "MGF1", MGF1ParameterSpec.SHA1, 20, PSSParameterSpec.TRAILER_FIELD_BC));
+    sha1.initSign(key);
+    observe(sha1, key, "initSign");
+
+    // parameters only set after init are not seen: the hash stays unknown rather than guessed
+    Signature later = Signature.getInstance("RSASSA-PSS");
+    later.initSign(key);
+    observe(later, key, "initSign");
+
+    assertThat(assets())
+        .extracting(CryptoAsset::algorithm)
+        .containsExactlyInAnyOrder("SHA1withRSASSA-PSS", "RSASSA-PSS");
+    assertThat(Recorder.pssHash(Signature.getInstance("SHA256withRSA"), "SHA256withRSA"))
+        .isEqualTo("SHA256withRSA");
   }
 
   @Test
