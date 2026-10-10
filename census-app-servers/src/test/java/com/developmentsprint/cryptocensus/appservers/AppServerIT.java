@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.appservers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.developmentsprint.cryptocensus.core.Cbom;
 import com.developmentsprint.cryptocensus.core.Occurrence;
@@ -24,19 +25,19 @@ import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 /**
  * Conformance: the agent inside real application servers, each with its own JVM vendor and its own
  * agents (Liberty's bootstrap agent, JBoss Modules). Images are pinned by digest; see
- * docs/CONFORMANCE.md for how to move them forward. Skipped, not failed, without Docker.
+ * docs/CONFORMANCE.md for how to move them forward. Without Docker the class is skipped locally,
+ * but fails when {@code census.requireDocker=true} (CI), so a gate cannot pass without running.
  */
-@Testcontainers(disabledWithoutDocker = true)
 class AppServerIT {
 
   /**
@@ -60,6 +61,17 @@ class AppServerIT {
 
   @TempDir static Path tmp;
   static Path war;
+
+  @BeforeAll
+  static void requireDocker() {
+    boolean available = DockerClientFactory.instance().isDockerAvailable();
+    if (Boolean.getBoolean("census.requireDocker")) {
+      assertThat(available)
+          .as("Docker is required here (census.requireDocker=true) but is not available")
+          .isTrue();
+    }
+    assumeTrue(available, "Docker is not available; app-server conformance skipped");
+  }
 
   @BeforeAll
   static void buildWar() throws IOException {

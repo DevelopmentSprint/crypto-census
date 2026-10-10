@@ -82,6 +82,30 @@ final class Advices {
   }
 
   /**
+   * Generators with JDK provider failover: {@code KeyGenerator.generateKey()} and {@code
+   * KeyPairGenerator$Delegate.generateKeyPair()}. Their {@code getProvider()} disables failover, so
+   * the advice reads the {@code provider} field directly and passes it on.
+   */
+  static final class ReturnsKeyWithProvider {
+    private ReturnsKeyWithProvider() {}
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    static int enter() {
+      return Recorder.enter();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    static void exit(
+        @Advice.Enter int depth,
+        @Advice.This Object self,
+        @Advice.Return Object key,
+        @Advice.FieldValue("provider") Object provider,
+        @Advice.Thrown Throwable thrown) {
+      Recorder.exit(depth, self, key, provider, thrown);
+    }
+  }
+
+  /**
    * Constructors where the constructed object is the asset: {@code SSLSessionImpl(...)}.
    *
    * <p>Byte Buddy cannot run exit advice on constructors that throw, so there is no enter/exit

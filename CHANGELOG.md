@@ -21,8 +21,26 @@ All notable changes to Crypto Census. The format follows
   methods. The agent prints gaps on stderr; `census:check` merges them over all test JVMs and warns,
   or fails with the new `failOnMissingTargets=true`.
 
+### Changed
+
+- An RSASSA-PSS signature whose hash could not be observed is now `unknown` instead of being judged
+  on its RSA key alone (SHA-1 is a valid PSS hash). When the PSS parameters are set before `init`,
+  the hash is recorded (`SHA256withRSASSA-PSS`) and judged like `SHA256withRSA`, so SHA-1 PSS
+  signing is `broken`.
+- `census:check` treats a test JVM whose CBOM has no `cryptocensus:targets` (an older agent, or one
+  that could not determine its targets) as an instrumentation gap: a warning, or a failure with
+  `failOnMissingTargets=true`.
+- `census:check` no longer accepts `-DskipITs` alone as proof that no tests ran; it skips only
+  Failsafe.
+- CI: the app-server conformance job fails when Docker is unavailable or either app-server test did
+  not run, instead of passing on a skip. Testcontainers' Ryuk image is pinned by digest.
+
 ### Fixed
 
+- Recording a key generation disabled the JDK's provider failover: the agent called
+  `KeyGenerator.getProvider()` / `KeyPairGenerator.getProvider()`, which turn it off, so a provider
+  failing after the first key made the application's next `generateKey()` throw instead of falling
+  back. The provider is now read from the field.
 - Call sites on IBM Semeru: OpenJCEPlus provider frames (defined by the application class loader)
   were reported as the application's call site. Provider frames of IBM (IBMJCE, IBMJCEFIPS,
   IBMJCEPlus, OpenJCEPlus), SunMSCAPI, Apple, ACCP, AWS CloudHSM, Thales Luna, Entrust nShield,

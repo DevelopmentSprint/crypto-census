@@ -431,6 +431,14 @@ public final class Policy {
 
     int with = alg.indexOf("WITH");
     if (with <= 0) {
+      if (RSA.contains(alg)) {
+        // Bare RSASSA-PSS: the hash lives in the PSS parameters, and SHA-1 is a valid choice. The
+        // recorder names the hash (SHA256withRSASSA-PSS) when it could read them.
+        return worst(
+            rsaSignatureSize(keySize, op),
+            Assessment.of(
+                Risk.UNKNOWN, alg + " signature; its hash (PSS parameters) not observed"));
+      }
       return asymmetric(alg, keySize, op);
     }
     String digestName = alg.substring(0, with);

@@ -49,7 +49,11 @@ class PolicyTest {
         "SIGNATURE,            SHA1withRSA,               2048,    VERIFY,  WEAK",
         "SIGNATURE,            SHA256withECDSA,           256,     SIGN,    QUANTUM_VULNERABLE",
         "SIGNATURE,            SHA256withECDSAinP1363Format, 256,  SIGN,    QUANTUM_VULNERABLE",
-        "SIGNATURE,            RSASSA-PSS,                3072,    SIGN,    QUANTUM_VULNERABLE",
+        "SIGNATURE,            RSASSA-PSS,                3072,    SIGN,    UNKNOWN", // hash unseen
+        "SIGNATURE,            RSASSA-PSS,                1024,    SIGN,    BROKEN",
+        "SIGNATURE,            SHA256withRSASSA-PSS,      3072,    SIGN,    QUANTUM_VULNERABLE",
+        "SIGNATURE,            SHA1withRSASSA-PSS,        2048,    SIGN,    BROKEN",
+        "SIGNATURE,            SHA1withRSASSA-PSS,        2048,    VERIFY,  WEAK",
         "SIGNATURE,            SHA256withDSA,             2048,    SIGN,    BROKEN", // FIPS 186-5:
         // no new DSA
         // signatures
