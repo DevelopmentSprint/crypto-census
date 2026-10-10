@@ -5,7 +5,7 @@ The `0.1.0` candidate is unpublished. Preparing and testing artifacts does not p
 ## Immediate prerequisites
 
 - Revoke and replace any credential exposed outside its intended secret store immediately. Record any incident-specific rotation work in private release evidence; rotation must not wait for repository publication. Update the repository secret and rerun dependency scanning without logging the key.
-- Confirm the mailbox in [SECURITY.md](../SECURITY.md) exists and receives mail. Remove its release-blocker marker only after verification.
+- Keep the mailbox in [SECURITY.md](../SECURITY.md) monitored. Verify delivery whenever the address or mail configuration changes.
 - Scan every reachable commit/ref with a dedicated secret detector, then review author emails, commit messages, session links and other metadata for privacy. Record tool/version, scope, findings and limits. Rotate confirmed secrets even if history is later rewritten; deletion is not revocation. Do not erase history without an explicit decision.
 - Confirm ownership of the `com.developmentsprint` Central namespace and a trusted signing key. Store the Central Portal token as Maven server ID `central` in private `~/.m2/settings.xml`. Keep credentials and passphrases out of the repository and command logs.
 

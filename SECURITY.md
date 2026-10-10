@@ -6,11 +6,11 @@ Security fixes target the latest released `0.x` version. Upgrade to that version
 
 ## Report a vulnerability privately
 
-**Release blocker: the maintainer must confirm a working security mailbox and replace this paragraph before public publication. No private contact address has been verified yet.** Do not post exploit details, credentials, or an unreviewed CBOM in a public issue. GitHub private vulnerability reporting is planned but must be enabled and tested before this policy advertises it as available.
+Email vulnerability reports to [security@developmentsprint.com](mailto:security@developmentsprint.com). Do not post exploit details, credentials, or an unreviewed CBOM in a public issue. GitHub private vulnerability reporting is planned but must be enabled and tested before this policy advertises it as available.
 
 Include the affected Census version or source revision, JDK/vendor, minimal reproduction, expected and actual behavior, and your assessment of impact. Use synthetic keys and sanitized output. Explain whether the issue affects the observed application, report correctness, evidence validation, or publication/build tooling.
 
-Once the reporting channel is active, we aim to acknowledge reports within **three business days**. The acknowledgement identifies a maintainer and the next assessment/update date. We assess severity and affected versions, agree on a mitigation or fix timeline with the reporter, and provide updates while the issue remains open; complex issues can require more investigation. We coordinate public disclosure after a fix or mitigation is available and credit reporters with their consent. These are response targets, not a guaranteed resolution deadline.
+We aim to acknowledge reports within **three business days**. The acknowledgement identifies a maintainer and the next assessment/update date. We assess severity and affected versions, agree on a mitigation or fix timeline with the reporter, and provide updates while the issue remains open; complex issues can require more investigation. We coordinate public disclosure after a fix or mitigation is available and credit reporters with their consent. These are response targets, not a guaranteed resolution deadline.
 
 ## Scope and evidence
 

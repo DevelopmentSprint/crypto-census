@@ -8,7 +8,7 @@ maintainer performs signing and publication after accepting the verified candida
 |---|---|---|---|
 | REL-1 | Policy composition and executable quickstart | Raw signatures require observed hashing or an exception; broken keys remain broken with unknown hashes/paddings; policy version advances; real Maven gates and README fixture agree | Implemented; verification recorded below |
 | REL-2 | Bounded output, collection settings, strict encoding | Counts and assets survive attribution compaction; output satisfies byte and parser budgets; impossible output fails safely; agent/Maven settings propagate; malformed encodings fail | Implemented; verification recorded below |
-| REL-3 | User, contributor, operator and release documentation | Complete linked guides, accurate examples, confirmed private reporting route and explicit staging/test positioning | Guides implemented; private reporting mailbox confirmation pending |
+| REL-3 | User, contributor, operator and release documentation | Complete linked guides, accurate examples, confirmed private reporting route and explicit staging/test positioning | Guides implemented; maintainer confirmed the private reporting mailbox |
 | REL-4 | Hook correction and release integration | Mixed PATH/JAVA_HOME verification; integrated clean/quality/container checks; release artifact inspection; fresh external consumer and standalone smoke tests | Local candidate gates passed; hosted CI/signing/publication pending |
 
 ## Candidate invariants
@@ -26,7 +26,7 @@ maintainer performs signing and publication after accepting the verified candida
 ## Before the publication decision
 
 - [ ] All REL tasks pass their acceptance checks and the combined diff is reviewed.
-- [ ] The security reporting address is confirmed to receive mail.
+- [x] The maintainer confirmed `security@developmentsprint.com` as the private reporting address.
 - [ ] Any exposed credentials have been revoked/replaced and the dependency scan is healthy.
 - [x] History-wide secret scanning and a commit-metadata privacy review are complete; session links remain for the maintainer to approve or remove explicitly.
 - [x] The release-version reactor passes clean verification and required Docker conformance.
@@ -72,4 +72,4 @@ The reactor now uses `0.1.0` as an **unpublished candidate**. The implementation
 - A dedicated history secret scan and a separate scan of the candidate source find no secrets within their scanned scope. Commit metadata includes session links; their removal remains an explicit privacy decision.
 - Independent collection and documentation reviews report no findings. Final combined review identified an additional pre-existing signature-composition gap (a broken hash hidden by an unknown key type); its fix passes unit and real-provider Maven regressions. Targeted independent re-review reports no remaining material findings. A supported-maximum inventory probe preserves 2,000 assets and all observation counts across 200,000 call sites, compacts below the byte budget, and parses under a 256 MiB heap. A persistent maximum-collection regression passes under a 256 MiB heap; default-limit boundary regressions also pass under a 128 MiB heap.
 
-These local checks do not establish a working security inbox, rotated credentials, hosted branch protections, fresh supported-platform CI, GPG signatures, or published artifacts. Those remain explicit operator gates.
+The maintainer has confirmed the private security reporting address. These local checks do not establish rotated credentials, hosted branch protections, fresh supported-platform CI, GPG signatures, or published artifacts. Those remain explicit operator gates.
