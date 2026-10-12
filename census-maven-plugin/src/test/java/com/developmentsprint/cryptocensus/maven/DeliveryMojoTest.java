@@ -174,6 +174,104 @@ class DeliveryMojoTest {
     assertThat(uploads.get()).isEqualTo(1);
   }
 
+  @Test
+  void manifestBoundProfileRejectsWrongRunMappingAndProtectedOutputsBeforeEffects()
+      throws Exception {
+    String runId = java.util.UUID.randomUUID().toString();
+    Path run = RunEvidence.prepare(directory, runId, "example:module", "1.0");
+    Files.copy(directory.resolve("cbom.json"), run.resolve("cbom-1.json"));
+    var project = new org.apache.maven.project.MavenProject();
+    project.setGroupId("example");
+    project.setArtifactId("module");
+    project.setVersion("1.0");
+    ReportMojo report = new ReportMojo();
+    for (var entry :
+        java.util.Map.<String, Object>of(
+                "project",
+                project,
+                "destDir",
+                directory.toFile(),
+                "runId",
+                runId,
+                "revision",
+                "1",
+                "testOutcome",
+                "failed",
+                "failOn",
+                "broken")
+            .entrySet()) {
+      Field field = CheckMojo.class.getDeclaredField(entry.getKey());
+      field.setAccessible(true);
+      field.set(report, entry.getValue());
+    }
+    report.execute();
+    Path manifest = RunEvidence.sealedDirectory(run, "1").resolve(RunEvidence.MANIFEST);
+    Path artifact = manifest.resolveSibling(RunEvidence.ARTIFACT);
+    var config = JsonSupport.object(JsonSupport.parse(Files.readAllBytes(profile)));
+    var correlation =
+        new java.util.LinkedHashMap<String, Object>(
+            java.util.Map.of(
+                "application",
+                "app",
+                "module",
+                "example:module",
+                "version",
+                "1.0",
+                "runId",
+                runId));
+    var input =
+        new java.util.LinkedHashMap<String, Object>(
+            java.util.Map.of(
+                "path",
+                artifact.toString(),
+                "sha256",
+                ProfileFixture.hash(Files.readAllBytes(artifact)),
+                "kind",
+                "CENSUS_MERGED_CBOM",
+                "correlation",
+                correlation));
+    config.put("inputs", java.util.List.of(input));
+    DeliveryMojo mojo = mojo();
+    set(mojo, "manifest", manifest.toFile());
+    set(mojo, "runId", runId);
+    set(mojo, "application", "app");
+    set(mojo, "module", "example:module");
+    set(mojo, "version", "1.0");
+    set(mojo, "action", "plan");
+    for (String key : java.util.List.of("runId", "module", "version", "application")) {
+      Object original = correlation.put(key, "wrong");
+      ProfileFixture.write(directory, config);
+      assertThatThrownBy(mojo::execute).isInstanceOf(MojoExecutionException.class);
+      correlation.put(key, original);
+      assertThat(Files.exists(directory.resolve("plan.json"))).isFalse();
+      assertThat(Files.exists(directory.resolve("prepared"))).isFalse();
+    }
+    Object outputs =
+        config.put(
+            "outputs",
+            java.util.Map.of(
+                "plan",
+                manifest.toString(),
+                "receipt",
+                directory.resolve("receipt.json").toString()));
+    ProfileFixture.write(directory, config);
+    assertThatThrownBy(mojo::execute).isInstanceOf(MojoExecutionException.class);
+    config.put("outputs", outputs);
+    ProfileFixture.write(directory, config);
+    set(mojo, "runId", java.util.UUID.randomUUID().toString());
+    assertThatThrownBy(mojo::execute).isInstanceOf(MojoExecutionException.class);
+    set(mojo, "runId", runId);
+    assertThat(uploads.get()).isZero();
+    mojo.execute();
+    set(mojo, "action", "publish");
+    set(mojo, "planSha256", planHash());
+    mojo.execute();
+    assertThat(uploads.get()).isEqualTo(1);
+    Files.writeString(artifact, Files.readString(artifact) + " ");
+    assertThatThrownBy(mojo::execute).isInstanceOf(MojoExecutionException.class);
+    assertThat(uploads.get()).isEqualTo(1);
+  }
+
   private DeliveryMojo mojo() throws Exception {
     DeliveryMojo mojo =
         new DeliveryMojo() {

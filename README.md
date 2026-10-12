@@ -69,6 +69,7 @@ The agent observes without changing application cryptographic operations, bounds
 
 - [Installation and artifact verification](docs/INSTALLATION.md)
 - [Maven parameters and check guarantees](docs/MAVEN.md)
+- [Finalize and deliver evidence after failed CI tests](docs/CI-FINALIZATION.md)
 - [JaCoCo, Failsafe, multimodule, container, and app-server recipes](docs/RECIPES.md)
 - [Agent options, troubleshooting, sensitivity, and retention](docs/OPERATIONS.md)
 - [Contributing and quality gates](docs/CONTRIBUTING.md)

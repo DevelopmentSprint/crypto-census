@@ -64,6 +64,10 @@ public class PrepareAgentMojo extends AbstractMojo {
   @Parameter(property = "census.destDir", defaultValue = "${project.build.directory}/cryptocensus")
   private File destDir;
 
+  /** Fresh CI-attempt UUID enabling independent current-run report and enforcement goals. */
+  @Parameter(property = "census.runId")
+  private String runId;
+
   /**
    * Property to append the {@code -javaagent} option to. To combine with your own Surefire {@code
    * <argLine>}, set this to e.g. {@code censusArgLine} and write {@code <argLine>@{censusArgLine}
@@ -162,7 +166,33 @@ public class PrepareAgentMojo extends AbstractMojo {
   private File runDirectory() throws MojoExecutionException {
     Object existing = project.getContextValue(RUN_DIR_CONTEXT);
     if (existing != null) {
+      if (runId != null) {
+        try {
+          RunEvidence.descriptor(
+              java.nio.file.Path.of(existing.toString()),
+              runId,
+              project.getGroupId() + ":" + project.getArtifactId(),
+              project.getVersion());
+        } catch (java.io.IOException | IllegalArgumentException error) {
+          throw new MojoExecutionException(
+              "Current-run descriptor changed within this build", error);
+        }
+      }
       return new File(existing.toString());
+    }
+    if (runId != null) {
+      try {
+        return RunEvidence.prepare(
+                destDir.toPath(),
+                runId,
+                project.getGroupId() + ":" + project.getArtifactId(),
+                project.getVersion())
+            .toFile();
+      } catch (java.io.IOException | IllegalArgumentException error) {
+        throw new MojoExecutionException(
+            "Cannot register census.runId: use a fresh UUID for each CI attempt and module build",
+            error);
+      }
     }
     try {
       java.nio.file.Files.createDirectories(destDir.toPath());
