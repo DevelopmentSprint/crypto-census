@@ -77,24 +77,53 @@ class PublishMojoTest {
         });
     server.start();
     try {
-      Path ca = directory.resolve("ca.pem");
-      Files.copy(tls.caBundle(), ca);
+      Path roots = Files.createDirectory(directory.resolve("roots"));
+      Path ca = Files.copy(tls.caBundle(), roots.resolve("ca.pem"));
       byte[] original = Files.readAllBytes(ca);
       Path hardlink = Files.createLink(directory.resolve("ca-hardlink.pem"), ca);
-      Path child = Files.createDirectory(directory.resolve("child"));
-      Path external = Files.createDirectory(directory.resolve("external"));
-      Path symlink = Files.createSymbolicLink(external.resolve("link"), child);
-      Path parentAlias = symlink.resolve("..").resolve("ca.pem");
-      for (Path receiptPath : new Path[] {ca, hardlink, parentAlias}) {
+      Path child = Files.createDirectory(roots.resolve("child"));
+      Path parentLink = Files.createSymbolicLink(directory.resolve("roots-link"), roots);
+      Path childLink = Files.createSymbolicLink(directory.resolve("child-link"), child);
+      for (Path receiptPath :
+          new Path[] {
+            ca, hardlink, parentLink.resolve("ca.pem"), parentLink.resolve("child/../ca.pem")
+          }) {
+        assertThat(Files.isSameFile(receiptPath, ca))
+            .as("Fixture must resolve to the CA: %s", receiptPath)
+            .isTrue();
         PublishMojo publish = mojo(server);
         set(publish, "caBundle", ca.toFile());
         set(publish, "receipt", receiptPath.toFile());
         assertThatThrownBy(publish::execute)
+            .as("Receipt aliases the selected CA: %s", receiptPath)
             .isInstanceOf(MojoExecutionException.class)
             .hasMessageContaining("must not overwrite the selected CA bundle");
         assertThat(Files.readAllBytes(ca)).isEqualTo(original);
+        assertThat(requests.get()).isZero();
       }
-      assertThat(requests.get()).isZero();
+      // Win32 removes link/.. lexically; Unix resolves the link before traversing its parent.
+      // Establish both possible targets independently, then verify the platform's fixture.
+      Path sibling = Files.writeString(directory.resolve("ca.pem"), "independent receipt target");
+      Path divergent = childLink.resolve("../ca.pem");
+      boolean windows = java.io.File.separatorChar == '\\';
+      assertThat(Files.isSameFile(divergent, windows ? sibling : ca))
+          .as("Platform-dependent parent resolution: %s", divergent)
+          .isTrue();
+      assertThat(Files.isSameFile(sibling, ca)).isFalse();
+      PublishMojo publish = mojo(server);
+      set(publish, "caBundle", ca.toFile());
+      set(publish, "receipt", divergent.toFile());
+      if (windows) {
+        publish.execute();
+        assertThat(Files.readString(sibling)).contains("ACCEPTED");
+        assertThat(requests.get()).isEqualTo(1);
+      } else {
+        assertThatThrownBy(publish::execute)
+            .hasMessageContaining("must not overwrite the selected CA bundle");
+        assertThat(Files.readString(sibling)).isEqualTo("independent receipt target");
+        assertThat(requests.get()).isZero();
+      }
+      assertThat(Files.readAllBytes(ca)).isEqualTo(original);
       assertThat(directory.resolve("receipts")).doesNotExist();
     } finally {
       server.stop(0);
