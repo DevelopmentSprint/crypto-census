@@ -202,7 +202,9 @@ class CensusCliTest {
     Path hardLink = Files.createLink(directory.resolve("ca-hardlink.pem"), caBundle);
     Path parentLink = Files.createSymbolicLink(directory.resolve("roots-link"), roots);
     Path child = Files.createDirectory(roots.resolve("child"));
-    Path childLink = Files.createSymbolicLink(directory.resolve("child-link"), child);
+    Path childLink = Files.createSymbolicLink(roots.resolve("child-link"), child);
+    Path externalLink = Files.createSymbolicLink(directory.resolve("external-link"), child);
+    Path sibling = Files.copy(caBundle, directory.resolve("ca.pem"));
     AtomicInteger calls = new AtomicInteger();
     HttpsServer server = tls.server();
     server.createContext(
@@ -215,18 +217,57 @@ class CensusCliTest {
         });
     server.start();
     try {
-      for (Path receipt :
-          List.of(
-              caBundle, hardLink, parentLink.resolve("ca.pem"), childLink.resolve("../ca.pem"))) {
+      Map<String, Path> aliases =
+          Map.of(
+              "same path",
+              caBundle,
+              "hard link",
+              hardLink,
+              "parent symlink",
+              parentLink.resolve("ca.pem"),
+              "symlink with parent segment",
+              childLink.resolve("../ca.pem"));
+      for (Map.Entry<String, Path> alias : aliases.entrySet()) {
+        Path receipt = alias.getValue();
+        String label = alias.getKey() + ": " + receipt;
+        assertThat(Files.isSameFile(receipt, caBundle)).as("fixture identity: %s", label).isTrue();
         List<String> args = args(artifact, server);
         args.set(args.indexOf("--receipt") + 1, receipt.toString());
         args.set(args.indexOf("--ca-bundle") + 1, caBundle.toString());
         args.addAll(List.of("--auth", "none"));
-        assertThat(run(args, Map.of())).isEqualTo(2);
-        assertThat(Files.readAllBytes(caBundle)).isEqualTo(original);
-        assertThat(Files.readAllBytes(receipt)).isEqualTo(original);
+        assertThat(run(args, Map.of())).as("reject CA alias: %s", label).isEqualTo(2);
+        assertThat(calls.get()).as("no network for CA alias: %s", label).isZero();
+        assertThat(Files.readAllBytes(caBundle)).as("CA bytes: %s", label).isEqualTo(original);
+        assertThat(Files.readAllBytes(receipt)).as("alias bytes: %s", label).isEqualTo(original);
       }
-      assertThat(calls.get()).isZero();
+      // Win32 removes link/.. lexically; Unix follows the link before resolving its parent.
+      // Select the documented platform expectation, then prove the fixture's actual identity.
+      boolean windows = "\\".equals(directory.getFileSystem().getSeparator());
+      Path divergent = externalLink.resolve("../ca.pem");
+      Path expectedTarget = windows ? sibling : caBundle;
+      String label = (windows ? "Windows sibling receipt: " : "Unix CA alias: ") + divergent;
+      assertThat(Files.isSameFile(sibling, caBundle)).as("independent sibling fixture").isFalse();
+      assertThat(Files.isSameFile(divergent, expectedTarget))
+          .as("fixture identity: %s", label)
+          .isTrue();
+      List<String> args = args(artifact, server);
+      args.set(args.indexOf("--receipt") + 1, divergent.toString());
+      args.set(args.indexOf("--ca-bundle") + 1, caBundle.toString());
+      args.addAll(List.of("--auth", "none"));
+      assertThat(run(args, Map.of()))
+          .as("platform receipt outcome: %s", label)
+          .isEqualTo(windows ? 0 : 2);
+      assertThat(calls.get()).as("platform request count: %s", label).isEqualTo(windows ? 1 : 0);
+      assertThat(Files.readAllBytes(caBundle)).as("CA bytes: %s", label).isEqualTo(original);
+      if (windows) {
+        assertThat(Files.readString(sibling))
+            .as("independent receipt: %s", label)
+            .contains("HTTP_ACCEPTED");
+      } else {
+        assertThat(Files.readAllBytes(sibling))
+            .as("untouched sibling: %s", label)
+            .isEqualTo(original);
+      }
       assertThat(stderr.toString(StandardCharsets.UTF_8))
           .contains("--receipt and --ca-bundle must be different files");
     } finally {
