@@ -9,6 +9,44 @@ The `0.1.0` candidate is unpublished. Preparing and testing artifacts does not p
 - Scan every reachable commit/ref with a dedicated secret detector, then review author emails, commit messages, session links and other metadata for privacy. Record tool/version, scope, findings and limits. Rotate confirmed secrets even if history is later rewritten; deletion is not revocation. Do not erase history without an explicit decision.
 - Confirm ownership of the `com.developmentsprint` Central namespace and a trusted signing key. Store the Central Portal token as Maven server ID `central` in private `~/.m2/settings.xml`. Keep credentials and passphrases out of the repository and command logs.
 
+## Set up the Central namespace and credentials
+
+The namespace `com.developmentsprint` requires control of `developmentsprint.com`. Sign in to [Central Portal](https://central.sonatype.com), open your account menu, select **View Namespaces**, and add `com.developmentsprint`. Copy its verification key into a new DNS TXT record at `developmentsprint.com` (usually host `@`). Preserve existing TXT records, including mail and other verification records.
+
+Check the record through public DNS before selecting **Verify Namespace**:
+
+```sh
+dig +short TXT developmentsprint.com
+```
+
+The TXT value must match the portal's verification key. Sonatype checks the exact domain, not a `maven-central` subdomain. Wait until the portal reports **Verified**. A GitHub login's automatically verified `io.github.<username>` namespace does not grant this domain namespace. See [Sonatype namespace registration](https://central.sonatype.org/register/namespace/) for verification and existing-namespace recovery.
+
+Generate a publishing token at [Central Portal user tokens](https://central.sonatype.com/usertoken). Save both generated fields in a secret manager: the token username and token password are distinct from your login credentials. The portal shows the token only once. Configure Maven server ID `central` in a private settings file; the following template contains environment references only:
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <servers>
+    <server>
+      <id>central</id>
+      <username>${env.CENSUS_CENTRAL_USERNAME}</username>
+      <password>${env.CENSUS_CENTRAL_PASSWORD}</password>
+    </server>
+  </servers>
+</settings>
+```
+
+Merge the server entry into existing `~/.m2/settings.xml`, or save a separate file and pass `-s /private/path/central-settings.xml` to Maven. On POSIX systems, set its permissions to `0600`. Inject both variables from your secret manager in the publishing process; do not paste credentials into chat, source files, command arguments or shell history. A token stored only as a GitHub Actions secret is available only to an authorized workflow, not a local Maven invocation. See [token generation](https://central.sonatype.org/publish/generate-portal-token/) and [Maven publishing configuration](https://central.sonatype.org/publish/publish-portal-maven/#credentials).
+
+Use an existing organization-approved signing key, or create one interactively with `gpg --full-generate-key`. Choose a public signing identity and protect the private key with a passphrase. Record the full public fingerprint, retain the revocation certificate securely, and publish only the public key to a Central-supported keyserver:
+
+```sh
+gpg --keyserver keyserver.ubuntu.com --send-keys YOUR_PUBLIC_KEY_FINGERPRINT
+```
+
+Verify that the public key can be retrieved independently before signing. Select the intended key explicitly with `-Dgpg.keyname=YOUR_PUBLIC_KEY_FINGERPRINT` on signing commands. Prefer a locally unlocked GPG agent; unattended builds can obtain `MAVEN_GPG_PASSPHRASE` from a secret manager. Enable `-Dgpg.bestPractices=true` to reject unsafe passphrase configuration. Never export a private signing key into the repository or supply the passphrase as a Maven argument. See [Central signing requirements](https://central.sonatype.org/publish/requirements/gpg/) and [Maven GPG usage](https://maven.apache.org/plugins/maven-gpg-plugin/usage.html).
+
+Namespace verification, token access, and signing-key access are separate prerequisites. Confirm all three before upload; none is established by a successful unsigned build.
+
 ## Freeze the release source
 
 After accepting the implementation, cut `release/0.1.0` from the accepted integration state using the repository's gitflow process. The prepared candidate already uses `0.1.0`; confirm every reactor parent/project still has that version and the parent SCM tag is `v0.1.0`. Record the real release date in the changelog only when publishing is scheduled. The release profile rejects snapshot project or dependency versions.
@@ -104,7 +142,8 @@ With another fresh consumer cache and external directory, run the [agent acquisi
 The maintainer returns to the frozen candidate checkout, confirms a clean worktree and the recorded commit/tree, and runs:
 
 ```sh
-./mvnw -B -ntp -P release deploy
+./mvnw -B -ntp -P release deploy -Dgpg.bestPractices=true \
+  -Dgpg.keyname=YOUR_PUBLIC_KEY_FINGERPRINT
 ```
 
 The profile has `autoPublish=false` and waits until validation. Confirm the deployment reaches **VALIDATED**, record its deployment ID, and inspect the uploaded artifact list. This step rebuilds/signs, so compare its artifact contents with the accepted source and record the uploaded checksums; unsigned-package testing alone does not prove the signed bundle's identity. Do not use `-Dgpg.skip` for this step.
@@ -129,6 +168,8 @@ Complete the accepted gitflow release: merge the release into `main`, create the
 
 ## Public repository settings
 
-Before announcing availability, enable GitHub private vulnerability reporting and verify the private reporting path from a separate account. Replace SECURITY.md's pending-channel wording only after it is usable. Apply branch protections/rulesets to `develop` and `main`, requiring the exact gate job names in [CONFORMANCE.md](CONFORMANCE.md); verify the settings through the API/UI and check that an unreviewed or failing change cannot merge. If the hosting plan prevents protection while private, perform and verify this step as part of the visibility change before accepting outside contributions.
+The repository is public, and GitHub private vulnerability reporting is enabled. Before announcing an artifact release, verify that a separate signed-in account can open the [private reporting form](https://github.com/DevelopmentSprint/crypto-census/security/advisories/new), without submitting a test vulnerability. Keep the email fallback in [SECURITY.md](../SECURITY.md).
+
+Protections on `develop` and `main` require pull requests, the 13 mandatory jobs named in [CONFORMANCE.md](CONFORMANCE.md), and an up-to-date branch; they apply to administrators and block force pushes and deletion. Recheck these settings through the API/UI before release. The configured approving-review count is zero, so an independent review remains a release-process gate rather than a GitHub-enforced approval. Record that review and verify all required jobs for the exact candidate; the advisory early-access failure is not a required-job failure.
 
 Keep the release checklist, security-channel check, dependency-scan record, history-scan scope, CI results and artifact evidence together. Source changes remain reviewable even when operator credentials or hosting settings are still pending; record those gates as pending rather than claiming publication readiness.

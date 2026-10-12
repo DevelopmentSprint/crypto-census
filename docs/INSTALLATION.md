@@ -13,7 +13,7 @@ cd crypto-census
 ./mvnw -B -ntp clean install
 ```
 
-The current candidate version is `0.1.0`. `install` includes the complete verification lifecycle and puts the parent POM, core, agent and plugin in your local Maven repository. Use that version in the [quickstart](../README.md#quick-start) in your application; installing in one user account does not install into another account or CI runner's repository. On Windows, use `mvnw.cmd`.
+The current candidate version is `0.1.0`. `install` includes the complete verification lifecycle and puts the parent POM, core, agent, delivery library, CLI and Maven plugin in your local Maven repository. Use that version in the [quickstart](../README.md#quick-start) in your application; installing in one user account does not install into another account or CI runner's repository. On Windows, use `mvnw.cmd`.
 
 ## Standalone agent
 
