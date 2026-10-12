@@ -10,12 +10,26 @@ public record DeliveryOptions(
     Duration requestTimeout,
     Duration overallTimeout,
     SSLContext sslContext,
-    ProxySelector proxySelector) {
+    ProxySelector proxySelector,
+    AuthenticatedProxy authenticatedProxy) {
   /** Rejects nonpositive or unbounded transport deadlines. */
   public DeliveryOptions {
+    if (authenticatedProxy != null && proxySelector != null) {
+      throw new IllegalArgumentException("Use exactly one explicit proxy configuration");
+    }
     validate(connectTimeout);
     validate(requestTimeout);
     validate(overallTimeout);
+  }
+
+  /** Backwards-compatible unauthenticated transport configuration. */
+  public DeliveryOptions(
+      Duration connectTimeout,
+      Duration requestTimeout,
+      Duration overallTimeout,
+      SSLContext sslContext,
+      ProxySelector proxySelector) {
+    this(connectTimeout, requestTimeout, overallTimeout, sslContext, proxySelector, null);
   }
 
   /** Default connect/request/overall limits are 10/30/60 seconds. */

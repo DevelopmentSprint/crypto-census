@@ -127,7 +127,27 @@ class CensusCliTest {
               List.of("--auth", "unsupported"),
               List.of("--token-env", "BAD-REFERENCE"),
               List.of("--token-env", "ABSENT"),
-              List.of("--proxy-port", "1234"))) {
+              List.of("--proxy-port", "1234"),
+              List.of("--auth", "none", "--proxy-user-env", "USER"),
+              List.of("--auth", "none", "--proxy-host", "localhost", "--proxy-user-env", "USER"),
+              List.of(
+                  "--auth",
+                  "none",
+                  "--proxy-host",
+                  "localhost",
+                  "--proxy-user-env",
+                  "BAD-REF",
+                  "--proxy-password-env",
+                  "PASS"),
+              List.of(
+                  "--auth",
+                  "none",
+                  "--proxy-host",
+                  "localhost",
+                  "--proxy-user-env",
+                  "USER",
+                  "--proxy-password-env",
+                  "PASS"))) {
         List<String> args = args(artifact, server);
         args.addAll(options);
         assertThat(run(args, Map.of())).isEqualTo(2);

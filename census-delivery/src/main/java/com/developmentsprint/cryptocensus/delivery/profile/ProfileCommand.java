@@ -16,12 +16,24 @@ public final class ProfileCommand {
   public static Result run(
       String action, Path profile, String expectedPlanSha256, SecretReference.Resolver resolver)
       throws IOException {
+    return run(action, profile, expectedPlanSha256, resolver, decoded -> {});
+  }
+
+  /** Binds every read and revalidation to caller-owned current-run evidence checks. */
+  public static Result run(
+      String action,
+      Path profile,
+      String expectedPlanSha256,
+      SecretReference.Resolver resolver,
+      java.util.function.Consumer<DeliveryProfile> validator)
+      throws IOException {
     if (!List.of("plan", "preflight", "publish").contains(action)) {
       throw new IllegalArgumentException("Delivery action must be plan, preflight or publish");
     }
     ProfilePlanner planner =
         new ProfilePlanner(
-            new ProfileReader(List.of(new GenericProfileAdapter(), new DependencyTrackAdapter())));
+            new ProfileReader(
+                List.of(new GenericProfileAdapter(), new DependencyTrackAdapter()), validator));
     if ("plan".equals(action)) {
       if (expectedPlanSha256 != null) {
         throw new IllegalArgumentException("Plan action cannot accept an existing plan hash");

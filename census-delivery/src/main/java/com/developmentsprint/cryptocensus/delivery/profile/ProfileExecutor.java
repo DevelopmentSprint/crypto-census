@@ -2,6 +2,7 @@ package com.developmentsprint.cryptocensus.delivery.profile;
 
 import com.developmentsprint.cryptocensus.delivery.DeliveryException;
 import com.developmentsprint.cryptocensus.delivery.DeliveryOptions;
+import com.developmentsprint.cryptocensus.delivery.ProxyCredentials;
 import com.developmentsprint.cryptocensus.delivery.ReceiptWriteException;
 import com.developmentsprint.cryptocensus.delivery.TransportConfiguration;
 import java.io.IOException;
@@ -62,7 +63,14 @@ public final class ProfileExecutor {
     }
     DeliveryOptions options =
         TransportConfiguration.optionsWithCaBytes(
-            caBytes, profile.transport().proxyHost(), profile.transport().proxyPort());
+            caBytes,
+            profile.transport().proxyHost(),
+            profile.transport().proxyPort(),
+            profile.transport().proxyUsername() == null
+                ? null
+                : ProxyCredentials.basic(
+                    resolve(profile.transport().proxyUsername(), resolver),
+                    resolve(profile.transport().proxyPassword(), resolver)));
     ProfileTransport transport = new ProfileTransport(options, monotonic);
     AdapterResult result =
         new AdapterResult(
@@ -150,10 +158,62 @@ public final class ProfileExecutor {
         result = stopped(result, "ATTEMPT_STARTED", true);
         persist(plan, result, retention, started, exchanges, false);
       }
-      ProtocolResponse response =
-          transport.send(
-              profile.endpoint(), request, secret, profile.options().authenticationScheme(), 65536);
-      exchanges++;
+      GenericProfileAdapter.Options retry =
+          profile.options() instanceof GenericProfileAdapter.Options generic
+                  && generic.receiverSupportsIdempotency()
+                  && request.mutation()
+              ? generic
+              : null;
+      if (retry != null) {
+        java.util.Map<String, String> headers = new java.util.LinkedHashMap<>(request.headers());
+        headers.put("Idempotency-Key", deliveryIdentity(plan));
+        request =
+            new AdapterRequest(
+                request.method(),
+                request.relativePath(),
+                request.contentType(),
+                request.body(),
+                true,
+                request.delayMillis(),
+                headers);
+      }
+      ProtocolResponse response;
+      int attempts = 0;
+      boolean ambiguous = false;
+      do {
+        response =
+            transport.send(
+                profile.endpoint(),
+                request,
+                secret,
+                profile.options().authenticationScheme(),
+                65536);
+        ambiguous |= response.statusCode() >= 500 || response.failureCode() != null;
+        attempts++;
+        exchanges++;
+        if (retry == null || attempts >= retry.maxAttempts() || !RetryPolicy.eligible(response)) {
+          break;
+        }
+        long delay = RetryPolicy.delayMillis(response.retryAfter(), attempts, Instant.now());
+        if (delay < 0
+            || java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(delay) >= transport.remaining()) {
+          break;
+        }
+        // Preserve ambiguity before waiting; a crash must never leave an old success receipt.
+        persist(plan, stopped(result, "RETRY_PENDING", true), retention, started, exchanges, false);
+        try {
+          java.util.concurrent.TimeUnit.MILLISECONDS.sleep(delay);
+        } catch (InterruptedException interrupted) {
+          Thread.currentThread().interrupt();
+          response = new ProtocolResponse(0, new byte[0], "INTERRUPTED");
+          break;
+        }
+      } while (true);
+      if (attempts > 1
+          && ambiguous
+          && !(response.statusCode() >= 200 && response.statusCode() < 300)) {
+        response = new ProtocolResponse(0, new byte[0], "RETRY_OUTCOME_UNKNOWN");
+      }
       step = session.accept(response);
       result = step.observation();
       persist(plan, result, retention, started, exchanges, false);
@@ -169,6 +229,19 @@ public final class ProfileExecutor {
             && (profile.policy().completion() == DeliveryPolicy.Completion.UPLOAD_ACCEPTED
                 || result.ingestion() == AdapterResult.Ingestion.COMPLETED);
     return persist(plan, result, retention, started, exchanges, success);
+  }
+
+  private static String deliveryIdentity(PlannedDelivery plan) {
+    var mapping = plan.bundle().correlation();
+    return com.developmentsprint.cryptocensus.delivery.DeliveryIdentity.of(
+        plan.profile().endpoint(),
+        plan.profile().destinationId(),
+        mapping.application(),
+        mapping.module(),
+        mapping.version(),
+        mapping.runId(),
+        plan.bundle().publication().sha256(),
+        ((GenericProfileAdapter.Options) plan.profile().options()).headers());
   }
 
   private static String resolve(SecretReference reference, SecretReference.Resolver resolver) {
