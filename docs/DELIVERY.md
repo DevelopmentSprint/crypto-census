@@ -4,7 +4,7 @@ For typed preparation, sealed plans and guarded vendor delivery, see [delivery p
 
 Use the Maven `publish` goal or standalone CLI to send an existing Crypto Census CBOM to a company-operated HTTPS receiver. Both use the same delivery engine and preserve the original file. Publication is explicit and never runs inside the observed application.
 
-This foundation supports a generic HTTPS receiver. Dependency-Track is the selected first vendor, but its adapter remains pending. An isolated 5.2 experiment found lost cryptographic fields and operation identities, and a crypto-only upload replaced the existing software inventory. The current generic publisher is not a Dependency-Track integration. See the [design and capability assessment](design/ENTERPRISE-DELIVERY.md#verified-destination-assessment).
+The `publish` command supports a generic HTTPS receiver. Use a [delivery profile](DELIVERY-PROFILES.md) for the guarded [Dependency-Track 5.2 integration](DEPENDENCY-TRACK.md). That adapter requires a dedicated crypto-only project and explicit acceptance of measured fidelity losses: Dependency-Track drops cryptographic fields and operation identities, and an upload replaces the target inventory. Preserve the original CBOM independently; this integration does not provide full-fidelity cryptographic ingestion or replace a general software inventory.
 
 `HTTP_ACCEPTED` means the endpoint returned HTTP 2xx. It does not mean the receiver indexed, analyzed, or retained every cryptographic field. Configure a receiver whose behavior your security team controls.
 
@@ -21,7 +21,9 @@ This feature is source-only until its release is published. The standalone JAR i
 
 ## Maven
 
-Generate the report using the [existing Maven setup](MAVEN.md). Capture the expected SHA-256 when the producing step finishes and retain the source run identifier alongside it. The publisher requires these values and compares the exact input bytes to the digest. It does not establish evidence freshness or discover the newest report.
+Generate the report using the [existing Maven setup](MAVEN.md). For an explicitly retained artifact, capture the expected SHA-256 when the producing step finishes and retain the source run identifier alongside it. This unbound mode compares the exact input bytes with that digest; it does not establish freshness or discover the newest report.
+
+For current CI evidence, use [immutable run finalization](CI-FINALIZATION.md): pass the exact `census.manifest` and expected `census.runId` to `publish`. It verifies the run/module/version, selected raw input digests and sealed artifact, then obtains the artifact/digest/run mapping from the manifest. Conflicting explicit input, digest or run options fail. The distinct `delivery` goal supports the same manifest binding for every profile action, including Dependency-Track.
 
 The following example publishes the demo report after it has been produced. On Linux use `sha256sum`; on macOS use `shasum -a 256`. Obtain `SOURCE_RUN_ID` from the producing CI job or your recorded local run. Supply `CENSUS_UPLOAD_TOKEN` using the CI secret store or your shell's protected environment, not a command argument.
 
@@ -36,7 +38,7 @@ CBOM_SHA256=$(shasum -a 256 census-demo/target/cryptocensus/cbom.json | cut -d '
   -Dcensus.delivery.tokenEnv=CENSUS_UPLOAD_TOKEN
 ```
 
-The default input is each module's `target/cryptocensus/cbom.json`. Module identity defaults to `groupId:artifactId`; version defaults to the Maven project version. Receipts get distinct UUID filenames under `target/cryptocensus/delivery/`. Application, destination ID, expected digest, and source run ID must be supplied.
+The default input is each module's `target/cryptocensus/cbom.json`. Module identity defaults to `groupId:artifactId`; version defaults to the Maven project version. Receipts get distinct UUID filenames under `target/cryptocensus/delivery/`. Application and destination ID must be supplied. Expected digest and source run ID are required in unbound mode; manifest-bound publication derives them from the verified selected revision.
 
 For encrypted Maven credentials, use `census.delivery.serverId` instead of `tokenEnv`. The selected `<server>`'s decrypted password is the bearer token; its username is unused. Missing servers, decryption problems, and empty credentials fail before delivery. Never place the token itself in a POM or `-D` parameter. To send anonymously, explicitly set `census.delivery.auth=none` and omit credential references.
 
@@ -68,9 +70,9 @@ The CLI requires an explicit receipt filename and all identity fields. `--auth n
 
 The client POSTs the unchanged CBOM as `application/vnd.cyclonedx+json`. `X-Census-Artifact-Sha256`, `X-Census-Delivery-Id`, `X-Census-Application`, `X-Census-Module`, `X-Census-Version`, and `X-Census-Run-Id` identify the submission. Mapping fields require 1–256 printable ASCII characters without whitespace. Destination IDs permit letters, digits, dot, underscore and hyphen, up to 128 characters.
 
-HTTPS certificate and hostname validation always remain enabled. Credentials in URLs, query parameters, fragments and redirects are rejected. Each invocation makes at most one network attempt, with 10-second connect, 30-second request and 60-second overall limits. Response bodies are bounded to 64 KiB and are not printed or copied into receipts. Arbitrary non-JSON success bodies are allowed. A 5xx or lost response can mean the receiver accepted before failing: reconcile the receipt with the receiver before intentionally trying again. There is no automatic retry or exactly-once guarantee.
+HTTPS certificate and hostname validation always remain enabled. Credentials in URLs, query parameters, fragments and redirects are rejected. The legacy `publish` command makes at most one network attempt, with 10-second connect, 30-second request and 60-second overall limits. Response bodies are bounded to 64 KiB and are not printed or copied into receipts. Arbitrary non-JSON success bodies are allowed. A 5xx or lost response can mean the receiver accepted before failing: reconcile the receipt with the receiver before intentionally trying again. This command has no automatic retry or exactly-once guarantee. A generic delivery profile can explicitly enable [bounded retries](DELIVERY-OPERATIONS.md#receiver-retries) when the receiver operator asserts the required deduplication contract. Dependency-Track uploads always make one attempt.
 
-Use a custom PEM CA bundle with `census.delivery.caBundle` or `--ca-bundle`. It augments JVM trust only for the delivery client. Explicit unauthenticated HTTP CONNECT proxies use `census.delivery.proxyHost` / `proxyPort`, or `--proxy-host` / `--proxy-port`; the default port is 8080. The client does not inherit ambient proxy settings and does not automatically bypass a failed proxy. Authenticated proxies, client certificates and vendor-specific authentication are not yet supported.
+Use a custom PEM CA bundle with `census.delivery.caBundle` or `--ca-bundle`. It augments JVM trust only for the delivery client. Explicit HTTP CONNECT proxies use `census.delivery.proxyHost` / `proxyPort`, or `--proxy-host` / `--proxy-port`; the default port is 8080. [Authenticated proxy configuration](DELIVERY-OPERATIONS.md#authenticated-connect-proxies) uses separate environment references or a Maven settings server for proxy credentials. Origin and proxy credentials remain separate. The client does not inherit ambient proxy settings or bypass a failed proxy. Client certificates remain unsupported. Vendor authentication belongs to the selected profile adapter.
 
 Receipts contain artifact and endpoint hashes, declared identity, outcome, safe reason code and transport bounds. They exclude the endpoint URL, token and raw response. A pending receipt is written before networking so a crash does not leave a previous success looking current. This is local operational evidence, not an attestation. Receipts and CBOMs remain sensitive: use private directories, protected CI artifacts and explicit retention. The publisher rejects an output that aliases the input.
 
@@ -78,7 +80,7 @@ Receipts contain artifact and endpoint hashes, declared identity, outcome, safe 
 
 The existing `check` writes its merged report before failing a crypto policy, so a separate always-run CI step can publish that usable report while the original step remains failed. Preserve the producing step's exit status. Compute and retain its digest only when that step actually produced the selected artifact; starting from a clean output directory and a unique run identifier helps avoid accidental stale selection.
 
-Surefire failure can stop Maven before `check`, leaving only individual JVM reports. Automatic current-run merging and independent `report`/`enforce` goals are planned in `census-6dt.4`; the foundation does not provide them. Preserve those raw reports using CI artifact upload and report the missing merged artifact. Never select an older merged report to make delivery pass. Workflow cancellation or a killed JVM can prevent output entirely.
+Surefire failure can stop Maven before `check`, leaving individual JVM reports. With a fresh explicit `census.runId` supplied during preparation, an always-run `report` invocation can finalize that exact run into an immutable manifest and merged CBOM. Run delivery and `enforce` in separate always-run steps so an upload failure cannot suppress policy enforcement and a successful upload cannot erase the original build failure. Follow the [CI finalization guide](CI-FINALIZATION.md) for exact revision selection, manifest-bound `publish` and profile `delivery` commands, and retention of raw evidence. Never select an older merged report to make delivery pass. Workflow cancellation or a killed JVM can prevent output entirely.
 
 Do not expose upload credentials to untrusted pull-request code. If a separate trusted delivery job consumes an artifact, verify its producing workflow/run and artifact identity before providing credentials. A caller-supplied SHA-256 detects changed bytes relative to that supplied digest; it does not prove the original producer or collection time.
 
@@ -86,20 +88,24 @@ Do not expose upload credentials to untrusted pull-request code. If a separate t
 
 | Parameter (`census.delivery.` prefix) | Default / purpose |
 |---|---|
-| `input` | `${project.build.directory}/cryptocensus/cbom.json`; explicit existing report. |
-| `sha256` | Required expected digest, 64 hexadecimal characters. |
+| `input` | `${project.build.directory}/cryptocensus/cbom.json` in unbound mode; with a manifest, any explicit path must identify the selected sealed artifact. |
+| `sha256` | Required in unbound mode: expected digest, 64 hexadecimal characters. With a manifest, any explicit value must match the seal. |
 | `endpoint` | Required operator-selected HTTPS URL. |
 | `destinationId` | Required nonsecret receiver ID. |
 | `application` | Required application mapping. |
 | `module` | `${project.groupId}:${project.artifactId}`. |
 | `version` | `${project.version}`. |
-| `runId` | Required caller-supplied source run identity. |
+| `runId` | Required in unbound mode: caller-supplied source run identity. With a manifest, any explicit value must match `census.runId`. |
 | `receipt` | Optional explicit receipt filename. |
 | `receiptDirectory` | `${project.build.directory}/cryptocensus/delivery`; UUID filename if `receipt` absent. |
 | `auth` | `bearer`; `none` explicitly disables authentication. |
 | `tokenEnv` | Environment variable name containing bearer token; mutually exclusive with `serverId`. |
 | `serverId` | Maven settings server; decrypted password is bearer token. |
 | `caBundle` | Optional PEM roots added to JVM trust for this client. |
-| `proxyHost` | Optional explicit unauthenticated CONNECT proxy host. |
+| `proxyHost` | Optional explicit CONNECT proxy host; required with proxy credentials. |
 | `proxyPort` | `8080`. |
+| `proxyUserEnv` / `proxyPasswordEnv` | Both environment variable names for Basic proxy credentials; mutually exclusive with `proxyServerId`. |
+| `proxyServerId` | Maven settings server whose username and decrypted password authenticate to the proxy. |
 | `failOnError` | `true`; false changes only recorded unsuccessful delivery gating. |
+
+Manifest controls use the **`census.` prefix**, not `census.delivery.`: `census.manifest` names the exact `run-.../revisions/N/manifest.json`, and `census.runId` supplies the expected producing UUID. They apply to Maven `publish` and profile `delivery`; see [CI finalization](CI-FINALIZATION.md). Explicit artifact/digest CLI publication retains caller-supplied provenance.
