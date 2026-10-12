@@ -137,6 +137,79 @@ class ProfileValidationTest {
   }
 
   @Test
+  void rejectsIncompleteProxySecretsAndUnverifiedRetriesWithoutResolvingSecrets() throws Exception {
+    for (Map<String, Object> transport :
+        List.<Map<String, Object>>of(
+            Map.of("proxyHost", "bad/host"),
+            Map.of("proxyUsername", Map.of("type", "ENV", "name", "USER")),
+            Map.of(
+                "proxyHost", "localhost", "proxyPassword", Map.of("type", "ENV", "name", "PASS")),
+            Map.of(
+                "proxyHost",
+                "localhost",
+                "proxyUsername",
+                Map.of("type", "NONE"),
+                "proxyPassword",
+                Map.of("type", "NONE")))) {
+      var config = ProfileFixture.configuration(directory, "https://example.invalid/upload", null);
+      config.put("transport", transport);
+      Path profile = ProfileFixture.write(directory, config);
+      assertThatThrownBy(
+              () ->
+                  ProfileCommand.run(
+                      "plan",
+                      profile,
+                      null,
+                      ref -> {
+                        throw new AssertionError();
+                      }))
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+    for (Map<String, Object> options :
+        List.<Map<String, Object>>of(
+            Map.of("receiverSupportsIdempotency", "true"),
+            Map.of("maxAttempts", 4),
+            Map.of("receiverSupportsIdempotency", true, "maxAttempts", 0),
+            Map.of("receiverSupportsIdempotency", false, "maxAttempts", 2))) {
+      var config = ProfileFixture.configuration(directory, "https://example.invalid/upload", null);
+      config.put("options", options);
+      Path profile = ProfileFixture.write(directory, config);
+      assertThatThrownBy(
+              () ->
+                  ProfileCommand.run(
+                      "plan",
+                      profile,
+                      null,
+                      ref -> {
+                        throw new AssertionError();
+                      }))
+          .isInstanceOf(IllegalArgumentException.class);
+    }
+  }
+
+  @Test
+  void callerValidatorRunsOnTheDecodedProfileBeforeAnyPreparation() throws Exception {
+    var config = ProfileFixture.configuration(directory, "https://example.invalid/upload", null);
+    Path profile = ProfileFixture.write(directory, config);
+    assertThatThrownBy(
+            () ->
+                ProfileCommand.run(
+                    "plan",
+                    profile,
+                    null,
+                    ref -> {
+                      throw new AssertionError();
+                    },
+                    decoded -> {
+                      throw new IllegalArgumentException("Run binding mismatch");
+                    }))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Run binding mismatch");
+    assertThat(Files.exists(directory.resolve("prepared"))).isFalse();
+    assertThat(Files.exists(directory.resolve("plan.json"))).isFalse();
+  }
+
+  @Test
   void jsonIsStrictBoundedAndRedacted() {
     assertThatThrownBy(
             () -> JsonSupport.parse("{\"a\":1,\"a\":2}".getBytes(StandardCharsets.UTF_8)))

@@ -53,6 +53,7 @@ final class ProfileReceiptStore {
     root.put("destinationId", plan.profile().destinationId());
     root.put("mapping", plan.sanitizedPlan().get("mapping"));
     root.put("adapterOptions", plan.profile().options().sanitized());
+    root.put("transport", plan.sanitizedPlan().get("transport"));
     root.put("endpointSha256", plan.sanitizedPlan().get("endpointSha256"));
     AdapterResult observed = result.observation();
     root.put("upload", observed.upload().name());

@@ -19,7 +19,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-/** Shared Maven/CLI configuration: explicit unauthenticated proxy and additive custom CA trust. */
+/** Shared Maven/CLI configuration: explicit proxy and additive custom CA trust. */
 public final class TransportConfiguration {
   private static final int MAX_CA_BYTES = 1024 * 1024;
 
@@ -28,12 +28,37 @@ public final class TransportConfiguration {
   /**
    * Builds default deadline options. A null CA bundle uses default JVM trust; a null proxy host
    * means direct connections. A CA bundle adds X.509 trust anchors without disabling hostname
-   * verification. Proxy credentials and automatic ambient proxy selection are not supported.
+   * verification. This overload is unauthenticated; automatic ambient proxy selection is never
+   * used.
    */
   public static DeliveryOptions options(Path caBundle, String proxyHost, int proxyPort)
       throws IOException {
     return optionsWithCaBytes(
         caBundle == null ? null : readCaBundle(caBundle), proxyHost, proxyPort);
+  }
+
+  /** Explicit client-scoped authenticated CONNECT configuration. */
+  public static DeliveryOptions options(
+      Path caBundle, String proxyHost, int proxyPort, ProxyCredentials credentials)
+      throws IOException {
+    return optionsWithCaBytes(
+        caBundle == null ? null : readCaBundle(caBundle), proxyHost, proxyPort, credentials);
+  }
+
+  /** Uses verified CA bytes and separately resolved proxy credentials. */
+  public static DeliveryOptions optionsWithCaBytes(
+      byte[] caBundle, String proxyHost, int proxyPort, ProxyCredentials credentials)
+      throws IOException {
+    DeliveryOptions ordinary = optionsWithCaBytes(caBundle, proxyHost, proxyPort);
+    return credentials == null
+        ? ordinary
+        : new DeliveryOptions(
+            ordinary.connectTimeout(),
+            ordinary.requestTimeout(),
+            ordinary.overallTimeout(),
+            ordinary.sslContext(),
+            null,
+            new AuthenticatedProxy(proxyHost, proxyPort, credentials));
   }
 
   /** Builds trust from the exact already-verified certificate bytes, without reopening a file. */

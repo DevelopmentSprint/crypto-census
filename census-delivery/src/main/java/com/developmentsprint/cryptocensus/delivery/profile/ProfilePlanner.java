@@ -208,6 +208,19 @@ public final class ProfilePlanner {
             "runId",
             bundle.correlation().runId()));
     data.put("adapterOptions", profile.options().sanitized());
+    data.put(
+        "transport",
+        Map.of(
+            "proxyConfigured",
+            profile.transport().proxyHost() != null,
+            "proxyAuthenticated",
+            profile.transport().proxyUsername() != null,
+            "connectTimeoutMillis",
+            10000,
+            "requestTimeoutMillis",
+            30000,
+            "overallTimeoutMillis",
+            60000));
     data.put("mutation", capability.mutation().name());
     data.put("lossCodes", losses.stream().sorted().toList());
     data.put("unresolvedAttribution", bundle.unresolvedCount());

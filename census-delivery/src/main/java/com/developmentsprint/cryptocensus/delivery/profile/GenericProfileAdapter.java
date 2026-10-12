@@ -8,10 +8,34 @@ import java.util.Set;
 /** Exact-byte receiver contract without claims of inventory ingestion or remote retention. */
 public final class GenericProfileAdapter implements DestinationAdapter {
   /** Typed nonsecret extension metadata with a finite header allowlist. */
-  public record Options(Map<String, String> headers) implements AdapterOptions {
+  public record Options(
+      Map<String, String> headers, boolean receiverSupportsIdempotency, int maxAttempts)
+      implements AdapterOptions {
     /** Copies validated extension headers. */
     public Options {
       headers = Map.copyOf(headers);
+      if (maxAttempts < 1
+          || maxAttempts > 3
+          || (!receiverSupportsIdempotency && maxAttempts != 1)) {
+        throw new IllegalArgumentException(
+            "Retries require receiver idempotency and at most three attempts");
+      }
+    }
+
+    /** Default one-attempt receiver behavior. */
+    public Options(Map<String, String> headers) {
+      this(headers, false, 1);
+    }
+
+    @Override
+    public Map<String, Object> sanitized() {
+      return Map.of(
+          "receiverSupportsIdempotency",
+          receiverSupportsIdempotency,
+          "maxAttempts",
+          maxAttempts,
+          "idempotencyDeclaration",
+          receiverSupportsIdempotency ? "OPERATOR_ASSERTED" : "NOT_DECLARED");
     }
 
     @Override
@@ -27,7 +51,7 @@ public final class GenericProfileAdapter implements DestinationAdapter {
 
   @Override
   public AdapterOptions parseOptions(Map<String, Object> raw) {
-    JsonSupport.fields(raw, "headers");
+    JsonSupport.fields(raw, "headers", "receiverSupportsIdempotency", "maxAttempts");
     Map<String, Object> values =
         raw.containsKey("headers") ? JsonSupport.object(raw.get("headers")) : Map.of();
     JsonSupport.fields(values, "X-Correlation-Id", "X-Tenant-Id");
@@ -39,7 +63,15 @@ public final class GenericProfileAdapter implements DestinationAdapter {
       }
       headers.put(name, value);
     }
-    return new Options(headers);
+    Object declaration = raw.getOrDefault("receiverSupportsIdempotency", false);
+    Object attempts = raw.getOrDefault("maxAttempts", 1L);
+    if (!(declaration instanceof Boolean enabled)
+        || !(attempts instanceof Long count)
+        || count < 1
+        || count > 3) {
+      throw new IllegalArgumentException("Invalid receiver retry configuration");
+    }
+    return new Options(headers, enabled, count.intValue());
   }
 
   @Override
