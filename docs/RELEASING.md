@@ -21,6 +21,8 @@ dig +short TXT developmentsprint.com
 
 The TXT value must match the portal's verification key. Sonatype checks the exact domain, not a `maven-central` subdomain. Wait until the portal reports **Verified**. A GitHub login's automatically verified `io.github.<username>` namespace does not grant this domain namespace. See [Sonatype namespace registration](https://central.sonatype.org/register/namespace/) for verification and existing-namespace recovery.
 
+If the portal says the namespace is already registered to an inaccessible older account, keep `com.developmentsprint` and request publishing-access recovery from [Central Support](mailto:central-support@sonatype.com). Provide the current Portal account, namespace, public project URL, any known former account identity, and your ability to prove control of `developmentsprint.com`; follow the DNS challenge supplied by support. Previously verified namespaces require [human review to add users or transfer ownership](https://central.sonatype.org/faq/verify-ownership/). A new token alone does not restore namespace access. Continue unsigned verification while recovery is pending; do not switch coordinates or follow retired OSSRH/Jira registration instructions.
+
 Generate a publishing token at [Central Portal user tokens](https://central.sonatype.com/usertoken). Save both generated fields in a secret manager: the token username and token password are distinct from your login credentials. The portal shows the token only once. Configure Maven server ID `central` in a private settings file; the following template contains environment references only:
 
 ```xml
