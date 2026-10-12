@@ -30,6 +30,24 @@
     <dependencies>
         <dependency>
             <groupId>com.developmentsprint</groupId>
+            <artifactId>census-delivery</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
+            <artifactId>census-delivery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-settings-builder</artifactId>
+            <version>${maven.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
             <artifactId>census-core</artifactId>
         </dependency>
         <dependency>

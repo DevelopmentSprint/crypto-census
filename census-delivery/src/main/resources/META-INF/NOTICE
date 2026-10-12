@@ -1,0 +1,10 @@
+Crypto Census
+Copyright 2026 Development Sprint, LLC
+
+Licensed under the Apache License, Version 2.0.
+See the accompanying LICENSE file for the license terms.
+
+The delivery module includes CycloneDX 1.6.1 JSON schemas from the
+CycloneDX specification project (OWASP Foundation), Apache License 2.0.
+Pinned source commit: 8a27bfd1be5be0dcb2c208a34d2f4fa0b6d75bd7.
+The schema license is included beside the schema resources.

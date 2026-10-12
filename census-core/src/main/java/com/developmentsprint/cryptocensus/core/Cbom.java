@@ -519,6 +519,37 @@ public final class Cbom {
   }
 
   /**
+   * Parses original UTF-8 evidence with strict Crypto Census component semantics, independently of
+   * its health-envelope schema. Every component must be a cryptographic asset with Census
+   * properties agreeing with its standard CycloneDX crypto properties. This accepts agent and
+   * Maven-merged evidence without adding, replacing or manufacturing health metadata.
+   *
+   * <p>Callers must separately validate the appropriate health envelope. The document is parsed
+   * directly from the supplied bytes; this method never rewrites or reserializes the evidence.
+   *
+   * @throws IllegalArgumentException on malformed bytes, JSON or inconsistent components
+   */
+  public static Document parseEvidence(byte[] json) {
+    return parse(decode(json), true);
+  }
+
+  private static String decode(byte[] json) {
+    if (json.length > MAX_INPUT_BYTES) {
+      throw new IllegalArgumentException("CBOM exceeds " + MAX_INPUT_BYTES + " bytes");
+    }
+    try {
+      return StandardCharsets.UTF_8
+          .newDecoder()
+          .onMalformedInput(CodingErrorAction.REPORT)
+          .onUnmappableCharacter(CodingErrorAction.REPORT)
+          .decode(ByteBuffer.wrap(json))
+          .toString();
+    } catch (CharacterCodingException e) {
+      throw new IllegalArgumentException("CBOM is not valid UTF-8", e);
+    }
+  }
+
+  /**
    * Parses UTF-8 CBOM bytes; see {@link #parse(String)}.
    *
    * @param json the document as UTF-8 bytes
@@ -526,20 +557,7 @@ public final class Cbom {
    * @throws IllegalArgumentException on malformed JSON or an invalid Crypto Census component
    */
   public static Document parse(byte[] json) {
-    if (json.length > MAX_INPUT_BYTES) {
-      throw new IllegalArgumentException("CBOM exceeds " + MAX_INPUT_BYTES + " bytes");
-    }
-    try {
-      return parse(
-          StandardCharsets.UTF_8
-              .newDecoder()
-              .onMalformedInput(CodingErrorAction.REPORT)
-              .onUnmappableCharacter(CodingErrorAction.REPORT)
-              .decode(ByteBuffer.wrap(json))
-              .toString());
-    } catch (CharacterCodingException e) {
-      throw new IllegalArgumentException("CBOM is not valid UTF-8", e);
-    }
+    return parse(decode(json));
   }
 
   /**
@@ -550,6 +568,10 @@ public final class Cbom {
    * @throws IllegalArgumentException on malformed JSON or an invalid Crypto Census component
    */
   public static Document parse(String json) {
+    return parse(json, false);
+  }
+
+  private static Document parse(String json, boolean requireCensusComponents) {
     Object root = Json.parse(json);
     Map<String, Object> bom = asMap(root, "document");
     if (!"CycloneDX".equals(bom.get("bomFormat"))) {
@@ -570,7 +592,7 @@ public final class Cbom {
 
     // An agent-written document must consist solely of our own, fully described components;
     // a component that lost its properties must not silently disappear from the evidence.
-    boolean strict = AGENT_SCHEMA.equals(metaProps.get(SCHEMA_PROPERTY));
+    boolean strict = requireCensusComponents || AGENT_SCHEMA.equals(metaProps.get(SCHEMA_PROPERTY));
     for (Object o : asList(bom.getOrDefault("components", List.of()), "components")) {
       Map<String, Object> c = asMap(o, "component");
       Map<String, String> all = properties(c, true);
@@ -585,7 +607,7 @@ public final class Cbom {
       if (props.isEmpty()) {
         if (strict) {
           throw new IllegalArgumentException(
-              "Component " + ref + " in an agent document lacks cryptocensus properties");
+              "Component " + ref + " in Census evidence lacks cryptocensus properties");
         }
         continue; // another tool's component
       }

@@ -82,3 +82,5 @@ Production overhead benchmarks and sampling; periodic/on-demand flushing; additi
 ## License
 
 Copyright 2026 Development Sprint, LLC. [Apache License 2.0](LICENSE).
+
+For delivery to a company HTTPS receiver, see [CBOM delivery](docs/DELIVERY.md).

@@ -45,9 +45,11 @@ Require supported-platform CI and the dependency scan for the exact candidate co
 | `census-parent` | POM only; no main, source or Javadoc JAR. |
 | `census-core` | Main JAR, source JAR, Javadoc JAR, POM. |
 | `census-agent` | Shaded main JAR, source JAR, Javadoc JAR, POM. |
+| `census-delivery` | Main JAR, source JAR, Javadoc JAR, test-fixture JAR (`tests` classifier), POM. |
+| `census-cli` | Executable shaded main JAR, source JAR, Javadoc JAR, POM. |
 | `census-maven-plugin` | Main JAR with plugin descriptor, source JAR, Javadoc JAR, POM. |
 
-All use group `com.developmentsprint` and version `0.1.0`. The demo and app-server test modules are excluded from deployment. Do not publish an `original-*` agent JAR. Inspect the agent manifest and relocated classes, and verify the content of `META-INF/LICENSE` (Apache 2.0), `META-INF/NOTICE` (Development Sprint copyright plus the retained Byte Buddy/Rafael Winterhalter notice), and `META-INF/licenses/ASM` (ASM copyright and BSD terms). Each published main JAR must carry the project license and notice; checking only that a file with the right name exists is insufficient. Confirm license/SCM/developer metadata in POMs, usable Javadocs and correct source contents. Signing adds detached signatures for published artifacts/POMs; record checksums for the exact signed bundle contents.
+All use group `com.developmentsprint` and version `0.1.0`. The demo and app-server test modules are excluded from deployment. Do not publish an `original-*` agent or CLI JAR. The delivery test-fixture JAR contains only shared test support, with no static private keys or runtime dependency on the agent. Verify the CLI main class and that neither Byte Buddy nor agent instrumentation is included in the CLI. Inspect the agent manifest and relocated classes, and verify the content of `META-INF/LICENSE` (Apache 2.0), `META-INF/NOTICE` (Development Sprint copyright plus the retained Byte Buddy/Rafael Winterhalter notice), and `META-INF/licenses/ASM` (ASM copyright and BSD terms). Each published main JAR must carry the project license and notice; checking only that a file with the right name exists is insufficient. Confirm license/SCM/developer metadata in POMs, usable Javadocs and correct source contents. Signing adds detached signatures for published artifacts/POMs; record checksums for the exact signed bundle contents.
 
 ## Test a locally staged candidate
 
@@ -55,7 +57,7 @@ Central cannot supply an unpublished first release. Stage the candidate in a ded
 
 ```sh
 CENSUS_STAGE_REPO=$(mktemp -d /tmp/census-stage.XXXXXX)
-./mvnw -B -ntp -P release -pl census-core,census-agent,census-maven-plugin -am install \
+./mvnw -B -ntp -P release -pl census-core,census-agent,census-delivery,census-cli,census-maven-plugin -am install \
   -Dgpg.skip=true -Dmaven.repo.local="$CENSUS_STAGE_REPO"
 export CENSUS_CANDIDATE_REPOSITORY="file://$CENSUS_STAGE_REPO"
 CENSUS_CONSUMER_REPO=$(mktemp -d /tmp/census-consumer-cache.XXXXXX)
@@ -93,7 +95,7 @@ mvn -s candidate-settings.xml -P candidate -Dmaven.repo.local="$CENSUS_CONSUMER_
   verify -Dcensus.failOn=quantum-vulnerable
 ```
 
-Use a SHA-256/RSA-2048 workload: the first run must pass and the stricter run must fail for the expected policy reason. Inspect a new current-run CBOM, policy version, counts and health in each run. Also exercise [JaCoCo/Failsafe and multimodule recipes](RECIPES.md).
+Use a SHA-256/RSA-2048 workload: the first run must pass and the stricter run must fail for the expected policy reason. Inspect a new current-run CBOM, policy version, counts and health in each run. Also exercise [JaCoCo/Failsafe and multimodule recipes](RECIPES.md). Verify the packaged CLI and actual Maven `publish` goal against a local HTTPS receiver using the same report and expected digest; require byte equality, equivalent delivery identities, private receipts, and no credential leakage. Follow [delivery limitations](DELIVERY.md) when testing policy-failed builds; the generic receiver does not establish vendor ingestion or current-run provenance.
 
 With another fresh consumer cache and external directory, run the [agent acquisition command](INSTALLATION.md#after-010-is-published) using the same candidate settings. Run a standalone cryptographic workload, stop it gracefully and validate its CBOM. Check the acquired agent's SHA-256 against the staged artifact. Archive the exact consumer POM/source and logs as smoke-test evidence.
 
@@ -121,7 +123,7 @@ Repeat the external Maven and standalone smoke tests with new empty caches. Down
 
 ## Publish and verify public resolution
 
-The maintainer explicitly publishes the accepted deployment in Central Portal. Wait for status **PUBLISHED**, then remove the candidate settings/repository and all authentication from the consumer test. Use new empty local caches and ordinary Central resolution to repeat the quickstart and standalone download/signature verification. Confirm parent/core/agent/plugin coordinates, classifiers and POMs resolve from `repo.maven.apache.org`.
+The maintainer explicitly publishes the accepted deployment in Central Portal. Wait for status **PUBLISHED**, then remove the candidate settings/repository and all authentication from the consumer test. Use new empty local caches and ordinary Central resolution to repeat the quickstart and standalone download/signature verification. Confirm parent/core/agent/delivery/CLI/plugin coordinates, classifiers and POMs resolve from `repo.maven.apache.org`.
 
 Complete the accepted gitflow release: merge the release into `main`, create the release tag identifying the verified source, merge back to `develop`, and advance development to `0.1.1-SNAPSHOT` with development SCM metadata reset to `HEAD`. Review and authorize remote pushes and the GitHub release separately. Publish the signing-key fingerprint and artifact SHA-256 values with the release record, then update installation text to reflect verified public availability. Never reuse an already published version for different bytes.
 
