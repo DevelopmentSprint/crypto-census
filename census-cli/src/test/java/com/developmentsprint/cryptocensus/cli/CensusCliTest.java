@@ -193,6 +193,47 @@ class CensusCliTest {
     }
   }
 
+  @Test
+  void receiptCannotReplaceCaBundleThroughFileOrDirectoryAliases() throws Exception {
+    Path artifact = artifact();
+    Path roots = Files.createDirectories(directory.resolve("roots"));
+    Path caBundle = Files.copy(tls.caBundle(), roots.resolve("ca.pem"));
+    byte[] original = Files.readAllBytes(caBundle);
+    Path hardLink = Files.createLink(directory.resolve("ca-hardlink.pem"), caBundle);
+    Path parentLink = Files.createSymbolicLink(directory.resolve("roots-link"), roots);
+    Path child = Files.createDirectory(roots.resolve("child"));
+    Path childLink = Files.createSymbolicLink(directory.resolve("child-link"), child);
+    AtomicInteger calls = new AtomicInteger();
+    HttpsServer server = tls.server();
+    server.createContext(
+        "/ingest",
+        exchange -> {
+          calls.incrementAndGet();
+          exchange.getRequestBody().readAllBytes();
+          exchange.sendResponseHeaders(204, -1);
+          exchange.close();
+        });
+    server.start();
+    try {
+      for (Path receipt :
+          List.of(
+              caBundle, hardLink, parentLink.resolve("ca.pem"), childLink.resolve("../ca.pem"))) {
+        List<String> args = args(artifact, server);
+        args.set(args.indexOf("--receipt") + 1, receipt.toString());
+        args.set(args.indexOf("--ca-bundle") + 1, caBundle.toString());
+        args.addAll(List.of("--auth", "none"));
+        assertThat(run(args, Map.of())).isEqualTo(2);
+        assertThat(Files.readAllBytes(caBundle)).isEqualTo(original);
+        assertThat(Files.readAllBytes(receipt)).isEqualTo(original);
+      }
+      assertThat(calls.get()).isZero();
+      assertThat(stderr.toString(StandardCharsets.UTF_8))
+          .contains("--receipt and --ca-bundle must be different files");
+    } finally {
+      server.stop(0);
+    }
+  }
+
   private int run(List<String> args, Map<String, String> environment) {
     return CensusCli.run(
         args.toArray(String[]::new),

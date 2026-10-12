@@ -11,6 +11,7 @@ import com.developmentsprint.cryptocensus.delivery.TransportConfiguration;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,9 +93,13 @@ public final class CensusCli {
     if (proxy == null && values.containsKey("proxy-port")) {
       throw new ConfigurationException("--proxy-port requires --proxy-host");
     }
+    Path input = Path.of(required(values, "input"));
+    Path receipt = Path.of(required(values, "receipt"));
+    Path caBundle = values.containsKey("ca-bundle") ? Path.of(values.get("ca-bundle")) : null;
+    protectCaBundle(receipt, caBundle);
     return new DeliveryRequest(
-        Path.of(required(values, "input")),
-        Path.of(required(values, "receipt")),
+        input,
+        receipt,
         required(values, "sha256"),
         required(values, "destination-id"),
         URI.create(required(values, "endpoint")),
@@ -104,10 +109,18 @@ public final class CensusCli {
         required(values, "run-id"),
         credentials(values, environment),
         TransportConfiguration.options(
-            values.containsKey("ca-bundle") ? Path.of(values.get("ca-bundle")) : null,
-            proxy,
-            port,
-            proxyCredentials(values, environment)));
+            caBundle, proxy, port, proxyCredentials(values, environment)));
+  }
+
+  private static void protectCaBundle(Path receipt, Path caBundle) throws IOException {
+    if (caBundle == null) {
+      return;
+    }
+    // Resolve the supplied paths in the filesystem, including hard links and parent symlinks.
+    // Lexical normalization could select a different file when a symlink precedes '..'.
+    if (Files.exists(receipt) && Files.isSameFile(receipt, caBundle)) {
+      throw new ConfigurationException("--receipt and --ca-bundle must be different files");
+    }
   }
 
   private static ProxyCredentials proxyCredentials(
