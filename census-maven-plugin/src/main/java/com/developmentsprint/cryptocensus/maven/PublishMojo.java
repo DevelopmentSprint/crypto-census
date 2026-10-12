@@ -5,11 +5,13 @@ import com.developmentsprint.cryptocensus.delivery.DeliveryEngine;
 import com.developmentsprint.cryptocensus.delivery.DeliveryException;
 import com.developmentsprint.cryptocensus.delivery.DeliveryReceipt;
 import com.developmentsprint.cryptocensus.delivery.DeliveryRequest;
+import com.developmentsprint.cryptocensus.delivery.ProxyCredentials;
 import com.developmentsprint.cryptocensus.delivery.ReceiptWriteException;
 import com.developmentsprint.cryptocensus.delivery.TransportConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 import org.apache.maven.execution.MavenSession;
@@ -36,10 +38,19 @@ public class PublishMojo extends AbstractMojo {
   private SettingsDecrypter settingsDecrypter;
 
   /** Existing CBOM. This goal does not generate or choose a report. */
-  @Parameter(
-      property = "census.delivery.input",
-      defaultValue = "${project.build.directory}/cryptocensus/cbom.json")
+  @Parameter(property = "census.delivery.input")
   private File input;
+
+  @Parameter(defaultValue = "${project.build.directory}/cryptocensus/cbom.json", readonly = true)
+  private File defaultInput;
+
+  /** Exact sealed Maven evidence revision. Alternative to caller-supplied input/digest mapping. */
+  @Parameter(property = "census.manifest")
+  private File manifest;
+
+  /** Explicit expected producing CI run UUID, required with census.manifest. */
+  @Parameter(property = "census.runId")
+  private String preparedRunId;
 
   /** SHA-256 captured by the producer; verifies the exact supplied evidence. */
   @Parameter(property = "census.delivery.sha256")
@@ -100,6 +111,17 @@ public class PublishMojo extends AbstractMojo {
   @Parameter(property = "census.delivery.proxyPort", defaultValue = "8080")
   private int proxyPort;
 
+  /** Environment references for explicit CONNECT proxy authentication. */
+  @Parameter(property = "census.delivery.proxyUserEnv")
+  private String proxyUserEnv;
+
+  @Parameter(property = "census.delivery.proxyPasswordEnv")
+  private String proxyPasswordEnv;
+
+  /** Maven server with decrypted proxy username/password; exclusive with environment references. */
+  @Parameter(property = "census.delivery.proxyServerId")
+  private String proxyServerId;
+
   /** Fail on a recorded unsuccessful delivery; input/configuration errors always fail. */
   @Parameter(property = "census.delivery.failOnError", defaultValue = "true")
   private boolean failOnError;
@@ -118,7 +140,7 @@ public class PublishMojo extends AbstractMojo {
           "Could not persist delivery receipt; remote HTTP acceptance: " + e.remoteAccepted());
     } catch (DeliveryException e) {
       throw new MojoExecutionException(e.reasonCode() + ": " + e.getMessage());
-    } catch (IllegalArgumentException | IOException e) {
+    } catch (IOException | RuntimeException e) {
       // Do not retain cause text: URI, credential, settings and transport errors can contain
       // secrets.
       throw new MojoExecutionException(
@@ -148,6 +170,36 @@ public class PublishMojo extends AbstractMojo {
   }
 
   private DeliveryRequest request() throws IOException {
+    Path runDirectory = null;
+    if (manifest != null) {
+      Path directory = RunEvidence.directoryForManifest(manifest.toPath());
+      runDirectory = directory;
+      String revision = RunEvidence.revisionForManifest(manifest.toPath());
+      var sealed = RunEvidence.verify(directory, preparedRunId, module, version, revision);
+      String sealedHash = (String) sealed.get("sha256");
+      if ((sha256 != null && !RunEvidence.hashMatches(sha256, sealedHash))
+          || (runId != null && !runId.equals(preparedRunId))) {
+        throw new ConfigurationException(
+            "Delivery identity conflicts with the selected current-run manifest");
+      }
+      File selectedInput =
+          RunEvidence.sealedDirectory(directory, revision).resolve(RunEvidence.ARTIFACT).toFile();
+      if (input != null
+          && !input
+              .toPath()
+              .toAbsolutePath()
+              .normalize()
+              .equals(selectedInput.toPath().toAbsolutePath().normalize())) {
+        throw new ConfigurationException(
+            "Delivery input conflicts with the selected current-run manifest");
+      }
+      input = selectedInput;
+      sha256 = sealedHash;
+      runId = preparedRunId;
+    }
+    if (input == null) {
+      input = defaultInput;
+    }
     if (input == null || endpoint == null || (receipt == null && receiptDirectory == null)) {
       throw new ConfigurationException(
           "Configure census.delivery.input, endpoint and a receipt location");
@@ -162,6 +214,17 @@ public class PublishMojo extends AbstractMojo {
         receipt != null
             ? receipt.toPath()
             : receiptDirectory.toPath().resolve("delivery-" + UUID.randomUUID() + ".json");
+    if (runDirectory != null) {
+      RunEvidence.rejectReceiptAlias(runDirectory, receiptPath);
+    }
+    // Compare the original filesystem paths: normalizing before resolving symlinks can
+    // change the meaning of a path containing parent segments.
+    if (caBundle != null
+        && Files.exists(receiptPath)
+        && Files.isSameFile(receiptPath, caBundle.toPath())) {
+      throw new ConfigurationException(
+          "Delivery receipt must not overwrite the selected CA bundle");
+    }
     return new DeliveryRequest(
         input.toPath(),
         receiptPath,
@@ -174,7 +237,52 @@ public class PublishMojo extends AbstractMojo {
         runId,
         credentials(),
         TransportConfiguration.options(
-            caBundle == null ? null : caBundle.toPath(), proxyHost, proxyPort));
+            caBundle == null ? null : caBundle.toPath(), proxyHost, proxyPort, proxyCredentials()));
+  }
+
+  private ProxyCredentials proxyCredentials() {
+    if (proxyUserEnv == null && proxyPasswordEnv == null && proxyServerId == null) {
+      return null;
+    }
+    if (proxyHost == null || proxyHost.isBlank()) {
+      throw new ConfigurationException("Proxy authentication requires census.delivery.proxyHost");
+    }
+    if (proxyServerId != null) {
+      if (proxyUserEnv != null || proxyPasswordEnv != null) {
+        throw new ConfigurationException(
+            "Select proxyServerId or proxy environment references, not both");
+      }
+      if (session == null || settingsDecrypter == null) {
+        throw new ConfigurationException("Maven proxy server credential resolution is unavailable");
+      }
+      Server server = session.getSettings().getServer(proxyServerId);
+      if (server == null) {
+        throw new ConfigurationException("Configured proxyServerId is absent from Maven settings");
+      }
+      SettingsDecryptionResult decrypted =
+          settingsDecrypter.decrypt(new DefaultSettingsDecryptionRequest(server));
+      if (decrypted == null
+          || !decrypted.getProblems().isEmpty()
+          || decrypted.getServer() == null) {
+        throw new ConfigurationException("Maven could not decrypt the selected proxy credential");
+      }
+      return ProxyCredentials.basic(
+          decrypted.getServer().getUsername(), decrypted.getServer().getPassword());
+    }
+    if (proxyUserEnv == null
+        || proxyPasswordEnv == null
+        || !proxyUserEnv.matches("[A-Za-z_][A-Za-z0-9_]*")
+        || !proxyPasswordEnv.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+      throw new ConfigurationException(
+          "Configure both proxyUserEnv and proxyPasswordEnv as environment variable names");
+    }
+    String username = environment(proxyUserEnv);
+    String password = environment(proxyPasswordEnv);
+    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+      throw new ConfigurationException(
+          "Configured proxy environment credential is absent or empty");
+    }
+    return ProxyCredentials.basic(username, password);
   }
 
   private DeliveryCredentials credentials() {

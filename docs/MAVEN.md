@@ -2,7 +2,7 @@
 
 Configure `com.developmentsprint:census-maven-plugin` under `<build><plugins>`. The [README quickstart](../README.md#quick-start) uses defaults so command-line properties work. An explicit XML value such as `<failOn>broken</failOn>` takes precedence over `-Dcensus.failOn=...`; use defaults or a POM property when you need command-line overrides.
 
-Both goals are thread-safe and operate per Maven project. `prepare-agent` defaults to `initialize`; `check` defaults to `verify`. Run the lifecycle through `verify` so preparation, forked tests and checking share the same Maven session. Directly invoking `check` in a later Maven process cannot authenticate the previous run directory.
+`prepare-agent` and `check` are thread-safe and operate per Maven project. `prepare-agent` defaults to `initialize`; `check` defaults to `verify`. Run the lifecycle through `verify` so preparation, forked tests and checking share the same Maven session. Directly invoking `check` in a later Maven process cannot authenticate the previous run directory.
 
 ## prepare-agent
 
@@ -14,6 +14,7 @@ Both goals are thread-safe and operate per Maven project. `prepare-agent` defaul
 | `maxAssets` | `census.maxAssets` | `500` | Distinct assets per JVM, integer 1–2000. |
 | `maxSites` | `census.maxSites` | `50` | Call sites retained per asset, integer 1–100. |
 | `debug` | `census.debug` | `false` | Log instrumentation errors from the agent. |
+| `runId` | `census.runId` | unset | Fresh lowercase UUID for independent current-run finalization. Reuse across invocations fails. |
 | `skip` | `census.skip` | `false` | Skip preparation and, with the shared property, checking. |
 
 Collection maxima are count ceilings, not a promise that arbitrarily long asset names and metadata fit the output budget; an unrepresentable report fails explicitly even after attribution is folded. Invalid collection limits fail configuration. The plugin percent-encodes agent options, sets `app` to the project's artifact ID, and disables per-JVM summaries because `check` prints the merged findings. `cryptocensus.runDir` is informational; changing it cannot substitute an evidence directory. `experimental` is a standalone agent option, not a Maven plugin parameter.
@@ -107,3 +108,32 @@ Not detected (by design or not yet):
 ## Enterprise evidence delivery
 
 Use the explicit [`publish` goal](DELIVERY.md) to send an existing report to a company HTTPS receiver. It shares the standalone CLI delivery engine and requires an expected digest and caller-supplied run identity. It does not run tests or replace crypto-policy enforcement.
+
+## Failed-build finalization
+
+[`report` and `enforce`](CI-FINALIZATION.md) are explicit, thread-safe goals with no
+default lifecycle binding. `report` requires `census.runId`, reads only that module's
+registered run, and seals evidence without enforcing policy. `enforce` requires
+`census.runId` and the exact `census.manifest`, verifies its bytes, and applies the
+same policy parameters as `check`. Neither goal chooses a latest report.
+
+| Property | Default | Meaning |
+|---|---|---|
+| `census.runId` | required | Fresh producer UUID, passed to prepare-agent and later finalizers. |
+| `census.destDir` | `${project.build.directory}/cryptocensus` | Descriptor/run parent used by prepare-agent and report. |
+| `census.revision` | `1` | Explicit positive revision number for report; existing seals are immutable. |
+| `census.testOutcome` | `unknown` | Caller-supplied producer outcome: passed, failed, or unknown. |
+| `census.manifest` | required for enforce | Exact run/revisions/N/manifest.json; optional binding for publish and delivery. |
+
+With `census.manifest`, `publish` obtains its artifact/digest/run identity from
+verified sealed evidence and rejects conflicting explicit values. Profile `delivery`
+also requires `census.delivery.application`; its cryptographic source and correlation
+must match the seal on every action. Receipts, plans, and derived output cannot
+replace or alias immutable run evidence. Without this option, existing delivery
+remains caller-supplied provenance, without a freshness claim.
+
+Authenticated CONNECT delivery accepts `census.delivery.proxyUserEnv` and
+`census.delivery.proxyPasswordEnv` as environment variable names, or the exclusive
+`census.delivery.proxyServerId` as a Maven settings server containing a decryptable
+username and password. These require an explicit `census.delivery.proxyHost`.
+Credentials are resolved during delivery and never stored in evidence or receipts.

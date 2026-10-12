@@ -3,13 +3,13 @@ package com.developmentsprint.cryptocensus.maven;
 import com.developmentsprint.cryptocensus.core.Cbom;
 import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Occurrence;
+import com.developmentsprint.cryptocensus.core.Policy;
 import com.developmentsprint.cryptocensus.core.Report;
 import com.developmentsprint.cryptocensus.core.Risk;
 import com.developmentsprint.cryptocensus.core.Targets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -113,13 +113,134 @@ public class CheckMojo extends AbstractMojo {
   @Parameter(property = "census.skip", defaultValue = "false")
   private boolean skip;
 
+  @Parameter(property = "census.runId")
+  private String runId;
+
+  @Parameter(property = "census.destDir", defaultValue = "${project.build.directory}/cryptocensus")
+  private File destDir;
+
+  /** Producer outcome supplied by CI, never inferred from report availability. */
+  @Parameter(property = "census.testOutcome", defaultValue = "unknown")
+  private String testOutcome;
+
+  /** Explicit immutable artifact revision; a new revision never overwrites an earlier seal. */
+  @Parameter(property = "census.revision", defaultValue = "1")
+  private String revision;
+
+  /** Exact sealed manifest to enforce; never selects the newest revision. */
+  @Parameter(property = "census.manifest")
+  private File manifest;
+
+  private Map<String, Object> selectedManifest;
+
+  enum Mode {
+    CHECK,
+    REPORT,
+    ENFORCE
+  }
+
+  Mode mode() {
+    return Mode.CHECK;
+  }
+
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     if (skip) {
       getLog().info("Skipping Crypto Census");
       return;
     }
-    Object runDirValue = project.getContextValue(PrepareAgentMojo.RUN_DIR_CONTEXT);
+    if (mode() != Mode.CHECK) {
+      try {
+        executeCurrentRun();
+      } catch (IOException | IllegalArgumentException error) {
+        throw new MojoExecutionException(
+            "Current-run evidence rejected: " + error.getMessage(), error);
+      }
+      return;
+    }
+    executeReport(null);
+  }
+
+  private void executeCurrentRun()
+      throws IOException, MojoExecutionException, MojoFailureException {
+    String module = project.getGroupId() + ":" + project.getArtifactId();
+    Path directory;
+    if (mode() == Mode.ENFORCE) {
+      if (manifest == null) {
+        throw new IllegalArgumentException(
+            "census:enforce requires census.manifest and census.runId");
+      }
+      directory = RunEvidence.directoryForManifest(manifest.toPath());
+      revision = RunEvidence.revisionForManifest(manifest.toPath());
+      RunEvidence.descriptor(directory, runId, module, project.getVersion());
+    } else {
+      directory = RunEvidence.select(destDir.toPath(), runId, module, project.getVersion());
+    }
+    Object context = project.getContextValue(PrepareAgentMojo.RUN_DIR_CONTEXT);
+    if (context != null
+        && !directory
+            .toAbsolutePath()
+            .normalize()
+            .equals(Path.of(context.toString()).toAbsolutePath().normalize())) {
+      throw new IllegalArgumentException(
+          "Explicit run differs from this Maven invocation's prepared run");
+    }
+    Path sealed = RunEvidence.sealedDirectory(directory, revision);
+    if (Files.exists(sealed, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+      Map<String, Object> manifest =
+          RunEvidence.verify(directory, runId, module, project.getVersion(), revision);
+      selectedManifest = manifest;
+      if (!policy().equals(manifest.get("policy"))) {
+        throw new IllegalArgumentException(
+            "Effective policy differs from sealed evidence; use the original policy configuration");
+      }
+      if (mode() == Mode.REPORT
+          && !RunEvidence.testOutcome(testOutcome).equals(manifest.get("testOutcome"))) {
+        throw new IllegalArgumentException("Producer outcome differs from the sealed run");
+      }
+      getLog()
+          .info("Verified sealed current-run evidence: " + sealed.resolve(RunEvidence.ARTIFACT));
+      if (mode() == Mode.REPORT) {
+        if (!RunEvidence.digests(directory).equals(manifest.get("inputs"))) {
+          throw new IllegalArgumentException(
+              "Inputs changed; choose a new explicit census.revision to preserve this seal");
+        }
+        getLog().info("Manifest: " + sealed.resolve(RunEvidence.MANIFEST));
+        return; // Preserve original bytes, document identity and timestamp on retries.
+      }
+    } else if (mode() == Mode.ENFORCE) {
+      throw new IllegalArgumentException(
+          "No sealed evidence; run census:report for this run first");
+    } else {
+      RunEvidence.testOutcome(testOutcome);
+      Files.createDirectories(directory.resolve("revisions"));
+      if (Files.isSymbolicLink(directory.resolve("revisions"))) {
+        throw new IllegalArgumentException("Revision directory cannot be a symlink");
+      }
+      RunEvidence.privateDirectory(sealed);
+    }
+    executeReport(directory);
+  }
+
+  private Map<String, Object> policy() {
+    Map<String, Object> config = new LinkedHashMap<>();
+    config.put("id", Policy.ID);
+    config.put("version", Policy.VERSION);
+    config.put("failOn", failOn.trim().toLowerCase(Locale.ROOT));
+    config.put("failOnUnknown", failOnUnknown);
+    config.put("failOnMissingData", failOnMissingData);
+    config.put("failOnIncompleteCollection", failOnIncompleteCollection);
+    config.put("failOnMissingTargets", failOnMissingTargets);
+    config.put("ignoreJdkInternal", ignoreJdkInternal);
+    config.put(
+        "allow",
+        allow.stream().map(a -> a.trim().toLowerCase(Locale.ROOT)).sorted().distinct().toList());
+    return config;
+  }
+
+  private void executeReport(Path registered) throws MojoExecutionException, MojoFailureException {
+    Object runDirValue =
+        registered == null ? project.getContextValue(PrepareAgentMojo.RUN_DIR_CONTEXT) : registered;
     if (runDirValue == null) {
       throw new MojoExecutionException(
           "census:check needs census:prepare-agent to run earlier in the same build");
@@ -135,9 +256,23 @@ public class CheckMojo extends AbstractMojo {
     long recordingFailures = 0;
     long drainTimedOut = 0;
     List<Map<String, Targets.Status>> targets = new ArrayList<>();
-    for (Path file : inputs(Path.of(runDir))) {
+    long totalRead = 0;
+    List<Path> inputFiles;
+    if (mode() == Mode.ENFORCE) {
+      Map<String, Object> expected =
+          com.developmentsprint.cryptocensus.delivery.profile.JsonSupport.object(
+              selectedManifest.get("inputs"));
+      inputFiles = expected.keySet().stream().sorted().map(Path.of(runDir)::resolve).toList();
+    } else {
+      inputFiles = inputs(Path.of(runDir));
+    }
+    for (Path file : inputFiles) {
       try {
         byte[] bytes = Cbom.readBytes(file); // read once ...
+        totalRead += bytes.length;
+        if (totalRead > MAX_TOTAL_BYTES) {
+          throw new IllegalArgumentException("CBOMs exceed the aggregate byte limit");
+        }
         Cbom.Document doc = Cbom.parse(bytes); // ... parse those bytes ...
         doc.validateAgentHealth(); // schema, every counter present and numeric, counters consistent
         // absent (an older agent, or one that could not determine its targets) parses as empty,
@@ -154,6 +289,10 @@ public class CheckMojo extends AbstractMojo {
     }
 
     if (inputs.isEmpty()) {
+      if (registered != null) {
+        throw new MojoExecutionException(
+            "No current-run JVM evidence exists; refusing to use an earlier report");
+      }
       // Absence of evidence is acceptable only when we can positively establish that no tests ran:
       // fresh test reports prove the opposite, and silence (reports disabled or relocated) is not
       // proof.
@@ -176,6 +315,10 @@ public class CheckMojo extends AbstractMojo {
       throw new MojoFailureException(message + " Set failOnMissingData=false to accept this.");
     }
 
+    if (mode() == Mode.ENFORCE && !inputs.equals(selectedManifest.get("inputs"))) {
+      throw new MojoExecutionException("Sealed inputs changed during enforcement");
+    }
+
     final List<Inventory.Entry> snapshot;
     final long dropped = merged.droppedObservations();
     Map<String, String> meta = new LinkedHashMap<>();
@@ -192,7 +335,15 @@ public class CheckMojo extends AbstractMojo {
     try {
       Cbom.Metadata metadata = new Cbom.Metadata(project.getArtifactId(), meta);
       snapshot = Cbom.boundedEntries(merged.entries(), dropped, metadata);
-      Cbom.write(snapshot, dropped, metadata, output.toPath());
+      if (registered != null) {
+        output =
+            RunEvidence.sealedDirectory(registered, revision)
+                .resolve(RunEvidence.ARTIFACT)
+                .toFile();
+      }
+      if (mode() != Mode.ENFORCE) {
+        Cbom.write(snapshot, dropped, metadata, output.toPath());
+      }
     } catch (IOException | IllegalArgumentException e) {
       throw new MojoExecutionException("Could not write " + output, e);
     }
@@ -243,6 +394,7 @@ public class CheckMojo extends AbstractMojo {
     targetReport.warnings().forEach(getLog()::warn);
     targetReport.failure().ifPresent(problems::add);
 
+    int healthProblems = problems.size();
     List<Inventory.Entry> unknown =
         snapshot.stream()
             .filter(
@@ -288,6 +440,41 @@ public class CheckMojo extends AbstractMojo {
       }
     }
 
+    if (mode() == Mode.REPORT) {
+      try {
+        RunEvidence.seal(
+            registered,
+            runId,
+            project.getGroupId() + ":" + project.getArtifactId(),
+            project.getVersion(),
+            revision,
+            inputs,
+            policy(),
+            testOutcome,
+            transformErrors == 0
+                && recordingFailures == 0
+                && dropped == 0
+                && drainTimedOut == 0
+                && overflowed == 0
+                && targetReport(targets, true).failure().isEmpty(),
+            problems.size() == healthProblems);
+      } catch (IOException | IllegalArgumentException error) {
+        throw new MojoExecutionException("Could not seal current-run evidence", error);
+      }
+      getLog()
+          .info(
+              "Manifest: "
+                  + RunEvidence.sealedDirectory(registered, revision)
+                      .resolve(RunEvidence.MANIFEST));
+      getLog()
+          .info(
+              "Evidence sealed; policy="
+                  + (problems.size() == healthProblems ? "passed" : "failed")
+                  + ", producer="
+                  + testOutcome
+                  + ". Run census:enforce independently of delivery.");
+      return;
+    }
     if (!problems.isEmpty()) {
       throw new MojoFailureException(String.join("\n\n", problems));
     }
@@ -298,24 +485,11 @@ public class CheckMojo extends AbstractMojo {
     if (!Files.isDirectory(dir)) {
       return files;
     }
-    long total = 0;
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "cbom-*.json")) {
-      for (Path file : stream) {
-        if (files.size() >= MAX_INPUT_FILES) {
-          throw new MojoExecutionException("More than " + MAX_INPUT_FILES + " CBOMs in " + dir);
-        }
-        // advisory early stop; each file's real size is enforced again while it is read
-        total += Files.size(file);
-        if (total > MAX_TOTAL_BYTES) {
-          throw new MojoExecutionException(
-              "CBOMs in " + dir + " exceed " + MAX_TOTAL_BYTES + " bytes in total");
-        }
-        files.add(file);
-      }
-    } catch (IOException e) {
-      throw new MojoExecutionException("Could not list CBOMs in " + dir, e);
+    try {
+      files.addAll(RunEvidence.inputs(dir));
+    } catch (IOException | IllegalArgumentException e) {
+      throw new MojoExecutionException("Could not list valid CBOMs in " + dir, e);
     }
-    files.sort(null);
     return files;
   }
 
