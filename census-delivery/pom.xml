@@ -16,6 +16,19 @@
         <jacoco.minimum.branch>0.75</jacoco.minimum.branch>
     </properties>
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>META-INF/LICENSE</include>
+                    <include>META-INF/NOTICE</include>
+                </includes>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -24,7 +37,11 @@
                     <execution>
                         <goals><goal>test-jar</goal></goals>
                         <configuration>
-                            <includes><include>**/testing/**</include></includes>
+                            <includes>
+                                <include>**/testing/**</include>
+                                <include>META-INF/LICENSE</include>
+                                <include>META-INF/NOTICE</include>
+                            </includes>
                         </configuration>
                     </execution>
                 </executions>
