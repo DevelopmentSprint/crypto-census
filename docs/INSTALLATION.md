@@ -31,6 +31,8 @@ java -javaagent:census-agent.jar=output=cbom.json,app=payments-api -jar payments
 
 The destination directory must allow the JVM user to create and rename files. The agent writes the report at graceful shutdown. See [operations](OPERATIONS.md) for options and output security.
 
+<a id="after-010-is-published"></a>
+
 ## After 0.1.0 is published
 
 Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-agent`, `census-delivery`, `census-cli`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
