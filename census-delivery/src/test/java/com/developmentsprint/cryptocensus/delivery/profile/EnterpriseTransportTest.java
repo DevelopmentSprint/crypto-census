@@ -29,7 +29,7 @@ class EnterpriseTransportTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"exact", "different", "missing", "redirect", "skipped"})
+  @ValueSource(strings = {"exact", "different", "missing", "redirect", "skipped", "before"})
   void authenticationAndReadbackAreEnforcedByEngine(String scenario) throws Exception {
     HttpsServer server = tls.server();
     AtomicReference<byte[]> stored = new AtomicReference<>();
@@ -71,8 +71,10 @@ class EnterpriseTransportTest {
       config.put("inputs", List.of(input));
       ProfilePlanner planner =
           new ProfilePlanner(
-              new ProfileReader(List.of(new TestAdapter("skipped".equals(scenario)))));
+              new ProfileReader(
+                  List.of(new TestAdapter("skipped".equals(scenario), "before".equals(scenario)))));
       var plan = planner.plan(ProfileFixture.write(directory, config));
+      stored.set(Files.readAllBytes(artifact));
       var receipt =
           new ProfileExecutor(planner)
               .execute(
@@ -130,7 +132,8 @@ class EnterpriseTransportTest {
         .isInstanceOf(IllegalArgumentException.class);
   }
 
-  private record TestAdapter(boolean skipDownload) implements DestinationAdapter {
+  private record TestAdapter(boolean skipDownload, boolean readBeforeUpload)
+      implements DestinationAdapter {
     @Override
     public String id() {
       return "generic-https";
@@ -158,9 +161,16 @@ class EnterpriseTransportTest {
     public AdapterSession open(AdapterContext context, byte[] publicationBytes) {
       return new AdapterSession() {
         private boolean uploaded;
+        private boolean readFirst;
 
         @Override
         public ProtocolStep first() {
+          if (readBeforeUpload && !readFirst) {
+            return new ProtocolStep(
+                new AdapterRequest("GET", "artifact", null, new byte[0], false, 0)
+                    .withPublicationReadback(),
+                result(AdapterResult.Upload.NOT_ATTEMPTED));
+          }
           return new ProtocolStep(
               new AdapterRequest("POST", "upload", "application/json", publicationBytes, true, 0),
               result(AdapterResult.Upload.NOT_ATTEMPTED));
@@ -168,10 +178,14 @@ class EnterpriseTransportTest {
 
         @Override
         public ProtocolStep accept(ProtocolResponse response) {
+          if (readBeforeUpload && !readFirst) {
+            readFirst = true;
+            return first();
+          }
           if (!uploaded) {
             uploaded = true;
             return new ProtocolStep(
-                skipDownload
+                (skipDownload || readBeforeUpload)
                     ? null
                     : new AdapterRequest("GET", "artifact", null, new byte[0], false, 0)
                         .withPublicationReadback(),

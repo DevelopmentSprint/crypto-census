@@ -7,7 +7,7 @@ software inventory too. See [delivery profiles](DELIVERY-PROFILES.md) for a comp
 
 ## Receiver retries
 
-The default is one attempt. Dependency-Track writes always make one attempt: its tested contract
+The default is one attempt. All vendor adapters use a single upload attempt. Dependency-Track writes always make one attempt: its tested contract
 does not establish deduplication. Retry options on its profile are rejected before networking.
 The legacy `publish` command also remains one attempt. Use a `generic-https` delivery profile to
 enable bounded retries through either entry point:
@@ -148,3 +148,5 @@ bounded body consumption, stable retry bytes/identity and preservation of ambigu
 Protocol references: [JDK proxy authentication defaults](https://docs.oracle.com/en/java/javase/17/core/java-networking.html),
 [Apache client controls](https://hc.apache.org/httpcomponents-client-5.6.x/current/httpclient5/apidocs/org/apache/hc/client5/http/impl/classic/HttpClientBuilder.html),
 and [HTTP Retry-After semantics](https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after).
+
+The JDK property `jdk.httpclient.enableAllMethodRetry=true` is incompatible with bounded delivery attempts. Census refuses the JDK transport under that setting; remove it before starting the JVM. Do not change global HTTP retry or logging properties while a delivery process is running. Explicit Census retries remain limited to generic receivers with a declared idempotency contract.

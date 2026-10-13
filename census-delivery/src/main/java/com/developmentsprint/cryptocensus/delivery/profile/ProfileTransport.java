@@ -36,6 +36,11 @@ final class ProfileTransport {
   ProfileTransport(DeliveryOptions options, long started) {
     this.options = options;
     this.started = started;
+    if (options.authenticatedProxy() == null
+        && Boolean.getBoolean("jdk.httpclient.enableAllMethodRetry")) {
+      client = null;
+      return;
+    }
     SSLParameters tls = new SSLParameters();
     tls.setEndpointIdentificationAlgorithm("HTTPS");
     HttpClient.Builder builder =
@@ -59,6 +64,11 @@ final class ProfileTransport {
       String secret,
       AdapterOptions.AuthenticationScheme scheme,
       int maximum) {
+    if (client == null
+        || (options.authenticatedProxy() == null
+            && Boolean.getBoolean("jdk.httpclient.enableAllMethodRetry"))) {
+      return failure("UNSAFE_AUTOMATIC_RETRY");
+    }
     if (!com.developmentsprint.cryptocensus.delivery.TransportLogging.safe(
         options.authenticatedProxy() != null)) {
       return failure("UNSAFE_TRANSPORT_LOGGING");

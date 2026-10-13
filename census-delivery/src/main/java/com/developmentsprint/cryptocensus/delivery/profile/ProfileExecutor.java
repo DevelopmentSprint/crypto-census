@@ -158,8 +158,9 @@ public final class ProfileExecutor {
       }
       mutation |= request.mutation();
       if (request.mutation()) {
+        destinationReadback = null;
         result = stopped(result, "ATTEMPT_STARTED", true);
-        persist(plan, result, retention, destinationReadback, started, exchanges, false);
+        persist(plan, result, retention, null, started, exchanges, false);
       }
       GenericProfileAdapter.Options retry =
           profile.options() instanceof GenericProfileAdapter.Options generic
