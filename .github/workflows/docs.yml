@@ -68,6 +68,11 @@ jobs:
       - name: Check documentation dependencies
         if: steps.source.outputs.current == 'true'
         run: npm audit --audit-level=moderate
+      - name: Test coverage provenance and aggregation
+        if: steps.source.outputs.current == 'true'
+        run: |
+          node --test scripts/docs/prepare_test.mjs
+          python3 scripts/coverage_badges_test.py
       - name: Type check theme
         if: steps.source.outputs.current == 'true'
         run: npm run docs:typecheck
