@@ -46,7 +46,7 @@ Lost attribution produces a warning rather than automatically being incomplete c
 
 `unknown` represents missing or unsupported information, not a low severity. Typical causes include an unrecognized algorithm/mode, an unobservable public or HMAC key size, raw signatures with external hashing, or parameters Census does not capture.
 
-Provider and HSM keys are not exported to discover their size. Review the provider's independently available metadata and the exact operation. AES with an unobserved size has a specific policy treatment because its supported sizes meet the classical floor; do not apply that rule to arbitrary algorithms.
+Third-party provider keys are never exported, and PKCS#11 keys are not inspected. For a short list of reviewed JDK key classes, Census inspects an encoded copy for size and wipes that copy; see the [key handling guarantees](../SAFETY.md). Review the provider's independently available metadata and the exact operation. AES with an unobserved size has a specific policy treatment because its supported sizes meet the classical floor; do not apply that rule to arbitrary algorithms.
 
 Use a reviewed exception only when you have independent evidence and a documented owner. Read [policy](../POLICY.md) and [exception scope](../MAVEN.md#reviewed-exceptions) before changing the gate. `failOn=none` alone does not disable unknown or evidence failures.
 
