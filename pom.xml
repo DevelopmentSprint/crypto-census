@@ -78,10 +78,10 @@
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
 
         <!-- static analysis: see the "quality" profile -->
-        <spotless.version>3.10.2</spotless.version>
+        <spotless.version>3.10.4</spotless.version>
         <google-java-format.version>1.36.1</google-java-format.version>
-        <checkstyle.version>14.1.0</checkstyle.version>
-        <pmd.version>7.27.0</pmd.version>
+        <checkstyle.version>14.3.0</checkstyle.version>
+        <pmd.version>7.28.0</pmd.version>
         <spotbugs.version>4.10.4</spotbugs.version>
         <findsecbugs.version>1.14.0</findsecbugs.version>
         <errorprone.version>2.50.0</errorprone.version>
