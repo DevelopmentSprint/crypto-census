@@ -57,6 +57,9 @@ jobs:
       # Tomcat.
       - name: Build, test and analyze
         run: ./mvnw -B -ntp verify
+      - name: Verify enterprise qualification evidence checks
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        run: python3 -m unittest discover -s scripts/enterprise -p 'test_*.py' -v
       # One reproducible coverage view: five production modules, including the agent's
       # shaded child-JVM report and the plugin's merged unit/Invoker report.
       - name: Export measured documentation coverage
