@@ -133,6 +133,7 @@ public final class ProfileExecutor {
     ProtocolStep step = session.first();
     boolean mutation = false;
     int mutations = 0;
+    boolean mutationAcknowledged = false;
     while (step.request() != null) {
       result = step.observation();
       if (exchanges >= 64 || transport.remaining() <= 0) {
@@ -225,6 +226,12 @@ public final class ProfileExecutor {
           && !(response.statusCode() >= 200 && response.statusCode() < 300)) {
         response = new ProtocolResponse(0, new byte[0], "RETRY_OUTCOME_UNKNOWN");
       }
+      if (request.mutation()) {
+        mutationAcknowledged =
+            response.failureCode() == null
+                && response.statusCode() >= 200
+                && response.statusCode() < 300;
+      }
       if (request.publicationReadback()) {
         destinationReadback = null;
         if (response.failureCode() == null
@@ -240,26 +247,57 @@ public final class ProfileExecutor {
                   Instant.now());
         } else {
           step = session.accept(response);
-          result = stopped(step.observation(), "DESTINATION_READBACK_UNVERIFIED", mutation);
+          result = step.observation();
+          if (result.upload() == AdapterResult.Upload.ACCEPTED && !mutationAcknowledged) {
+            result = unacknowledged(result, mutation);
+          }
+          result = stopped(result, "DESTINATION_READBACK_UNVERIFIED", mutation);
           return persist(plan, result, retention, null, started, exchanges, false);
         }
       }
       step = session.accept(response);
       result = step.observation();
+      if (result.upload() == AdapterResult.Upload.ACCEPTED && !mutationAcknowledged) {
+        result = unacknowledged(result, mutation);
+        return persist(plan, result, retention, destinationReadback, started, exchanges, false);
+      }
       persist(plan, result, retention, destinationReadback, started, exchanges, false);
-      if (response.failureCode() != null && step.request() != null) {
+      if (response.failureCode() != null) {
         result = stopped(result, response.failureCode(), mutation);
         return persist(plan, result, retention, destinationReadback, started, exchanges, false);
       }
     }
     result = step.observation();
     boolean accepted = result.upload() == AdapterResult.Upload.ACCEPTED;
+    if (accepted && !mutationAcknowledged) {
+      result = unacknowledged(result, mutation);
+      return persist(plan, result, retention, destinationReadback, started, exchanges, false);
+    }
+    boolean completionSatisfied =
+        profile.policy().completion() == DeliveryPolicy.Completion.UPLOAD_ACCEPTED
+            || result.ingestion() == AdapterResult.Ingestion.COMPLETED;
+    if (accepted
+        && completionSatisfied
+        && profile.adapter().requiresPublicationReadback()
+        && destinationReadback == null) {
+      result = stopped(result, "DESTINATION_READBACK_UNVERIFIED", mutation);
+    }
     boolean success =
         accepted
             && (!profile.adapter().requiresPublicationReadback() || destinationReadback != null)
-            && (profile.policy().completion() == DeliveryPolicy.Completion.UPLOAD_ACCEPTED
-                || result.ingestion() == AdapterResult.Ingestion.COMPLETED);
+            && completionSatisfied;
     return persist(plan, result, retention, destinationReadback, started, exchanges, success);
+  }
+
+  private static AdapterResult unacknowledged(AdapterResult result, boolean mutation) {
+    return new AdapterResult(
+        mutation ? AdapterResult.Upload.UNKNOWN : AdapterResult.Upload.NOT_ATTEMPTED,
+        AdapterResult.Ingestion.UNVERIFIED,
+        "UPLOAD_ACCEPTANCE_UNVERIFIED",
+        result.httpStatus(),
+        result.remoteOperationId(),
+        result.serverVersion(),
+        result.lossCodes());
   }
 
   private static String deliveryIdentity(PlannedDelivery plan) {

@@ -68,3 +68,5 @@ A successful receipt records `ARTIFACTORY_STORED_EXACT_BYTES`, upload `ACCEPTED`
 A collision fails closed, even when the existing artifact appears identical. A server-side conflict or permission rejection never triggers an overwrite or automatic retry. A 5xx, disconnected upload, or unexpected success code leaves upload acceptance `UNKNOWN`; inspect the destination and reconcile the exact digest before another intentional attempt.
 
 If upload returned 201 but retrieval fails or differs, the receipt preserves upload `ACCEPTED` and delivery remains unsuccessful. Do not infer that an unsuccessful delivery left no remote object. Retain the receipt and investigate repository policies or concurrent privileged changes. The adapter never deletes objects, creates repositories, follows server-provided download URLs, or automatically retries a PUT.
+
+For this adapter, `remoteOperationId` is the planned artifact’s SHA-256 filename identifier, not a server-issued job ticket; its presence alone does not prove that the remote object exists.

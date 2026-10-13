@@ -84,4 +84,4 @@ Production overhead benchmarks and sampling; periodic/on-demand flushing; additi
 
 Copyright 2026 Development Sprint, LLC. [Apache License 2.0](LICENSE).
 
-For delivery to a company HTTPS receiver, see [CBOM delivery](docs/DELIVERY.md).
+For delivery to a company HTTPS receiver, see [CBOM delivery](docs/DELIVERY.md). [Delivery profiles](docs/DELIVERY-PROFILES.md) also support guarded Dependency-Track delivery and experimental Sonatype SBOM Manager, JFrog Artifactory, and Anchore Enterprise adapters. Each guide distinguishes stored evidence from imported inventory and documents verification limits.

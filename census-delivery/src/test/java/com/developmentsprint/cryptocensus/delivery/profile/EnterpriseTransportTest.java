@@ -29,7 +29,17 @@ class EnterpriseTransportTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"exact", "different", "missing", "redirect", "skipped", "before"})
+  @ValueSource(
+      strings = {
+        "exact",
+        "different",
+        "missing",
+        "redirect",
+        "skipped",
+        "before",
+        "rejected",
+        "dropped"
+      })
   void authenticationAndReadbackAreEnforcedByEngine(String scenario) throws Exception {
     HttpsServer server = tls.server();
     AtomicReference<byte[]> stored = new AtomicReference<>();
@@ -40,7 +50,9 @@ class EnterpriseTransportTest {
           auth.set(exchange.getRequestHeaders().getFirst("Authorization"));
           if ("POST".equals(exchange.getRequestMethod())) {
             stored.set(exchange.getRequestBody().readAllBytes());
-            exchange.sendResponseHeaders(201, -1);
+            if (!"dropped".equals(scenario)) {
+              exchange.sendResponseHeaders("rejected".equals(scenario) ? 500 : 201, -1);
+            }
           } else {
             byte[] bytes = "different".equals(scenario) ? new byte[] {1} : stored.get();
             int code = "missing".equals(scenario) ? 404 : "redirect".equals(scenario) ? 302 : 200;
@@ -81,7 +93,14 @@ class EnterpriseTransportTest {
                   plan,
                   reference -> SecretReference.encodeBasic("private-user", "private-password"));
       assertThat(receipt.successful()).isEqualTo("exact".equals(scenario));
-      assertThat(receipt.observation().upload()).isEqualTo(AdapterResult.Upload.ACCEPTED);
+      assertThat(receipt.observation().upload())
+          .isEqualTo(
+              ("rejected".equals(scenario) || "dropped".equals(scenario))
+                  ? AdapterResult.Upload.UNKNOWN
+                  : AdapterResult.Upload.ACCEPTED);
+      if ("rejected".equals(scenario)) {
+        assertThat(receipt.observation().reasonCode()).isEqualTo("UPLOAD_ACCEPTANCE_UNVERIFIED");
+      }
       assertThat(auth.get()).isEqualTo("Basic cHJpdmF0ZS11c2VyOnByaXZhdGUtcGFzc3dvcmQ=");
       assertThat(stored.get()).isEqualTo(Files.readAllBytes(artifact));
       assertThat(receipt.destinationReadback() != null).isEqualTo("exact".equals(scenario));
