@@ -20,13 +20,14 @@ async function render() {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: 'strict',
+      htmlLabels: false,
       theme: isDark.value ? 'dark' : 'base',
       fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-      themeVariables: isDark.value ? { primaryColor: '#163d40', primaryBorderColor: '#4fc2b3', lineColor: '#94acae' } : {
+      themeVariables: isDark.value ? { primaryColor: '#163d40', mainBkg: '#163d40', nodeBorder: '#4fc2b3', primaryBorderColor: '#4fc2b3', lineColor: '#94acae', clusterBkg: '#122a30', clusterBorder: '#406167' } : {
         primaryColor: '#e8f5f1', primaryTextColor: '#173537', primaryBorderColor: '#147d73',
         lineColor: '#526d72', secondaryColor: '#eff2f7', tertiaryColor: '#fff7e8',
       },
-      flowchart: { htmlLabels: false, curve: 'linear' },
+      flowchart: { curve: 'linear' },
     })
     const result = await mermaid.render(`${id}-${current}`, props.source)
     if (current === revision) svg.value = result.svg
