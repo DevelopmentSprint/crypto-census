@@ -38,7 +38,7 @@ echo "pre-commit: running static analysis (Spotless, Checkstyle, Error Prone, ja
 log=$(mktemp "${TMPDIR:-/tmp}/census-precommit.XXXXXX")
 trap 'rm -f "$log"' EXIT
 
-if ! ./mvnw -B -q -P quality verify -DskipTests -Dinvoker.skip -Djacoco.skip > "$log" 2>&1; then
+if ! ./mvnw -B -q -P quality verify -DskipTests -DskipITs -Dinvoker.skip -Djacoco.skip > "$log" 2>&1; then
   grep -E '^\[(ERROR|WARNING)\]' "$log" | grep -vE 'Help 1|re-run|Re-run|full stack|http|^\[ERROR\] $' | head -60 >&2
   if grep -q 'spotless' "$log"; then
     echo >&2

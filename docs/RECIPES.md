@@ -105,7 +105,7 @@ Open the GitHub Actions run summary and download **crypto-census-cbom** from **A
 Reproduce the basic scan from the repository root with JDK 17:
 
 ```sh
-./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -Dinvoker.skip=true
+./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -DskipITs -Dinvoker.skip=true
 ./mvnw -B -ntp -pl census-demo clean verify
 ```
 
