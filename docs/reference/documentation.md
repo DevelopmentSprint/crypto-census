@@ -75,7 +75,7 @@ flowchart TD
   Build --> Pages[GitHub Pages deployment]
 ```
 
-The documentation workflow validates pull requests without publishing them. Deployment runs only after a successful `CI` workflow triggered by a push to this repository's `develop` branch. It checks out that exact source SHA and downloads `docs-coverage` from that exact run. Missing evidence or a mismatched SHA stops publication. A second branch-tip check prevents a delayed build from deploying after `develop` has already advanced.
+The documentation workflow validates pull requests without publishing them. Deployment runs only after a successful `CI` workflow triggered by a push to this repository's `develop` branch. It checks out that exact source SHA and downloads `docs-coverage` from that exact run. Missing evidence or a mismatched SHA stops publication. Deployments are serialized with a queue that preserves waiting jobs. A second branch-tip check inside the deployment job skips a delayed build after `develop` has already advanced. A stale CI completion cannot cancel or replace a newer pending publication.
 
 Only the deployment job has `pages: write` and `id-token: write`. Build jobs have read permissions. Actions use full commit pins, dependencies use the npm lockfile, and dependency audit runs with the documentation checks. No personal token or external badge service credential is required.
 
@@ -94,3 +94,11 @@ The site tracks the development branch and identifies the current version as a p
 - **Broken navigation or missing diagram:** reproduce with the production build and browser tests above; fix the source instead of disabling validation.
 
 The README coverage badge links to measured provenance. A failing or pending build leaves the previous successful site's measurement in place; the current source SHA remains visible in `badges/coverage.json`.
+
+When linting the workflow locally, actionlint 1.7.12 does not yet recognize GitHub's supported `concurrency.queue` field ([upstream issue](https://github.com/rhysd/actionlint/issues/680)). With that version, use this narrowly scoped compatibility exception; GitHub Actions itself validates the full workflow syntax:
+
+```sh
+actionlint -ignore 'unexpected key "queue" for "concurrency" section' .github/workflows/docs.yml
+```
+
+Remove the exception when actionlint supports the field. Do not remove `queue: max`: the [GitHub concurrency contract](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) otherwise allows a new queued job to cancel an existing pending deployment.
