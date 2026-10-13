@@ -14,6 +14,8 @@ npm run docs:dev
 Open the loopback URL printed by VitePress. The site lives under `/crypto-census/`, including in local previews. To validate the production output:
 
 ```sh
+node --test scripts/docs/prepare_test.mjs
+python3 scripts/coverage_badges_test.py
 npm run docs:typecheck
 npm run docs:build
 npx playwright install chromium

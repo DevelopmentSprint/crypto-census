@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { createMarkdownRenderer } from 'vitepress'
 
 async function markdownFiles(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -11,9 +12,10 @@ async function markdownFiles(directory: string): Promise<string[]> {
   return children.flat()
 }
 
+const markdownRenderer = await createMarkdownRenderer(path.resolve('docs'))
 for (const file of await markdownFiles('docs')) {
   const markdown = await readFile(file, 'utf8')
-  const diagrams = (markdown.match(/^```mermaid\s*$/gm) ?? []).length
+  const diagrams = markdownRenderer.parse(markdown, {}).filter(token => token.type === 'fence' && token.info.trim() === 'mermaid').length
   if (!diagrams) continue
   test(`render all ${diagrams} diagrams: ${file}`, async ({ page }) => {
     const errors: string[] = []
