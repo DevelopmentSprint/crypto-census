@@ -12,8 +12,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: docs-${{ github.event_name }}-${{ github.event.pull_request.number || 'develop' }}
-  cancel-in-progress: true
+  # Late CI completions must not cancel a newer source's publication.
+  group: docs-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -113,6 +114,9 @@ jobs:
 
   deploy:
     name: Publish GitHub Pages
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     needs: build
     if: github.event_name == 'workflow_run' && needs.build.outputs.current == 'true'
     runs-on: ubuntu-latest
