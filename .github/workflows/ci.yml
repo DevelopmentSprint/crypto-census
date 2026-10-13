@@ -83,29 +83,67 @@ jobs:
       # bootstraps the plugin and its dependencies before a separate consumer invocation.
       - name: Install this checkout's Maven plugin and agent
         run: ./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -Dinvoker.skip=true
+      - name: Allocate an explicit current-run identity
+        id: evidence
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, os, uuid
+          run_id = str(uuid.uuid4())
+          module_hash = hashlib.sha256(b"com.developmentsprint:census-demo").hexdigest()
+          run_dir = f"census-demo/target/cryptocensus/run-{run_id}-{module_hash}"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"run_id={run_id}\nrun_dir={run_dir}\nmanifest={run_dir}/revisions/1/manifest.json\n")
+          PYTHON
       - name: Scan the payments workload with the Maven plugin
-        run: ./mvnw -B -ntp -pl census-demo clean verify
-      # check writes the merged CBOM before failing a risk policy. Keep that evidence while
-      # preserving Maven's failure. Test failures before check may leave only raw JVM reports.
+        id: scan
+        run: ./mvnw -B -ntp -pl census-demo clean verify -Dcensus.runId=${{ steps.evidence.outputs.run_id }}
+      # Separate always-run invocations preserve the producer failure and cannot suppress each other.
+      - name: Finalize current-run evidence
+        id: report
+        if: always() && steps.evidence.outcome == 'success'
+        env:
+          PRODUCER_OUTCOME: ${{ steps.scan.outcome }}
+          CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+        run: |
+          case "$PRODUCER_OUTCOME" in
+            success) outcome=passed ;;
+            failure) outcome=failed ;;
+            *) outcome=unknown ;;
+          esac
+          ./mvnw -B -ntp -pl census-demo com.developmentsprint:census-maven-plugin:0.1.0:report \
+            -Dcensus.runId="$CENSUS_RUN_ID" -Dcensus.testOutcome="$outcome"
       - name: Require a nonempty cryptographic inventory
-        if: always()
+        if: always() && steps.report.outcome == 'success'
+        env:
+          CENSUS_RUN_DIR: ${{ steps.evidence.outputs.run_dir }}
         run: |
           jq -e '.bomFormat == "CycloneDX" and any(.components[]; .type == "cryptographic-asset")' \
-            census-demo/target/cryptocensus/cbom.json
-      - name: Publish merged runtime CBOM
-        if: always()
+            "$CENSUS_RUN_DIR/revisions/1/evidence.json"
+      - name: Publish sealed runtime CBOM and manifest
+        if: always() && steps.report.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: crypto-census-cbom
-          path: census-demo/target/cryptocensus/cbom.json
+          path: ${{ steps.evidence.outputs.run_dir }}/revisions/1/
           if-no-files-found: error
           retention-days: 14
-      - name: Preserve individual JVM reports
-        if: always()
+      - name: Enforce current-run crypto and collection policy
+        if: always() && steps.evidence.outcome == 'success'
+        env:
+          CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+          CENSUS_MANIFEST: ${{ steps.evidence.outputs.manifest }}
+        run: |
+          ./mvnw -B -ntp -pl census-demo com.developmentsprint:census-maven-plugin:0.1.0:enforce \
+            -Dcensus.runId="$CENSUS_RUN_ID" -Dcensus.manifest="$GITHUB_WORKSPACE/$CENSUS_MANIFEST"
+      - name: Preserve exact run descriptor and individual JVM reports
+        if: always() && steps.evidence.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: crypto-census-cbom-jvm-reports
-          path: census-demo/target/cryptocensus/*/cbom-*.json
+          path: |
+            ${{ steps.evidence.outputs.run_dir }}/run.json
+            ${{ steps.evidence.outputs.run_dir }}/cbom-*.json
           if-no-files-found: ignore
           retention-days: 14
 

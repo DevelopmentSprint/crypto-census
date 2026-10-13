@@ -47,7 +47,15 @@ public final class DeliveryEngine {
     String digest = sha256(bytes);
     String endpointHash =
         sha256(request.endpoint().toASCIIString().getBytes(StandardCharsets.UTF_8));
-    String identity = identity(request, digest);
+    String identity =
+        DeliveryIdentity.of(
+            request.endpoint(),
+            request.destinationId(),
+            request.application(),
+            request.module(),
+            request.version(),
+            request.runId(),
+            digest);
     DeliveryReceipt pending =
         new DeliveryReceipt(
             DeliveryReceipt.Outcome.UNKNOWN, digest, identity, 0, "ATTEMPT_STARTED");
@@ -107,6 +115,9 @@ public final class DeliveryEngine {
   // cancel.
   private DeliveryReceipt send(
       DeliveryRequest request, byte[] bytes, String digest, String identity, long started) {
+    if (!TransportLogging.safe(request.options().authenticatedProxy() != null)) {
+      return failure(digest, identity, DeliveryReceipt.Outcome.FAILED, "UNSAFE_TRANSPORT_LOGGING");
+    }
     CompletableFuture<HttpResponse<Void>> future = null;
     try {
       HttpClient client = client(request.options());
@@ -117,6 +128,19 @@ public final class DeliveryEngine {
       Duration timeout =
           Duration.ofNanos(Math.min(remaining, request.options().requestTimeout().toNanos()));
       HttpRequest message = adapter.prepare(request, bytes, digest, identity, timeout);
+      if (request.options().authenticatedProxy() != null) {
+        var response =
+            AuthenticatedProxyTransport.send(request.options(), message, bytes, 65536, timeout);
+        return response.failureCode() == null
+            ? adapter.interpret(response.statusCode(), digest, identity)
+            : failure(
+                digest,
+                identity,
+                "DEADLINE_BEFORE_SEND".equals(response.failureCode())
+                    ? DeliveryReceipt.Outcome.FAILED
+                    : DeliveryReceipt.Outcome.UNKNOWN,
+                response.failureCode());
+      }
       long attemptStarted = System.nanoTime();
       future = client.sendAsync(message, ignored -> new BoundedResponseSubscriber());
       // HttpRequest.timeout may finish at headers. Bound the future through the entire body too.
@@ -183,27 +207,6 @@ public final class DeliveryEngine {
   private static DeliveryReceipt failure(
       String digest, String identity, DeliveryReceipt.Outcome outcome, String reason) {
     return new DeliveryReceipt(outcome, digest, identity, 0, reason);
-  }
-
-  @SuppressFBWarnings(
-      value = "IMPROPER_UNICODE",
-      justification =
-          "URI ASCII serialization intentionally distinguishes configured endpoint identities")
-  private static String identity(DeliveryRequest request, String digest) {
-    StringBuilder value = new StringBuilder("census-delivery/1:");
-    for (String field :
-        new String[] {
-          request.endpoint().toASCIIString(),
-          request.destinationId(),
-          request.application(),
-          request.module(),
-          request.version(),
-          request.runId(),
-          digest
-        }) {
-      value.append(field.length()).append(':').append(field);
-    }
-    return sha256(value.toString().getBytes(StandardCharsets.UTF_8));
   }
 
   private static String sha256(byte[] bytes) {

@@ -75,6 +75,136 @@ class ProfileFlowTest {
   }
 
   @Test
+  void declaredDedupContractRetriesStableIdentityAndOriginalBytes() throws Exception {
+    config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    var keys = new java.util.ArrayList<String>();
+    var bodies = new java.util.ArrayList<byte[]>();
+    server.removeContext("/upload");
+    server.createContext(
+        "/upload",
+        exchange -> {
+          requests.incrementAndGet();
+          keys.add(exchange.getRequestHeaders().getFirst("Idempotency-Key"));
+          bodies.add(exchange.getRequestBody().readAllBytes());
+          exchange.getResponseHeaders().add("Retry-After", "0");
+          exchange.sendResponseHeaders(requests.get() == 1 ? 503 : 202, -1);
+          exchange.close();
+        });
+    var plan = ProfileCommand.run("plan", profile, null, ref -> "token");
+    var result = ProfileCommand.run("publish", profile, plan.planSha256(), ref -> "token");
+    assertThat(result.successful()).isTrue();
+    assertThat(requests.get()).isEqualTo(2);
+    assertThat(keys).hasSize(2);
+    assertThat(keys.get(0)).matches("[a-f0-9]{64}").isEqualTo(keys.get(1));
+    assertThat(bodies.get(0))
+        .isEqualTo(bodies.get(1))
+        .isEqualTo(Files.readAllBytes(directory.resolve("cbom.json")));
+    assertThat(Files.readString(directory.resolve("receipt.json"))).contains("\"exchanges\": 2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {401, 403, 409, 302})
+  void declaredIdempotencyNeverRetriesAuthConflictOrRedirect(int code) throws Exception {
+    config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    status.set(code);
+    var plan = ProfileCommand.run("plan", profile, null, ref -> "token");
+    assertThat(
+            ProfileCommand.run("publish", profile, plan.planSha256(), ref -> "token").successful())
+        .isFalse();
+    assertThat(requests.get()).isEqualTo(1);
+  }
+
+  @Test
+  void retriesStopAtThreeAndCannotBeEnabledWithoutReceiverDeclaration() throws Exception {
+    config.put("options", Map.of("maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    assertThatThrownBy(() -> ProfileCommand.run("plan", profile, null, ref -> "token"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(requests.get()).isZero();
+    config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    status.set(503);
+    var plan = ProfileCommand.run("plan", profile, null, ref -> "token");
+    assertThat(
+            ProfileCommand.run("publish", profile, plan.planSha256(), ref -> "token").successful())
+        .isFalse();
+    assertThat(requests.get()).isEqualTo(3);
+  }
+
+  @Test
+  void committedRequestWithLostResponseIsDeduplicatedAndLaterRejectionStaysUnknown()
+      throws Exception {
+    config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    var persisted = new java.util.HashMap<String, byte[]>();
+    server.removeContext("/upload");
+    server.createContext(
+        "/upload",
+        exchange -> {
+          int attempt = requests.incrementAndGet();
+          String key = exchange.getRequestHeaders().getFirst("Idempotency-Key");
+          byte[] body = exchange.getRequestBody().readAllBytes();
+          byte[] original = persisted.putIfAbsent(key, body);
+          if (attempt == 1) {
+            exchange.close();
+            return;
+          }
+          exchange.sendResponseHeaders(
+              original != null && java.util.Arrays.equals(original, body) ? 202 : 409, -1);
+          exchange.close();
+        });
+    var plan = ProfileCommand.run("plan", profile, null, ref -> "token");
+    assertThat(
+            ProfileCommand.run("publish", profile, plan.planSha256(), ref -> "token").successful())
+        .isTrue();
+    assertThat(persisted).hasSize(1);
+    assertThat(requests.get()).isEqualTo(2);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {401, 409})
+  void laterRejectionDoesNotEraseEarlierAmbiguousAcceptance(int rejection) throws Exception {
+    config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    server.removeContext("/upload");
+    server.createContext(
+        "/upload",
+        exchange -> {
+          exchange.getRequestBody().readAllBytes();
+          exchange.sendResponseHeaders(requests.incrementAndGet() == 1 ? 503 : rejection, -1);
+          exchange.close();
+        });
+    var plan = ProfileCommand.run("plan", profile, null, ref -> "token");
+    var result = ProfileCommand.run("publish", profile, plan.planSha256(), ref -> "token");
+    assertThat(result.successful()).isFalse();
+    assertThat(result.receipt().observation().upload()).isEqualTo(AdapterResult.Upload.UNKNOWN);
+    assertThat(requests.get()).isEqualTo(2);
+  }
+
+  @Test
+  void excessiveRetryAfterStopsWithoutShorteningServerAdvice() throws Exception {
+    config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));
+    profile = ProfileFixture.write(directory, config);
+    server.removeContext("/upload");
+    server.createContext(
+        "/upload",
+        exchange -> {
+          requests.incrementAndGet();
+          exchange.getRequestBody().readAllBytes();
+          exchange.getResponseHeaders().add("Retry-After", "120");
+          exchange.sendResponseHeaders(503, -1);
+          exchange.close();
+        });
+    var plan = ProfileCommand.run("plan", profile, null, ref -> "token");
+    assertThat(
+            ProfileCommand.run("publish", profile, plan.planSha256(), ref -> "token").successful())
+        .isFalse();
+    assertThat(requests.get()).isEqualTo(1);
+  }
+
+  @Test
   void persistedPlanLoadsInFreshJvmsWithIndependentMapHashSeeds() throws Exception {
     var plan =
         ProfileCommand.run(

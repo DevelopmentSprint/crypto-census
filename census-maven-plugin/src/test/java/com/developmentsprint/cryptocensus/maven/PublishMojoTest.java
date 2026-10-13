@@ -64,6 +64,73 @@ class PublishMojoTest {
   }
 
   @Test
+  void receiptCannotOverwriteCaThroughFilesystemAliases() throws Exception {
+    HttpsServer server = tls.server();
+    var requests = new java.util.concurrent.atomic.AtomicInteger();
+    server.createContext(
+        "/ingest",
+        exchange -> {
+          requests.incrementAndGet();
+          exchange.getRequestBody().readAllBytes();
+          exchange.sendResponseHeaders(204, -1);
+          exchange.close();
+        });
+    server.start();
+    try {
+      Path roots = Files.createDirectory(directory.resolve("roots"));
+      Path ca = Files.copy(tls.caBundle(), roots.resolve("ca.pem"));
+      byte[] original = Files.readAllBytes(ca);
+      Path hardlink = Files.createLink(directory.resolve("ca-hardlink.pem"), ca);
+      Path child = Files.createDirectory(roots.resolve("child"));
+      Path parentLink = Files.createSymbolicLink(directory.resolve("roots-link"), roots);
+      Path childLink = Files.createSymbolicLink(directory.resolve("child-link"), child);
+      for (Path receiptPath :
+          new Path[] {
+            ca, hardlink, parentLink.resolve("ca.pem"), parentLink.resolve("child/../ca.pem")
+          }) {
+        assertThat(Files.isSameFile(receiptPath, ca))
+            .as("Fixture must resolve to the CA: %s", receiptPath)
+            .isTrue();
+        PublishMojo publish = mojo(server);
+        set(publish, "caBundle", ca.toFile());
+        set(publish, "receipt", receiptPath.toFile());
+        assertThatThrownBy(publish::execute)
+            .as("Receipt aliases the selected CA: %s", receiptPath)
+            .isInstanceOf(MojoExecutionException.class)
+            .hasMessageContaining("must not overwrite the selected CA bundle");
+        assertThat(Files.readAllBytes(ca)).isEqualTo(original);
+        assertThat(requests.get()).isZero();
+      }
+      // Win32 removes link/.. lexically; Unix resolves the link before traversing its parent.
+      // Establish both possible targets independently, then verify the platform's fixture.
+      Path sibling = Files.writeString(directory.resolve("ca.pem"), "independent receipt target");
+      Path divergent = childLink.resolve("../ca.pem");
+      boolean windows = java.io.File.separatorChar == '\\';
+      assertThat(Files.isSameFile(divergent, windows ? sibling : ca))
+          .as("Platform-dependent parent resolution: %s", divergent)
+          .isTrue();
+      assertThat(Files.isSameFile(sibling, ca)).isFalse();
+      PublishMojo publish = mojo(server);
+      set(publish, "caBundle", ca.toFile());
+      set(publish, "receipt", divergent.toFile());
+      if (windows) {
+        publish.execute();
+        assertThat(Files.readString(sibling)).contains("ACCEPTED");
+        assertThat(requests.get()).isEqualTo(1);
+      } else {
+        assertThatThrownBy(publish::execute)
+            .hasMessageContaining("must not overwrite the selected CA bundle");
+        assertThat(Files.readString(sibling)).isEqualTo("independent receipt target");
+        assertThat(requests.get()).isZero();
+      }
+      assertThat(Files.readAllBytes(ca)).isEqualTo(original);
+      assertThat(directory.resolve("receipts")).doesNotExist();
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
   void failureGateDoesNotMaskInvalidInputOrLeakResponses() throws Exception {
     HttpsServer server = tls.server();
     server.createContext(
@@ -192,6 +259,177 @@ class PublishMojoTest {
       mojo.execute();
       set(mojo, "settingsDecrypter", (SettingsDecrypter) ignored -> result(null));
       assertThatThrownBy(mojo::execute).hasMessageContaining("could not decrypt");
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void sealedRunPublishesExactBytesAndRejectsTamperingAndReceiptAliasesBeforeNetwork()
+      throws Exception {
+    java.util.concurrent.atomic.AtomicInteger requests =
+        new java.util.concurrent.atomic.AtomicInteger();
+    AtomicReference<byte[]> uploaded = new AtomicReference<>();
+    HttpsServer server = tls.server();
+    server.createContext(
+        "/ingest",
+        exchange -> {
+          requests.incrementAndGet();
+          uploaded.set(exchange.getRequestBody().readAllBytes());
+          exchange.sendResponseHeaders(204, -1);
+          exchange.close();
+        });
+    server.start();
+    try {
+      final PublishMojo publish = mojo(server);
+      String runId = java.util.UUID.randomUUID().toString();
+      Path run = RunEvidence.prepare(directory, runId, "example:payments", "1.0");
+      Files.copy(directory.resolve("cbom.json"), run.resolve("cbom-1.json"));
+      final ReportMojo report = new ReportMojo();
+      var project = new org.apache.maven.project.MavenProject();
+      project.setGroupId("example");
+      project.setArtifactId("payments");
+      project.setVersion("1.0");
+      for (var entry :
+          Map.<String, Object>of(
+                  "project",
+                  project,
+                  "destDir",
+                  directory.toFile(),
+                  "runId",
+                  runId,
+                  "revision",
+                  "1",
+                  "testOutcome",
+                  "failed",
+                  "failOn",
+                  "broken")
+              .entrySet()) {
+        Field field = CheckMojo.class.getDeclaredField(entry.getKey());
+        field.setAccessible(true);
+        field.set(report, entry.getValue());
+      }
+      report.execute();
+      Path manifest = RunEvidence.sealedDirectory(run, "1").resolve(RunEvidence.MANIFEST);
+      Path artifact = manifest.resolveSibling(RunEvidence.ARTIFACT);
+      final byte[] original = Files.readAllBytes(artifact);
+      set(publish, "manifest", manifest.toFile());
+      set(publish, "preparedRunId", runId);
+      set(publish, "runId", null);
+      set(publish, "sha256", null);
+      assertThatThrownBy(publish::execute).hasMessageContaining("input conflicts");
+      set(publish, "input", null);
+      for (Path protectedPath :
+          new Path[] {manifest, run.resolve("run.json"), run.resolve("cbom-1.json"), artifact}) {
+        set(publish, "receipt", protectedPath.toFile());
+        assertThatThrownBy(publish::execute).isInstanceOf(MojoExecutionException.class);
+      }
+      Path alias = directory.resolve("receipt-hardlink.json");
+      Files.createLink(alias, manifest);
+      set(publish, "receipt", alias.toFile());
+      assertThatThrownBy(publish::execute).isInstanceOf(MojoExecutionException.class);
+      assertThat(requests.get()).isZero();
+      set(publish, "receipt", directory.resolve("sealed-receipt.json").toFile());
+      publish.execute();
+      assertThat(uploaded.get()).isEqualTo(original);
+      assertThat(requests.get()).isEqualTo(1);
+      Files.writeString(artifact, Files.readString(artifact) + " ");
+      assertThatThrownBy(publish::execute).isInstanceOf(MojoExecutionException.class);
+      assertThat(requests.get()).isEqualTo(1);
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void environmentAndDecryptedSettingsProxyCredentialsStayAtTheProxy() throws Exception {
+    HttpsServer server = tls.server();
+    AtomicReference<String> leaked = new AtomicReference<>();
+    server.createContext(
+        "/ingest",
+        exchange -> {
+          leaked.set(exchange.getRequestHeaders().getFirst("Proxy-Authorization"));
+          exchange.getRequestBody().readAllBytes();
+          exchange.sendResponseHeaders(204, -1);
+          exchange.close();
+        });
+    server.start();
+    final String basic =
+        "Basic "
+            + java.util.Base64.getEncoder()
+                .encodeToString(
+                    "private-proxy-user:private-proxy-password"
+                        .getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+    try {
+      for (boolean settings : new boolean[] {false, true}) {
+        try (var proxy =
+            new com.developmentsprint.cryptocensus.delivery.testing.TunnelProxy(
+                server.getAddress().getPort(), basic)) {
+          PublishMojo publish =
+              configured(
+                  new PublishMojo() {
+                    @Override
+                    String environment(String name) {
+                      return "PROXY_USER".equals(name)
+                          ? "private-proxy-user"
+                          : "private-proxy-password";
+                    }
+                  },
+                  server);
+          set(publish, "proxyHost", "localhost");
+          set(publish, "proxyPort", proxy.port());
+          if (settings) {
+            var request = new DefaultMavenExecutionRequest();
+            final MavenSession session =
+                new MavenSession(null, null, request, new DefaultMavenExecutionResult());
+            final Server credential = new Server();
+            credential.setId("proxy");
+            credential.setUsername("encrypted");
+            credential.setPassword("encrypted");
+            session.getSettings().addServer(credential);
+            final Server decoded = new Server();
+            decoded.setUsername("private-proxy-user");
+            decoded.setPassword("private-proxy-password");
+            set(publish, "session", session);
+            set(publish, "proxyServerId", "proxy");
+            set(publish, "settingsDecrypter", (SettingsDecrypter) ignored -> result(decoded));
+          } else {
+            set(publish, "proxyUserEnv", "PROXY_USER");
+            set(publish, "proxyPasswordEnv", "PROXY_PASSWORD");
+          }
+          publish.execute();
+          assertThat(proxy.connectRequest()).contains(basic);
+          assertThat(leaked.get()).isNull();
+        }
+      }
+      try (var receipts = Files.list(directory.resolve("receipts"))) {
+        for (Path receipt : receipts.toList()) {
+          assertThat(Files.readString(receipt)).doesNotContain("private-proxy", basic);
+        }
+      }
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void proxyReferencesAreExclusiveCompleteAndRequireExplicitHost() throws Exception {
+    HttpsServer server = tls.server();
+    try {
+      PublishMojo publish = mojo(server);
+      set(publish, "proxyUserEnv", "PROXY_USER");
+      assertThatThrownBy(publish::execute)
+          .hasMessageContaining("requires census.delivery.proxyHost");
+      set(publish, "proxyHost", "localhost");
+      assertThatThrownBy(publish::execute).hasMessageContaining("both proxyUserEnv");
+      set(publish, "proxyPasswordEnv", "INVALID-REF");
+      assertThatThrownBy(publish::execute).hasMessageContaining("environment variable names");
+      set(publish, "proxyServerId", "proxy");
+      assertThatThrownBy(publish::execute).hasMessageContaining("not both");
+      set(publish, "proxyUserEnv", null);
+      set(publish, "proxyPasswordEnv", null);
+      assertThatThrownBy(publish::execute).hasMessageContaining("resolution is unavailable");
     } finally {
       server.stop(0);
     }

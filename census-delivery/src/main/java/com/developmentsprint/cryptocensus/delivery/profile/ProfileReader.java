@@ -18,9 +18,17 @@ import java.util.Set;
 /** Strict profile reader shared by Maven and CLI. */
 public final class ProfileReader {
   private final Map<String, DestinationAdapter> adapters;
+  private final java.util.function.Consumer<DeliveryProfile> validator;
 
   /** Uses explicitly registered adapters only. */
   public ProfileReader(List<DestinationAdapter> adapters) {
+    this(adapters, profile -> {});
+  }
+
+  /** Applies an entrypoint's run-binding checks to every freshly decoded profile. */
+  public ProfileReader(
+      List<DestinationAdapter> adapters, java.util.function.Consumer<DeliveryProfile> validator) {
+    this.validator = java.util.Objects.requireNonNull(validator);
     Map<String, DestinationAdapter> registry = new java.util.LinkedHashMap<>();
     for (DestinationAdapter adapter : adapters) {
       if (registry.put(adapter.id(), adapter) != null) {
@@ -109,9 +117,32 @@ public final class ProfileReader {
     JsonSupport.fields(outputs, "plan", "receipt");
     Map<String, Object> transport =
         root.containsKey("transport") ? JsonSupport.object(root.get("transport")) : Map.of();
-    JsonSupport.fields(transport, "caBundle", "proxyHost", "proxyPort");
+    JsonSupport.fields(
+        transport, "caBundle", "proxyHost", "proxyPort", "proxyUsername", "proxyPassword");
+    boolean proxyAuth =
+        transport.containsKey("proxyUsername") || transport.containsKey("proxyPassword");
+    SecretReference proxyUsername = null;
+    SecretReference proxyPassword = null;
+    if (proxyAuth) {
+      if (!transport.containsKey("proxyHost")
+          || !transport.containsKey("proxyUsername")
+          || !transport.containsKey("proxyPassword")) {
+        throw new IllegalArgumentException(
+            "Proxy authentication requires host and both references");
+      }
+      proxyUsername = SecretReference.parse(transport.get("proxyUsername"));
+      proxyPassword = SecretReference.parse(transport.get("proxyPassword"));
+      if (proxyUsername.kind() != SecretReference.Kind.ENV
+          || proxyPassword.kind() != SecretReference.Kind.ENV) {
+        throw new IllegalArgumentException(
+            "Profile proxy credentials require environment references");
+      }
+    }
     String proxy =
         transport.containsKey("proxyHost") ? JsonSupport.string(transport, "proxyHost") : null;
+    if (proxy != null && !proxy.matches("[A-Za-z0-9.:-]{1,253}")) {
+      throw new IllegalArgumentException("Invalid explicit proxy host");
+    }
     if (proxy == null && transport.containsKey("proxyPort")) {
       throw new IllegalArgumentException("Proxy port requires proxy host");
     }
@@ -132,24 +163,29 @@ public final class ProfileReader {
               endpoint(JsonSupport.string(value, "endpoint")),
               SecretReference.parse(value.get("authentication")));
     }
-    return new DeliveryProfile(
-        source.toAbsolutePath(),
-        ProfileFiles.hash(bytes),
-        destination,
-        adapter,
-        endpoint,
-        adapter.parseOptions(
-            root.containsKey("options") ? JsonSupport.object(root.get("options")) : Map.of()),
-        preparation,
-        SecretReference.parse(root.get("authentication")),
-        new DeliveryProfile.Transport(
-            transport.containsKey("caBundle") ? path(directory, transport, "caBundle") : null,
-            proxy,
-            port),
-        gate,
-        retention,
-        path(directory, outputs, "plan"),
-        path(directory, outputs, "receipt"));
+    DeliveryProfile decoded =
+        new DeliveryProfile(
+            source.toAbsolutePath(),
+            ProfileFiles.hash(bytes),
+            destination,
+            adapter,
+            endpoint,
+            adapter.parseOptions(
+                root.containsKey("options") ? JsonSupport.object(root.get("options")) : Map.of()),
+            preparation,
+            SecretReference.parse(root.get("authentication")),
+            new DeliveryProfile.Transport(
+                transport.containsKey("caBundle") ? path(directory, transport, "caBundle") : null,
+                proxy,
+                port,
+                proxyUsername,
+                proxyPassword),
+            gate,
+            retention,
+            path(directory, outputs, "plan"),
+            path(directory, outputs, "receipt"));
+    validator.accept(decoded);
+    return decoded;
   }
 
   private static boolean booleanValue(Map<String, Object> values, String name) {

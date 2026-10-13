@@ -5,11 +5,13 @@ import com.developmentsprint.cryptocensus.delivery.DeliveryEngine;
 import com.developmentsprint.cryptocensus.delivery.DeliveryException;
 import com.developmentsprint.cryptocensus.delivery.DeliveryReceipt;
 import com.developmentsprint.cryptocensus.delivery.DeliveryRequest;
+import com.developmentsprint.cryptocensus.delivery.ProxyCredentials;
 import com.developmentsprint.cryptocensus.delivery.ReceiptWriteException;
 import com.developmentsprint.cryptocensus.delivery.TransportConfiguration;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +34,9 @@ public final class CensusCli {
           "auth",
           "ca-bundle",
           "proxy-host",
-          "proxy-port");
+          "proxy-port",
+          "proxy-user-env",
+          "proxy-password-env");
 
   private CensusCli() {}
 
@@ -89,9 +93,13 @@ public final class CensusCli {
     if (proxy == null && values.containsKey("proxy-port")) {
       throw new ConfigurationException("--proxy-port requires --proxy-host");
     }
+    Path input = Path.of(required(values, "input"));
+    Path receipt = Path.of(required(values, "receipt"));
+    Path caBundle = values.containsKey("ca-bundle") ? Path.of(values.get("ca-bundle")) : null;
+    protectCaBundle(receipt, caBundle);
     return new DeliveryRequest(
-        Path.of(required(values, "input")),
-        Path.of(required(values, "receipt")),
+        input,
+        receipt,
         required(values, "sha256"),
         required(values, "destination-id"),
         URI.create(required(values, "endpoint")),
@@ -101,9 +109,34 @@ public final class CensusCli {
         required(values, "run-id"),
         credentials(values, environment),
         TransportConfiguration.options(
-            values.containsKey("ca-bundle") ? Path.of(values.get("ca-bundle")) : null,
-            proxy,
-            port));
+            caBundle, proxy, port, proxyCredentials(values, environment)));
+  }
+
+  private static void protectCaBundle(Path receipt, Path caBundle) throws IOException {
+    if (caBundle == null) {
+      return;
+    }
+    // Resolve the supplied paths in the filesystem, including hard links and parent symlinks.
+    // Lexical normalization could select a different file when a symlink precedes '..'.
+    if (Files.exists(receipt) && Files.isSameFile(receipt, caBundle)) {
+      throw new ConfigurationException("--receipt and --ca-bundle must be different files");
+    }
+  }
+
+  private static ProxyCredentials proxyCredentials(
+      Map<String, String> values, Map<String, String> environment) {
+    if (!values.containsKey("proxy-user-env") && !values.containsKey("proxy-password-env")) {
+      return null;
+    }
+    if (!values.containsKey("proxy-host")) {
+      throw new ConfigurationException("Proxy credential references require --proxy-host");
+    }
+    String user = required(values, "proxy-user-env");
+    String password = required(values, "proxy-password-env");
+    if (!user.matches("[A-Za-z_][A-Za-z0-9_]*") || !password.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+      throw new ConfigurationException("Invalid proxy environment reference");
+    }
+    return ProxyCredentials.basic(environment.get(user), environment.get(password));
   }
 
   private static DeliveryCredentials credentials(
@@ -185,6 +218,7 @@ public final class CensusCli {
     out.println("  --version 1.0 --run-id CURRENT_RUN_ID --token-env CENSUS_UPLOAD_TOKEN");
     out.println("Options: --auth none (explicit anonymous), --ca-bundle roots.pem,");
     out.println("  --proxy-host HOST --proxy-port PORT, --report-only");
+    out.println("  --proxy-user-env NAME --proxy-password-env NAME (explicit CONNECT credentials)");
     out.println("Exactly one attempt; HTTPS only; no redirects; 60-second operation deadline.");
     out.println("HTTP_ACCEPTED means HTTP acknowledgment, not verified inventory ingestion.");
     out.println(

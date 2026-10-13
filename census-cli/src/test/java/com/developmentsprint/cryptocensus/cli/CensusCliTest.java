@@ -127,7 +127,27 @@ class CensusCliTest {
               List.of("--auth", "unsupported"),
               List.of("--token-env", "BAD-REFERENCE"),
               List.of("--token-env", "ABSENT"),
-              List.of("--proxy-port", "1234"))) {
+              List.of("--proxy-port", "1234"),
+              List.of("--auth", "none", "--proxy-user-env", "USER"),
+              List.of("--auth", "none", "--proxy-host", "localhost", "--proxy-user-env", "USER"),
+              List.of(
+                  "--auth",
+                  "none",
+                  "--proxy-host",
+                  "localhost",
+                  "--proxy-user-env",
+                  "BAD-REF",
+                  "--proxy-password-env",
+                  "PASS"),
+              List.of(
+                  "--auth",
+                  "none",
+                  "--proxy-host",
+                  "localhost",
+                  "--proxy-user-env",
+                  "USER",
+                  "--proxy-password-env",
+                  "PASS"))) {
         List<String> args = args(artifact, server);
         args.addAll(options);
         assertThat(run(args, Map.of())).isEqualTo(2);
@@ -168,6 +188,88 @@ class CensusCliTest {
       assertThat(run(args, Map.of())).isEqualTo(5);
       assertThat(stderr.toString(StandardCharsets.UTF_8)).contains("remote HTTP acceptance: true");
       assertThat(calls.get()).isEqualTo(2);
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void receiptCannotReplaceCaBundleThroughFileOrDirectoryAliases() throws Exception {
+    Path artifact = artifact();
+    Path roots = Files.createDirectories(directory.resolve("roots"));
+    Path caBundle = Files.copy(tls.caBundle(), roots.resolve("ca.pem"));
+    byte[] original = Files.readAllBytes(caBundle);
+    Path hardLink = Files.createLink(directory.resolve("ca-hardlink.pem"), caBundle);
+    Path parentLink = Files.createSymbolicLink(directory.resolve("roots-link"), roots);
+    Path child = Files.createDirectory(roots.resolve("child"));
+    Path childLink = Files.createSymbolicLink(roots.resolve("child-link"), child);
+    Path externalLink = Files.createSymbolicLink(directory.resolve("external-link"), child);
+    Path sibling = Files.copy(caBundle, directory.resolve("ca.pem"));
+    AtomicInteger calls = new AtomicInteger();
+    HttpsServer server = tls.server();
+    server.createContext(
+        "/ingest",
+        exchange -> {
+          calls.incrementAndGet();
+          exchange.getRequestBody().readAllBytes();
+          exchange.sendResponseHeaders(204, -1);
+          exchange.close();
+        });
+    server.start();
+    try {
+      Map<String, Path> aliases =
+          Map.of(
+              "same path",
+              caBundle,
+              "hard link",
+              hardLink,
+              "parent symlink",
+              parentLink.resolve("ca.pem"),
+              "symlink with parent segment",
+              childLink.resolve("../ca.pem"));
+      for (Map.Entry<String, Path> alias : aliases.entrySet()) {
+        Path receipt = alias.getValue();
+        String label = alias.getKey() + ": " + receipt;
+        assertThat(Files.isSameFile(receipt, caBundle)).as("fixture identity: %s", label).isTrue();
+        List<String> args = args(artifact, server);
+        args.set(args.indexOf("--receipt") + 1, receipt.toString());
+        args.set(args.indexOf("--ca-bundle") + 1, caBundle.toString());
+        args.addAll(List.of("--auth", "none"));
+        assertThat(run(args, Map.of())).as("reject CA alias: %s", label).isEqualTo(2);
+        assertThat(calls.get()).as("no network for CA alias: %s", label).isZero();
+        assertThat(Files.readAllBytes(caBundle)).as("CA bytes: %s", label).isEqualTo(original);
+        assertThat(Files.readAllBytes(receipt)).as("alias bytes: %s", label).isEqualTo(original);
+      }
+      // Win32 removes link/.. lexically; Unix follows the link before resolving its parent.
+      // Select the documented platform expectation, then prove the fixture's actual identity.
+      boolean windows = "\\".equals(directory.getFileSystem().getSeparator());
+      Path divergent = externalLink.resolve("../ca.pem");
+      Path expectedTarget = windows ? sibling : caBundle;
+      String label = (windows ? "Windows sibling receipt: " : "Unix CA alias: ") + divergent;
+      assertThat(Files.isSameFile(sibling, caBundle)).as("independent sibling fixture").isFalse();
+      assertThat(Files.isSameFile(divergent, expectedTarget))
+          .as("fixture identity: %s", label)
+          .isTrue();
+      List<String> args = args(artifact, server);
+      args.set(args.indexOf("--receipt") + 1, divergent.toString());
+      args.set(args.indexOf("--ca-bundle") + 1, caBundle.toString());
+      args.addAll(List.of("--auth", "none"));
+      assertThat(run(args, Map.of()))
+          .as("platform receipt outcome: %s", label)
+          .isEqualTo(windows ? 0 : 2);
+      assertThat(calls.get()).as("platform request count: %s", label).isEqualTo(windows ? 1 : 0);
+      assertThat(Files.readAllBytes(caBundle)).as("CA bytes: %s", label).isEqualTo(original);
+      if (windows) {
+        assertThat(Files.readString(sibling))
+            .as("independent receipt: %s", label)
+            .contains("HTTP_ACCEPTED");
+      } else {
+        assertThat(Files.readAllBytes(sibling))
+            .as("untouched sibling: %s", label)
+            .isEqualTo(original);
+      }
+      assertThat(stderr.toString(StandardCharsets.UTF_8))
+          .contains("--receipt and --ca-bundle must be different files");
     } finally {
       server.stop(0);
     }

@@ -20,7 +20,17 @@ public record DeliveryProfile(
     Path planPath,
     Path receiptPath) {
   /** Explicit trust/proxy configuration used only at execution. */
-  public record Transport(Path caBundle, String proxyHost, int proxyPort) {}
+  public record Transport(
+      Path caBundle,
+      String proxyHost,
+      int proxyPort,
+      SecretReference proxyUsername,
+      SecretReference proxyPassword) {
+    /** Default unauthenticated CONNECT configuration. */
+    public Transport(Path caBundle, String proxyHost, int proxyPort) {
+      this(caBundle, proxyHost, proxyPort, null, null);
+    }
+  }
 
   /** Independently authenticated original-evidence retrieval endpoint. */
   public record Retention(URI endpoint, SecretReference authentication) {

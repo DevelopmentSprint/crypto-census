@@ -2,10 +2,14 @@ package com.developmentsprint.cryptocensus.maven;
 
 import com.developmentsprint.cryptocensus.delivery.DeliveryException;
 import com.developmentsprint.cryptocensus.delivery.ReceiptWriteException;
+import com.developmentsprint.cryptocensus.delivery.preparation.InputKind;
+import com.developmentsprint.cryptocensus.delivery.profile.DeliveryProfile;
 import com.developmentsprint.cryptocensus.delivery.profile.ProfileCommand;
 import com.developmentsprint.cryptocensus.delivery.profile.SecretReference;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -41,6 +45,24 @@ public class DeliveryMojo extends AbstractMojo {
   @Parameter(property = "census.delivery.failOnError", defaultValue = "true")
   private boolean failOnError;
 
+  /** Optional exact Maven run evidence binding for all profile actions. */
+  @Parameter(property = "census.manifest")
+  private File manifest;
+
+  @Parameter(property = "census.runId")
+  private String runId;
+
+  @Parameter(property = "census.delivery.application")
+  private String application;
+
+  @Parameter(
+      property = "census.delivery.module",
+      defaultValue = "${project.groupId}:${project.artifactId}")
+  private String module;
+
+  @Parameter(property = "census.delivery.version", defaultValue = "${project.version}")
+  private String version;
+
   @Override
   @SuppressWarnings("PMD.PreserveStackTrace") // Maven -e must not expose URI/auth/remote causes.
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -56,7 +78,9 @@ public class DeliveryMojo extends AbstractMojo {
         throw new ConfigurationException(
             "Missing census.delivery.planSha256 from the planning step");
       }
-      result = ProfileCommand.run(action, profile.toPath(), planSha256, this::resolve);
+      result =
+          ProfileCommand.run(
+              action, profile.toPath(), planSha256, this::resolve, this::validateEvidence);
     } catch (ConfigurationException error) {
       throw new MojoExecutionException(error.getMessage());
     } catch (ReceiptWriteException error) {
@@ -90,6 +114,45 @@ public class DeliveryMojo extends AbstractMojo {
           .warn(
               "Delivery requirements were not met; census.delivery.failOnError=false retains this"
                   + " outcome");
+    }
+  }
+
+  @SuppressWarnings("PMD.PreserveStackTrace")
+  private void validateEvidence(DeliveryProfile decoded) {
+    if (manifest == null) {
+      return;
+    }
+    try {
+      Path directory = RunEvidence.directoryForManifest(manifest.toPath());
+      String revision = RunEvidence.revisionForManifest(manifest.toPath());
+      var sealed = RunEvidence.verify(directory, runId, module, version, revision);
+      Path artifact =
+          RunEvidence.sealedDirectory(directory, revision).resolve(RunEvidence.ARTIFACT);
+      var census =
+          decoded.preparation().inputs().stream()
+              .filter(input -> input.kind() == InputKind.CENSUS_MERGED_CBOM)
+              .toList();
+      if (census.size() != 1 || application == null) {
+        throw new ConfigurationException(
+            "Manifest-bound profiles require one CENSUS_MERGED_CBOM input and"
+                + " census.delivery.application");
+      }
+      var input = census.get(0);
+      var mapping = input.correlation();
+      if (!Files.isSameFile(input.path(), artifact)
+          || !sealed.get("sha256").equals(input.expectedSha256())
+          || !runId.equals(mapping.runId())
+          || !module.equals(mapping.module())
+          || !version.equals(mapping.version())
+          || !application.equals(mapping.application())) {
+        throw new ConfigurationException(
+            "Profile input or correlation conflicts with selected current-run manifest");
+      }
+      RunEvidence.rejectReceiptAlias(directory, decoded.receiptPath());
+      RunEvidence.rejectReceiptAlias(directory, decoded.planPath());
+      RunEvidence.rejectReceiptAlias(directory, decoded.preparation().outputDirectory());
+    } catch (IOException | IllegalArgumentException error) {
+      throw new ConfigurationException("Current-run profile evidence or output binding is invalid");
     }
   }
 

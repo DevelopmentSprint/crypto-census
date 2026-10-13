@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.delivery.profile;
 
+import com.developmentsprint.cryptocensus.delivery.AuthenticatedProxyTransport;
 import com.developmentsprint.cryptocensus.delivery.DeliveryOptions;
 import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
@@ -58,6 +59,10 @@ final class ProfileTransport {
       String secret,
       AdapterOptions.AuthenticationScheme scheme,
       int maximum) {
+    if (!com.developmentsprint.cryptocensus.delivery.TransportLogging.safe(
+        options.authenticatedProxy() != null)) {
+      return failure("UNSAFE_TRANSPORT_LOGGING");
+    }
     CompletableFuture<HttpResponse<byte[]>> future = null;
     try {
       long remaining = remaining();
@@ -103,7 +108,7 @@ final class ProfileTransport {
         message.header("Content-Type", request.contentType());
       }
       for (Map.Entry<String, String> header : request.headers().entrySet()) {
-        if (!Set.of("X-Correlation-Id", "X-Tenant-Id").contains(header.getKey())
+        if (!Set.of("X-Correlation-Id", "X-Tenant-Id", "Idempotency-Key").contains(header.getKey())
             || !header.getValue().matches("[\\x21-\\x7e]{1,256}")) {
           throw new IllegalArgumentException("Unsupported extension header");
         }
@@ -122,13 +127,29 @@ final class ProfileTransport {
           body.length == 0
               ? HttpRequest.BodyPublishers.noBody()
               : HttpRequest.BodyPublishers.ofByteArray(body));
+      if (options.authenticatedProxy() != null) {
+        var response =
+            AuthenticatedProxyTransport.send(
+                options,
+                message.build(),
+                body,
+                maximum,
+                Duration.ofNanos(Math.min(limit, remaining())));
+        return new ProtocolResponse(
+            response.statusCode(), response.body(), response.failureCode(), response.retryAfter());
+      }
       future = client.sendAsync(message.build(), ignored -> new Body(maximum));
       long wait = Math.min(limit - (System.nanoTime() - attempt), remaining());
       if (wait <= 0) {
         return failure("TIMEOUT");
       }
       HttpResponse<byte[]> response = future.get(wait, TimeUnit.NANOSECONDS);
-      return new ProtocolResponse(response.statusCode(), response.body(), null);
+      var advice = response.headers().allValues("Retry-After");
+      String retryAfter =
+          advice.isEmpty()
+              ? null
+              : advice.size() != 1 || advice.get(0).length() > 128 ? "INVALID" : advice.get(0);
+      return new ProtocolResponse(response.statusCode(), response.body(), null, retryAfter);
     } catch (InterruptedException error) {
       Thread.currentThread().interrupt();
       return failure("INTERRUPTED");

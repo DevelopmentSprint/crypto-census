@@ -6,7 +6,7 @@ Security fixes target the latest released `0.x` version. Upgrade to that version
 
 ## Report a vulnerability privately
 
-Email vulnerability reports to [security@developmentsprint.com](mailto:security@developmentsprint.com). Do not post exploit details, credentials, or an unreviewed CBOM in a public issue. GitHub private vulnerability reporting is planned but must be enabled and tested before this policy advertises it as available.
+Use [GitHub private vulnerability reporting](https://github.com/DevelopmentSprint/crypto-census/security/advisories/new) or email [security@developmentsprint.com](mailto:security@developmentsprint.com). GitHub requires a signed-in account; email is available without one. Do not post exploit details, credentials, or an unreviewed CBOM in a public issue.
 
 Include the affected Census version or source revision, JDK/vendor, minimal reproduction, expected and actual behavior, and your assessment of impact. Use synthetic keys and sanitized output. Explain whether the issue affects the observed application, report correctness, evidence validation, or publication/build tooling.
 

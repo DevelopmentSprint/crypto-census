@@ -9,6 +9,7 @@ import com.developmentsprint.cryptocensus.core.Inventory;
 import com.developmentsprint.cryptocensus.core.Occurrence;
 import com.developmentsprint.cryptocensus.core.Primitive;
 import com.developmentsprint.cryptocensus.delivery.testing.TlsFixture;
+import com.developmentsprint.cryptocensus.delivery.testing.TunnelProxy;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsServer;
