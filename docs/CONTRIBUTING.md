@@ -10,14 +10,20 @@ Modules:
   output is validated against the official CycloneDX 1.6 schema in tests.
 - `census-agent`: the `-javaagent` (shaded jar), with integration tests that run real JVMs, including
   the conformance tests with the OpenTelemetry Java agent and embedded Tomcat.
-- `census-delivery`: shared HTTPS transport, evidence validation and private delivery receipts. It
-  depends on core and stays outside the agent. Test fixtures generate temporary TLS identities.
+- `census-delivery`: evidence validation, SBOM preparation, delivery profiles and adapters, shared
+  HTTPS transport, and private delivery receipts. It depends on core and stays outside the agent.
+  Test fixtures generate temporary TLS identities.
 - `census-cli`: standalone executable delivery JAR using the shared engine.
-- `census-maven-plugin`: `prepare-agent`, `check` and explicit `publish` goals, with Maven Invoker tests for argLine
-  composition, odd paths, missing data and failure modes.
+- `census-maven-plugin`: `prepare-agent` and `check` lifecycle integration; explicit `report` and
+  `enforce` goals for sealed CI evidence; explicit `publish` and profile-based `delivery` goals.
+  Maven Invoker tests exercise argument composition, odd paths, missing data, and failure modes.
 - `census-demo`: a toy payments service that runs the plugin on itself.
 - `census-app-servers`: Open Liberty and WildFly in containers; only with `-P app-servers` (needs
   Docker, skipped without it), never published.
+
+Read the [architecture overview](architecture/overview.md) for module and process boundaries,
+the [evidence pipeline](architecture/evidence-pipeline.md) for current-run identity and finalization,
+and [enterprise delivery](architecture/enterprise-delivery.md) for adapter and transport responsibilities.
 
 ## Code quality
 
@@ -42,7 +48,8 @@ The Maven Wrapper pins Maven 3.9.12 and verifies its SHA-256.
 
 **Git hooks** are installed by the first build (`core.hooksPath .githooks`):
 
-- `pre-commit` runs the whole static analysis suite (no tests) and blocks the commit on any finding;
+- `pre-commit` runs the whole static analysis suite (no tests) for staged Java, POM, `config/`, or
+  `.mvn/` changes and blocks the commit on any finding; documentation-only changes skip this suite;
 - `pre-push` runs the full build with tests and coverage.
 
 Use JDK 21+ for contributor checks. The pre-commit hook and Maven Wrapper select `$JAVA_HOME/bin/java` when `JAVA_HOME` is set, otherwise `java` from PATH. The pre-push hook invokes the wrapper directly. `git commit --no-verify` exists for emergencies; CI runs the same checks regardless.
