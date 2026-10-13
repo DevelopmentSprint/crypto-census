@@ -2,7 +2,7 @@
 
 Census contributes observed cryptographic usage. Use an existing software SBOM generator, such as the CycloneDX Maven plugin, to inventory packages, versions, licenses and dependencies. Preparation joins these independently produced documents locally before a delivery adapter sees them.
 
-This implementation is part of the unpublished enterprise delivery candidate. Its Java API lives in `com.developmentsprint.cryptocensus.delivery.preparation`; CLI and Maven profile integration are described separately in the delivery documentation.
+The Java API lives in `com.developmentsprint.cryptocensus.delivery.preparation`; CLI and Maven profile integration are described separately in the delivery documentation.
 
 ## Choose the preparation mode
 

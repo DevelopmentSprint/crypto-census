@@ -2,7 +2,7 @@
 
 The included payments demo produces findings you can trace directly to application code: AES-256-GCM encryption, RSA-2048 signatures, and a legacy SHA-1 checksum. Run it to learn how workload, observation, and policy relate before integrating a larger application.
 
-## Build the candidate
+## Build the example
 
 Complete [source installation](../getting-started/installation.md), then stay in the Census repository root. The demo's [POM](https://github.com/DevelopmentSprint/crypto-census/blob/develop/census-demo/pom.xml) already activates `prepare-agent` and `check`.
 

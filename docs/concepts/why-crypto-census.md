@@ -52,6 +52,6 @@ Collection works locally without a Census server, account, or paid service. Ente
 
 Census targets tests and staging today; runtime overhead has not been benchmarked. It observes supported JCA/JSSE paths, not every cryptographic implementation. Native libraries and Bouncy Castle's lightweight API can bypass those paths. Evidence remains self-reported because collection runs inside the observed JVM.
 
-The project is prerelease. Follow [installation](../INSTALLATION.md) for the current source-build path and [compatibility](../COMPATIBILITY.md) for tested runtimes. Do not infer release availability or runtime support from a version number in an example.
+Follow [installation](../INSTALLATION.md) to set up Census and [compatibility](../COMPATIBILITY.md) for tested runtimes.
 
 Continue with [cryptographic evidence](cryptographic-evidence.md), [policy and coverage](policy-and-coverage.md), or the [architecture overview](../architecture/overview.md). The detailed behavioral contract is in [safety and limitations](../SAFETY.md).

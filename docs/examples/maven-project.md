@@ -2,11 +2,11 @@
 
 Census integrates into the existing Maven test lifecycle. `prepare-agent` supplies the JVM argument in `initialize`; forked tests collect evidence; `check` merges and evaluates that invocation's reports in `verify`.
 
-Install the unpublished candidate first using [source installation](../getting-started/installation.md). The examples below modify your application's `pom.xml`; keep its existing dependencies, compiler settings, and test framework.
+Complete [source installation](../getting-started/installation.md). The examples below modify your application's `pom.xml`; keep its existing dependencies, compiler settings, and test framework.
 
 ## Start with the standard lifecycle
 
-Add the [quickstart plugin](../getting-started/index.md#install-the-candidate-first) under `<build><plugins>`, then run:
+Add the [quickstart plugin](../getting-started/index.md#install-and-configure-the-plugin) under `<build><plugins>`, then run:
 
 ```sh
 mvn verify

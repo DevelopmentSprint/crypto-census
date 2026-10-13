@@ -1,6 +1,6 @@
 # Install from source
 
-The current `0.1.0` candidate is not available from Maven Central. A local source build installs the plugin and its libraries into your Maven repository and creates the standalone agent and CLI JARs.
+A local source build installs the plugin and its libraries into your Maven repository and creates the standalone agent and CLI JARs.
 
 ## Check prerequisites
 
@@ -41,16 +41,16 @@ Then follow [Maven setup](../examples/maven-project.md) or [runtime deployment](
 
 ## Use an isolated Maven repository
 
-A separate local repository helps distinguish candidate bytes from a future published release and keeps automation reproducible. Pass the same repository setting when building Census and when running a consuming application:
+A separate local repository keeps source-built artifacts isolated and automation reproducible. Pass the same repository setting when building Census and when running a consuming application:
 
 ```sh
 ./mvnw -B -ntp clean install -Dmaven.repo.local=/path/to/census-maven-repository
 ```
 
-In the consumer project, use its wrapper or `mvn` with the identical `-Dmaven.repo.local` path. A fresh CI runner must bootstrap the source candidate before resolving the plugin. The [repository's CI workflow](https://github.com/DevelopmentSprint/crypto-census/blob/develop/.github/workflows/ci.yml) demonstrates that order.
+In the consumer project, use its wrapper or `mvn` with the identical `-Dmaven.repo.local` path. A fresh CI runner must build and install Census before resolving the plugin. The [repository's CI workflow](https://github.com/DevelopmentSprint/crypto-census/blob/develop/.github/workflows/ci.yml) demonstrates that order.
 
 ## Transition to a published release
 
 Do not assume locally installed `0.1.0` bytes match an eventual Central artifact with the same coordinates. Verify the release through an empty local repository or follow the cache replacement and signature-verification steps in the [artifact installation reference](../INSTALLATION.md#after-010-is-published).
 
-The [release runbook](../RELEASING.md) defines publication evidence. Until that process completes, use the source-build route above rather than a Central download URL.
+The [release runbook](../RELEASING.md) defines publication and verification steps.

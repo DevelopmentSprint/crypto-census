@@ -1,6 +1,6 @@
 # Integration recipes
 
-These examples use the locally installed, unpublished `0.1.0` candidate. Complete [installation](INSTALLATION.md) first. Keep your application's existing dependency and compiler configuration; add the plugins under `<build><plugins>`. Run `mvn verify` and inspect `target/cryptocensus/cbom.json`.
+Complete [installation](INSTALLATION.md) first. Keep your application's existing dependency and compiler configuration; add the plugins under `<build><plugins>`. Run `mvn verify` and inspect `target/cryptocensus/cbom.json`.
 
 ## JaCoCo and custom JVM options
 

@@ -27,9 +27,11 @@ flowchart TD
 | Preserve reports even when tests fail | [CI evidence workflow](../guides/ci.md). |
 | Send evidence to a company system | [Enterprise delivery](../guides/enterprise-delivery.md). |
 
-## Install the candidate first
+<a id="install-the-candidate-first"></a>
 
-Version `0.1.0` is an unpublished candidate. Build and install it from source before using the plugin coordinates. Follow [installation](installation.md) with JDK 21 or newer for the full build; the resulting agent runs on supported Java 17+ runtimes.
+## Install and configure the plugin
+
+Follow [installation](installation.md) with JDK 21 or newer for the full build; the resulting agent runs on supported Java 17+ runtimes.
 
 After local installation, add this plugin under your application's `<build><plugins>` in `pom.xml`:
 
