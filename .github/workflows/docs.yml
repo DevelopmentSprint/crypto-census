@@ -116,6 +116,8 @@ jobs:
     name: Publish GitHub Pages
     concurrency:
       group: github-pages
+      # Preserve pending deployments; a late stale build must not replace one.
+      queue: max
       cancel-in-progress: false
     needs: build
     if: github.event_name == 'workflow_run' && needs.build.outputs.current == 'true'
@@ -129,12 +131,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Recheck source before deployment
+        id: source
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           tip=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/develop" --jq .object.sha)
-          test "$SOURCE_SHA" = "$tip" || { echo 'Develop advanced; refusing stale site deployment.'; exit 1; }
+          if [ "$SOURCE_SHA" = "$tip" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Develop advanced; skipping stale site deployment."
+            echo "current=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Deploy
+        if: steps.source.outputs.current == 'true'
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
