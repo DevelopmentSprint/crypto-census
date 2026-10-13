@@ -17,3 +17,12 @@ dependency-reduced-pom.xml
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Documentation site dependencies, generated assets and browser results
+node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+docs/public/badges/
+test-results/
+playwright-report/
+__pycache__/

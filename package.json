@@ -1,0 +1,29 @@
+{
+  "name": "crypto-census-documentation",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev docs --host 127.0.0.1",
+    "docs:prepare": "node scripts/docs/prepare.mjs",
+    "docs:build": "npm run docs:prepare && vitepress build docs && python3 scripts/docs/check_links.py",
+    "docs:preview": "vitepress preview docs --host 127.0.0.1",
+    "docs:typecheck": "vue-tsc --noEmit -p docs/.vitepress/tsconfig.json",
+    "docs:test": "playwright test --config scripts/docs/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "mermaid": "12.2.0",
+    "typescript": "5.9.3",
+    "vitepress": "1.6.4",
+    "vue": "3.5.44",
+    "vue-tsc": "3.3.13"
+  },
+  "overrides": {
+    "vitepress": {
+      "vite": "6.4.4"
+    }
+  }
+}

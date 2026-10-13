@@ -107,7 +107,11 @@ Not detected (by design or not yet):
 
 ## Enterprise evidence delivery
 
-Use the explicit [`publish` goal](DELIVERY.md) to send an existing report to a company HTTPS receiver. It shares the standalone CLI delivery engine and requires an expected digest and caller-supplied run identity. It does not run tests or replace crypto-policy enforcement.
+Use the explicit [`publish` goal](DELIVERY.md) to send an existing report to a company HTTPS receiver. Without a sealed manifest, it requires an expected digest and caller-supplied run identity. With a manifest, it obtains the artifact and identity from verified run evidence as described below.
+
+Use the explicit [`delivery` goal](DELIVERY-PROFILES.md#maven-uses-the-same-profile) for profile-based preparation, generic HTTPS, Dependency-Track, or the experimental Sonatype SBOM Manager, Artifactory, and Anchore adapters. Set `census.delivery.profile` to the JSON profile and `census.delivery.action` to `plan` (the default), `preflight`, or `publish`. Preflight and publication require `census.delivery.planSha256` from the planning step. The [profile reference](DELIVERY-PROFILES.md) covers input kinds, capability and loss requirements, credentials, and destination-specific guides.
+
+Both delivery goals share their engines with the standalone CLI. Neither has a default lifecycle binding, runs tests, collects observations, or replaces crypto-policy enforcement. Keep delivery and enforcement in separate CI steps so each outcome remains visible.
 
 ## Failed-build finalization
 

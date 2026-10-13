@@ -22,3 +22,13 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      documentation:
+        patterns:
+          - '*'
