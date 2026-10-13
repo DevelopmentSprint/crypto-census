@@ -93,7 +93,7 @@ jobs:
         run: npm run docs:test
       - name: Upload browser evidence
         if: always() && steps.source.outputs.current == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: documentation-browser-evidence
           path: test-results/
@@ -101,7 +101,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload review site
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: documentation-preview
           path: docs/.vitepress/dist/
