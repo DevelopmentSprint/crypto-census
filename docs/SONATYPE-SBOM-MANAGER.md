@@ -65,3 +65,7 @@ Supported inputs are raw Census CBOM, merged Census CBOM and externally generate
 The capability revision explicitly requires both named unverified-loss acceptances. Requiring preservation of any semantic field fails planning. Keep local CBOMs, raw evidence, manifests and receipts even when delivery succeeds. Planning performs no network or credential resolution; preflight retrieves evidence and inspects application/version mapping without importing anything.
 
 Tests cover actual HTTPS multipart bytes and BASIC auth, read-only preflight, both original comparisons, bounded asynchronous fallback, rejected and ambiguous responses, malicious returned URLs, application/version mismatches, pagination, and safe receipts. A future certified capability revision needs a real licensed tenant with retained request/result evidence and field-level comparison of crypto types/properties, operation identity, occurrences, Census metadata, signatures and software dependency graph.
+
+## Repeatable live validation
+
+Use the [enterprise live-validation runner](ENTERPRISE-LIVE-VALIDATION.md) with the packaged CLI and Maven plugin against separate disposable identities. It records sealed-plan and artifact digests, validates required completion/readback proofs, and provides a separate native-export comparison. Licensed tenant access was unavailable during the 2026-10-13 validation work; this adapter remains experimental, with no claim of commercial runtime compatibility or native crypto fidelity.
