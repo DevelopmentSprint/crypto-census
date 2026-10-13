@@ -30,7 +30,13 @@ async function render() {
       flowchart: { curve: 'linear' },
     })
     const result = await mermaid.render(`${id}-${current}`, props.source)
-    if (current === revision) svg.value = result.svg
+    // Preserve the diagram's measured width so mobile layouts scroll instead
+    // of shrinking labels below a readable size. Mermaid has already sanitized it.
+    const document = new DOMParser().parseFromString(result.svg, 'image/svg+xml')
+    const element = document.documentElement as unknown as SVGSVGElement
+    const width = element.viewBox.baseVal.width
+    if (Number.isFinite(width) && width > 0) element.style.minWidth = `${Math.ceil(width)}px`
+    if (current === revision) svg.value = element.outerHTML
   } catch {
     if (current === revision) { failed.value = true; svg.value = '' }
   }
@@ -42,8 +48,9 @@ watch([() => props.source, isDark], () => void render())
 
 <template>
   <figure class="census-diagram" :data-diagram-error="failed || undefined">
-    <div v-if="svg" class="diagram-canvas" role="img" aria-label="Documentation diagram; text source follows" v-html="svg" />
+    <div v-if="svg" class="diagram-canvas" tabindex="0" role="img" aria-label="Documentation diagram; scroll horizontally if needed. Text source follows." v-html="svg" />
     <p v-else class="diagram-status" role="status">{{ failed ? 'The diagram could not render. Its text source is available below.' : 'Loading diagram…' }}</p>
+    <p v-if="svg" class="diagram-hint">Wide diagrams scroll horizontally. Focus the diagram to scroll with arrow keys.</p>
     <details class="diagram-source">
       <summary>Read diagram source</summary>
       <pre><code>{{ source }}</code></pre>
