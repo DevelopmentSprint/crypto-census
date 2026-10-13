@@ -3,6 +3,9 @@
 # Bypass only in an emergency: git push --no-verify  (CI runs the same build anyway).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+
+# Always enforce the private tracker boundary, including documentation-only commits.
+bash scripts/check-private-tracker.sh --pre-push "${1:-}"
 echo "pre-push: full build with tests and coverage..."
 ./mvnw -B -q verify
 echo "pre-push: build passed."
