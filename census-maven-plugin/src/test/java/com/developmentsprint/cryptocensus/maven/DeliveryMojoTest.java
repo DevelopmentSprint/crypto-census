@@ -295,7 +295,7 @@ class DeliveryMojoTest {
         exchange -> {
           readbacks.incrementAndGet();
           assertThat(exchange.getRequestHeaders().getFirst("Authorization"))
-              .isEqualTo("Basic dXNlcjpwYXNzd29yZA==");
+              .isEqualTo("Basic dXNlcjpwcml2YXRlLWJhc2ljLXBhc3N3b3Jk");
           byte[] bytes = Files.readAllBytes(directory.resolve("cbom.json"));
           exchange.sendResponseHeaders(200, bytes.length);
           exchange.getResponseBody().write(bytes);
@@ -304,7 +304,12 @@ class DeliveryMojoTest {
     var environment =
         new java.util.HashMap<>(
             java.util.Map.of(
-                "CENSUS_TEST_TOKEN", "upload-secret", "USERNAME", "user", "PASSWORD", "password"));
+                "CENSUS_TEST_TOKEN",
+                "upload-secret",
+                "USERNAME",
+                "user",
+                "PASSWORD",
+                "private-basic-password"));
     DeliveryMojo mojo =
         new DeliveryMojo() {
           @Override
@@ -327,7 +332,7 @@ class DeliveryMojoTest {
     set(mojo, "session", session);
     org.apache.maven.settings.Server decrypted = new org.apache.maven.settings.Server();
     decrypted.setUsername("user");
-    decrypted.setPassword("password");
+    decrypted.setPassword("private-basic-password");
     var decryption =
         (org.apache.maven.settings.crypto.SettingsDecryptionResult)
             java.lang.reflect.Proxy.newProxyInstance(
@@ -351,14 +356,15 @@ class DeliveryMojoTest {
       decrypted.setUsername(username);
       assertThatThrownBy(mojo::execute)
           .isInstanceOf(MojoExecutionException.class)
-          .hasMessageNotContaining("user:name")
-          .hasMessageNotContaining("password")
+          .hasMessage(
+              "BASIC_CREDENTIALS_INVALID: Basic credentials are missing or invalid; check"
+                  + " the selected username and password sources.")
           .hasNoCause();
     }
     assertThat(uploads.get()).isEqualTo(1);
     assertThat(readbacks.get()).isEqualTo(1);
     assertThat(Files.readString(directory.resolve("receipt.json")))
-        .doesNotContain("password", "dXNlcjpw");
+        .doesNotContain("private-basic-password", "dXNlcjpw");
   }
 
   private DeliveryMojo mojo() throws Exception {

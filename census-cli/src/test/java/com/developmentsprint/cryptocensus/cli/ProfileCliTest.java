@@ -215,7 +215,7 @@ class ProfileCliTest {
         exchange -> {
           readbacks.incrementAndGet();
           assertThat(exchange.getRequestHeaders().getFirst("Authorization"))
-              .isEqualTo("Basic dXNlcjpwYXNzd29yZA==");
+              .isEqualTo("Basic dXNlcjpwcml2YXRlLWJhc2ljLXBhc3N3b3Jk");
           byte[] bytes = Files.readAllBytes(directory.resolve("cbom.json"));
           exchange
               .getResponseHeaders()
@@ -229,7 +229,7 @@ class ProfileCliTest {
           .isZero();
       Map<String, String> env =
           new java.util.HashMap<>(
-              Map.of("CENSUS_TEST_TOKEN", "upload-secret", "PASSWORD", "password"));
+              Map.of("CENSUS_TEST_TOKEN", "upload-secret", "PASSWORD", "private-basic-password"));
       if (!"missing".equals(scenario)) {
         env.put(
             "USERNAME",
@@ -252,7 +252,14 @@ class ProfileCliTest {
           .isEqualTo("valid".equals(scenario) || "redirect".equals(scenario) ? 1 : 0);
       assertThat(forwarded.get()).isZero();
       assertThat(error.toString(StandardCharsets.UTF_8))
-          .doesNotContain("user:name", "password", "dXNlcjpw");
+          .doesNotContain("user:name", "private-basic-password", "dXNlcjpw", "PROFILE_INVALID");
+      if (!"valid".equals(scenario) && !"redirect".equals(scenario)) {
+        assertThat(error.toString(StandardCharsets.UTF_8))
+            .isEqualTo(
+                "BASIC_CREDENTIALS_INVALID: Basic credentials are missing or invalid; check"
+                    + " the selected username and password sources."
+                    + System.lineSeparator());
+      }
     } finally {
       other.stop(0);
     }

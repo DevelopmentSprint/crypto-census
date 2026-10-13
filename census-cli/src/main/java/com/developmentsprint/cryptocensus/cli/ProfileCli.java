@@ -43,7 +43,7 @@ final class ProfileCli {
                 + ")");
       }
       return result.successful() || options.containsKey("report-only") ? 0 : 4;
-    } catch (UsageException error) {
+    } catch (UsageException | SecretReference.InvalidBasicCredentialsException error) {
       err.println(error.getMessage());
       return 2;
     } catch (ReceiptWriteException error) {

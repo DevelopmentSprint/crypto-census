@@ -318,6 +318,9 @@ public final class ProfileExecutor {
       return null;
     }
     String value = resolver.resolve(reference);
+    if (reference.basic()) {
+      SecretReference.validateBasic(value);
+    }
     if (value == null
         || value.isEmpty()
         || value.length() > 8192

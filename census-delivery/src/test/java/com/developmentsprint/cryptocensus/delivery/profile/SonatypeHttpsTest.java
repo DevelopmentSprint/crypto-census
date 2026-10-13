@@ -1,6 +1,7 @@
 package com.developmentsprint.cryptocensus.delivery.profile;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.developmentsprint.cryptocensus.delivery.sonatype.SonatypeSbomManagerAdapter;
 import com.developmentsprint.cryptocensus.delivery.testing.ProfileFixture;
@@ -150,6 +151,22 @@ class SonatypeHttpsTest {
 
   ProfileReceipt publish() throws Exception {
     return new ProfileExecutor(planner).execute(planner.plan(profile), this::resolve);
+  }
+
+  @ParameterizedTest
+  @org.junit.jupiter.params.provider.MethodSource(
+      "com.developmentsprint.cryptocensus.delivery.profile.SecretReferenceTest#invalidBasicValues")
+  void invalidPrimaryResolverFailsBeforeRetentionOrDestinationRequests(String value)
+      throws Exception {
+    var plan = planner.plan(profile);
+    assertThatThrownBy(
+            () ->
+                new ProfileExecutor(planner)
+                    .execute(plan, ref -> ref.basic() ? value : "retention-secret"))
+        .isInstanceOf(SecretReference.InvalidBasicCredentialsException.class)
+        .hasNoCause();
+    assertThat(paths).isEmpty();
+    assertThat(Files.exists(directory.resolve("receipt.json"))).isFalse();
   }
 
   @Test

@@ -81,7 +81,7 @@ public class DeliveryMojo extends AbstractMojo {
       result =
           ProfileCommand.run(
               action, profile.toPath(), planSha256, this::resolve, this::validateEvidence);
-    } catch (ConfigurationException error) {
+    } catch (ConfigurationException | SecretReference.InvalidBasicCredentialsException error) {
       throw new MojoExecutionException(error.getMessage());
     } catch (ReceiptWriteException error) {
       throw new MojoExecutionException(
