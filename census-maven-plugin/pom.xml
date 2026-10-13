@@ -20,7 +20,7 @@
     <properties>
         <!-- Set by JaCoCo's prepare-agent-integration in the quality profile; empty otherwise. -->
         <invoker.mavenOpts/>
-        <invoker.groovy.version>4.0.33</invoker.groovy.version>
+        <invoker.groovy.version>6.0.0</invoker.groovy.version>
     </properties>
 
     <prerequisites>
