@@ -1,6 +1,9 @@
 package com.developmentsprint.cryptocensus.delivery.profile;
 
+import com.developmentsprint.cryptocensus.delivery.anchore.AnchoreAdapter;
+import com.developmentsprint.cryptocensus.delivery.artifactory.ArtifactoryAdapter;
 import com.developmentsprint.cryptocensus.delivery.dependencytrack.DependencyTrackAdapter;
+import com.developmentsprint.cryptocensus.delivery.sonatype.SonatypeSbomManagerAdapter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -33,7 +36,13 @@ public final class ProfileCommand {
     ProfilePlanner planner =
         new ProfilePlanner(
             new ProfileReader(
-                List.of(new GenericProfileAdapter(), new DependencyTrackAdapter()), validator));
+                List.of(
+                    new GenericProfileAdapter(),
+                    new DependencyTrackAdapter(),
+                    new SonatypeSbomManagerAdapter(),
+                    new ArtifactoryAdapter(),
+                    new AnchoreAdapter()),
+                validator));
     if ("plan".equals(action)) {
       if (expectedPlanSha256 != null) {
         throw new IllegalArgumentException("Plan action cannot accept an existing plan hash");

@@ -1,5 +1,7 @@
 # Enterprise SBOM integration priorities
 
+Implementation update, 2026-10-13: the documented contracts now have experimental [Sonatype](../SONATYPE-SBOM-MANAGER.md), [Artifactory](../ARTIFACTORY.md), and [Anchore](../ANCHORE.md) adapters. Their guides record local protocol testing and remaining commercial tenant/fidelity verification. The research below records the original prioritization, not a claim of live validation.
+
 Research date: 2026-10-10. Tracking: `census-6dt.7`; Dependency-Track compatibility spike: `census-6dt.5`.
 
 Crypto Census should finish the selected Dependency-Track compatibility investigation, then prioritize **Sonatype SBOM Manager and JFrog Artifactory/Xray** for enterprise delivery. Investigate **Cybeats SBOM Studio** alongside them when the customer needs searchable cryptographic inventory. Publish clear GitHub and GitLab CI artifact recipes immediately. Treat Black Duck, Anchore, and Snyk as customer-driven integrations until their handling of our evidence is demonstrated.

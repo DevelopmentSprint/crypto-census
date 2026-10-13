@@ -231,6 +231,7 @@ public final class ProfilePlanner {
     data.put("destinationLinkage", capability.linkage().name());
     data.put("nativeIdempotency", capability.nativeIdempotency());
     data.put("asynchronous", capability.asynchronous());
+    data.put("requiresPublicationReadback", profile.adapter().requiresPublicationReadback());
     data.put("remotePreflight", "NOT_PERFORMED");
     data.put(
         "originalRetention",

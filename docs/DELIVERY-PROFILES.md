@@ -82,11 +82,24 @@ After installing or resolving the plugin version, use:
   -Dcensus.delivery.planSha256="$PLAN_SHA256"
 ```
 
-Maven also accepts `{"type":"MAVEN_SERVER","name":"company-evidence"}` as the authentication reference. The plugin decrypts that server's password using Maven settings; the username is unused. CLI execution accepts environment references or `{"type":"NONE"}`. Both tools can plan without resolving credentials. Profiles never contain literal tokens.
+Maven also accepts `{"type":"MAVEN_SERVER","name":"company-evidence"}` as the authentication reference. For bearer/API-key adapters, the plugin decrypts that server's password using Maven settings; the username is unused. CLI execution accepts environment references or `{"type":"NONE"}`. Both tools can plan without resolving credentials.
+
+Adapters that require HTTP Basic authentication accept paired secret references:
+
+```json
+"authentication": {
+  "type": "ENV_BASIC",
+  "usernameName": "SBOM_USERNAME",
+  "name": "SBOM_PASSWORD"
+}
+```
+
+Both names refer to environment variables, never literal credential values. Maven can instead use `{"type":"MAVEN_SERVER_BASIC","name":"sbom-manager"}` to resolve the selected server's decrypted username and password. The adapter selects the authentication scheme; the profile cannot send a Basic pair to a bearer endpoint accidentally. Pairs are resolved only during execution, encoded by the caller, and sent only through the shared HTTPS transport. Usernames must be nonempty printable ASCII without spaces or colons; passwords must be nonempty printable ASCII (spaces and colons are allowed). Use service-token credentials that meet these bounds. A retention endpoint can use either bearer or paired Basic references independently of upload credentials.
+ Profiles never contain literal tokens.
 
 A recorded delivery failure fails the command by default. CLI `--report-only` and Maven `-Dcensus.delivery.failOnError=false` allow the job to retain that recorded failure without failing the delivery step. Invalid inputs, missing credentials and receipt persistence failures still fail. CLI exit codes are 0 for the selected outcome policy, 2 for invalid input/configuration, 4 for an unsuccessful recorded outcome, and 5 when a receipt could not be persisted. Archive the original evidence, preparation directory, plan and receipt as CI artifacts even when a delivery step fails.
 
-The separate `delivery` goal does not collect evidence or change the scan policy result. Failed-test collection/report/enforcement orchestration remains a separate lifecycle task; these recipes do not promise that a failed test run produced a complete merged CBOM.
+The separate `delivery` goal does not collect evidence or change the scan policy result. Use [CI finalization](CI-FINALIZATION.md) to seal available current-run evidence after a failed test run and keep test, policy, and delivery outcomes separate.
 
 ## Select preparation and a destination
 
@@ -97,6 +110,9 @@ The separate `delivery` goal does not collect evidence or change the scan policy
 | `COMBINE` | Produce a separately identified combined BOM with a transformation manifest and explicit losses. Original signed documents stay unchanged; their signatures do not sign the derivative. |
 | `generic-https` | Forward any supported prepared kind to an artifact receiver; ingestion and receiver semantic fidelity stay unverified. |
 | `dependency-track` | Guarded, explicitly lossy runtime view for exactly the tested Dependency-Track 5.2.0 contract. See [Dependency-Track setup](DEPENDENCY-TRACK.md). |
+| `artifactory` | Store the publication in a scoped repository path and verify its exact bytes by download. This does not establish Xray ingestion. See [Artifactory](ARTIFACTORY.md). |
+| `sonatype-sbom-manager` | Import into an explicitly mapped application/version, observe asynchronous completion, and verify the original download. Experimental; see [Sonatype SBOM Manager](SONATYPE-SBOM-MANAGER.md). |
+| `anchore-enterprise` | Submit an SBOM asset to an explicitly mapped application/version and observe the import job. Independent original retention is required. Experimental; see [Anchore Enterprise](ANCHORE.md). |
 
 Inputs distinguish `CENSUS_RAW_CBOM`, `CENSUS_MERGED_CBOM` and `EXTERNAL_SOFTWARE_SBOM`. A combined document is produced as `DERIVED_COMBINED_BOM`; it is not accepted as a user-declared original. External CycloneDX 1.6 JSON uses its own pinned offline schema/reference validator. The Census-only validator still rejects software and mixed documents. No network schema resolution or implicit conversion is performed.
 
@@ -115,13 +131,15 @@ An optional `retention` block requires exact original readback before upload:
 }
 ```
 
-Set `policy.requireRemoteRetention` to `true` to make this a policy requirement. The Dependency-Track adapter requires it regardless of that flag. An external evidence-store workflow must first save the original CBOM. Census performs an authenticated HTTPS GET and verifies the exact publication digest; this is an observation at that moment, not a guarantee of future storage durability. With `LINK`, it proves retention of the published CBOM only, not the linked software SBOM. Combined-document remote retention is rejected until separate original-source retention can be expressed. Upload and readback credentials are separate.
+Set `policy.requireRemoteRetention` to `true` to make this a policy requirement. The Dependency-Track, Sonatype SBOM Manager, and Anchore Enterprise adapters require it regardless of that flag. An external evidence-store workflow must first save the original CBOM. Census performs an authenticated HTTPS GET and verifies the exact publication digest; this is an observation at that moment, not a guarantee of future storage durability. With `LINK`, it proves retention of the published CBOM only, not the linked software SBOM. Combined-document remote retention is rejected until separate original-source retention can be expressed. Upload and readback credentials are separate.
 
-Optional `transport` fields are `caBundle` (PEM certificates added to default trust), `proxyHost` and `proxyPort` (default 8080). TLS hostname verification is mandatory. The explicit unauthenticated CONNECT proxy is used for both upload and readback; ambient proxy configuration is ignored. Credential-bearing URLs, query strings, fragments and redirects are rejected. The generic adapter permits only nonsecret `X-Correlation-Id` and `X-Tenant-Id` entries under `options.headers`; endpoint templates, arbitrary header overrides and executable hooks are unsupported.
+Optional `transport` fields are `caBundle` (PEM certificates added to default trust), `proxyHost` and `proxyPort` (default 8080). TLS hostname verification is mandatory. The explicit CONNECT proxy is used for both upload and readback; ambient proxy configuration is ignored. Credential-bearing URLs, query strings, fragments and redirects are rejected. The generic adapter permits only nonsecret `X-Correlation-Id` and `X-Tenant-Id` entries under `options.headers`; endpoint templates, arbitrary header overrides and executable hooks are unsupported.
 
-Limits are 64 KiB per profile/plan and protocol response body, 16 MiB per source/readback, two inputs, 64 exchanges, one mutation, 10-second connection, 30-second full-request and 60-second overall execution deadlines. Polling shares the overall budget. There are no automatic upload retries or exactly-once claims. A timeout after submission remains unknown; inspect the destination before a manual repeat.
+Limits are 64 KiB per profile/plan and protocol response body, 16 MiB per source/readback, two inputs, 64 exchanges, one mutation, 10-second connection, 30-second full-request and 60-second overall execution deadlines. Polling shares the overall budget. Vendor uploads are single-attempt. Generic HTTPS can opt into bounded retries only with an explicit receiver idempotency contract; see [delivery operations](DELIVERY-OPERATIONS.md). There are no exactly-once claims. A timeout after submission remains unknown; inspect the destination before a manual repeat.
 
-Receipts use `census.delivery-receipt/2` and are atomically replaced as execution progresses. They independently record upload, ingestion, original readback, declared semantic loss, inventory mutation intent, completion gate, digests, caller mapping and timings. Semantic and inventory readback remain `UNVERIFIED` unless explicitly observed; the current adapters do not perform those comparisons. Original collection health remains in the immutable artifact. Plans/receipts omit credentials, endpoint text and remote response bodies. They still contain operational identifiers and local manifest paths, so retain them under your organization's access policy. Protect the receipt directory on Windows using the runner's ACLs; POSIX files are created with owner-only permissions.
+Receipts use `census.delivery-receipt/2` and are atomically replaced as execution progresses. They independently record upload, ingestion, original readback, declared semantic loss, inventory mutation intent, completion gate, digests, caller mapping and timings. Semantic and inventory readback remain `UNVERIFIED` unless explicitly observed; the current adapters do not perform those comparisons. An adapter can require a destination download in addition to the selected completion gate. `destinationReadback` records centrally verified exact publication bytes separately from pre-upload `originalRetention`; a mismatch, failed download, or missing proof fails delivery even after the server accepted the upload. Both readback paths are limited to 16 MiB and the same overall deadline. A readback observation is not a retention SLA or proof of searchable cryptographic inventory.
+
+Original collection health remains in the immutable artifact. Plans/receipts omit credentials, endpoint text and remote response bodies. They still contain operational identifiers and local manifest paths, so retain them under your organization's access policy. Protect the receipt directory on Windows using the runner's ACLs; POSIX files are created with owner-only permissions.
 
 ## Adapter authors
 

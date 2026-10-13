@@ -272,6 +272,95 @@ class DeliveryMojoTest {
     assertThat(uploads.get()).isEqualTo(1);
   }
 
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"ENV_BASIC", "MAVEN_SERVER_BASIC"})
+  @SuppressWarnings("deprecation") // Isolated Maven3 settings/decryption fixture.
+  void resolvesBasicPairsFromEnvironmentAndDecryptedServers(String provider) throws Exception {
+    var config = JsonSupport.object(JsonSupport.parse(Files.readAllBytes(profile)));
+    java.util.Map<String, Object> auth =
+        "ENV_BASIC".equals(provider)
+            ? java.util.Map.of("type", provider, "name", "PASSWORD", "usernameName", "USERNAME")
+            : java.util.Map.of("type", provider, "name", "inventory");
+    config.put(
+        "retention",
+        java.util.Map.of(
+            "endpoint",
+            "https://localhost:" + server.getAddress().getPort() + "/original",
+            "authentication",
+            auth));
+    ProfileFixture.write(directory, config);
+    AtomicInteger readbacks = new AtomicInteger();
+    server.createContext(
+        "/original",
+        exchange -> {
+          readbacks.incrementAndGet();
+          assertThat(exchange.getRequestHeaders().getFirst("Authorization"))
+              .isEqualTo("Basic dXNlcjpwYXNzd29yZA==");
+          byte[] bytes = Files.readAllBytes(directory.resolve("cbom.json"));
+          exchange.sendResponseHeaders(200, bytes.length);
+          exchange.getResponseBody().write(bytes);
+          exchange.close();
+        });
+    var environment =
+        new java.util.HashMap<>(
+            java.util.Map.of(
+                "CENSUS_TEST_TOKEN", "upload-secret", "USERNAME", "user", "PASSWORD", "password"));
+    DeliveryMojo mojo =
+        new DeliveryMojo() {
+          @Override
+          String environment(String name) {
+            return environment.get(name);
+          }
+        };
+    set(mojo, "profile", profile.toFile());
+    set(mojo, "failOnError", true);
+    var session =
+        new org.apache.maven.execution.MavenSession(
+            null,
+            null,
+            new org.apache.maven.execution.DefaultMavenExecutionRequest(),
+            new org.apache.maven.execution.DefaultMavenExecutionResult());
+    org.apache.maven.settings.Server configured = new org.apache.maven.settings.Server();
+    configured.setId("inventory");
+    configured.setPassword("{encrypted-password}");
+    session.getSettings().addServer(configured);
+    set(mojo, "session", session);
+    org.apache.maven.settings.Server decrypted = new org.apache.maven.settings.Server();
+    decrypted.setUsername("user");
+    decrypted.setPassword("password");
+    var decryption =
+        (org.apache.maven.settings.crypto.SettingsDecryptionResult)
+            java.lang.reflect.Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {org.apache.maven.settings.crypto.SettingsDecryptionResult.class},
+                (proxy, method, args) ->
+                    "getServer".equals(method.getName()) ? decrypted : java.util.List.of());
+    set(
+        mojo,
+        "settingsDecrypter",
+        (org.apache.maven.settings.crypto.SettingsDecrypter) request -> decryption);
+    set(mojo, "action", "plan");
+    mojo.execute();
+    set(mojo, "action", "publish");
+    set(mojo, "planSha256", planHash());
+    mojo.execute();
+    assertThat(uploads.get()).isEqualTo(1);
+    assertThat(readbacks.get()).isEqualTo(1);
+    for (String username : new String[] {null, "", "user:name"}) {
+      environment.put("USERNAME", username);
+      decrypted.setUsername(username);
+      assertThatThrownBy(mojo::execute)
+          .isInstanceOf(MojoExecutionException.class)
+          .hasMessageNotContaining("user:name")
+          .hasMessageNotContaining("password")
+          .hasNoCause();
+    }
+    assertThat(uploads.get()).isEqualTo(1);
+    assertThat(readbacks.get()).isEqualTo(1);
+    assertThat(Files.readString(directory.resolve("receipt.json")))
+        .doesNotContain("password", "dXNlcjpw");
+  }
+
   private DeliveryMojo mojo() throws Exception {
     DeliveryMojo mojo =
         new DeliveryMojo() {

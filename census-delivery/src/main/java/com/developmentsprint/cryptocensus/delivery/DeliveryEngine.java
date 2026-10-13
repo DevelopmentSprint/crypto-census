@@ -115,6 +115,10 @@ public final class DeliveryEngine {
   // cancel.
   private DeliveryReceipt send(
       DeliveryRequest request, byte[] bytes, String digest, String identity, long started) {
+    if (request.options().authenticatedProxy() == null
+        && Boolean.getBoolean("jdk.httpclient.enableAllMethodRetry")) {
+      return failure(digest, identity, DeliveryReceipt.Outcome.FAILED, "UNSAFE_AUTOMATIC_RETRY");
+    }
     if (!TransportLogging.safe(request.options().authenticatedProxy() != null)) {
       return failure(digest, identity, DeliveryReceipt.Outcome.FAILED, "UNSAFE_TRANSPORT_LOGGING");
     }

@@ -13,6 +13,7 @@ public interface AdapterOptions {
   /** Authentication schemes supported by the central transport. */
   enum AuthenticationScheme {
     BEARER,
-    API_KEY
+    API_KEY,
+    BASIC
   }
 }

@@ -185,6 +185,79 @@ class ProfileCliTest {
     assertThat(error.toString(StandardCharsets.UTF_8)).doesNotContain("secret-value");
   }
 
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(
+      strings = {"valid", "missing", "empty", "invalid", "redirect"})
+  void resolvesBasicEnvironmentPairsAndNeverForwardsOnRedirect(String scenario) throws Exception {
+    var config = JsonSupport.object(JsonSupport.parse(Files.readAllBytes(profile)));
+    String base = "https://localhost:" + server.getAddress().getPort();
+    config.put(
+        "retention",
+        Map.of(
+            "endpoint",
+            base + "/original",
+            "authentication",
+            Map.of("type", "ENV_BASIC", "name", "PASSWORD", "usernameName", "USERNAME")));
+    ProfileFixture.write(directory, config);
+    AtomicInteger readbacks = new AtomicInteger();
+    AtomicInteger forwarded = new AtomicInteger();
+    HttpsServer other = tls.server();
+    other.createContext(
+        "/",
+        exchange -> {
+          forwarded.incrementAndGet();
+          exchange.sendResponseHeaders(200, -1);
+          exchange.close();
+        });
+    other.start();
+    server.createContext(
+        "/original",
+        exchange -> {
+          readbacks.incrementAndGet();
+          assertThat(exchange.getRequestHeaders().getFirst("Authorization"))
+              .isEqualTo("Basic dXNlcjpwYXNzd29yZA==");
+          byte[] bytes = Files.readAllBytes(directory.resolve("cbom.json"));
+          exchange
+              .getResponseHeaders()
+              .add("Location", "https://localhost:" + other.getAddress().getPort() + "/");
+          exchange.sendResponseHeaders("redirect".equals(scenario) ? 302 : 200, bytes.length);
+          exchange.getResponseBody().write(bytes);
+          exchange.close();
+        });
+    try {
+      assertThat(run(Map.of(), "delivery", "--action", "plan", "--profile", profile.toString()))
+          .isZero();
+      Map<String, String> env =
+          new java.util.HashMap<>(
+              Map.of("CENSUS_TEST_TOKEN", "upload-secret", "PASSWORD", "password"));
+      if (!"missing".equals(scenario)) {
+        env.put(
+            "USERNAME",
+            "empty".equals(scenario) ? "" : "invalid".equals(scenario) ? "user:name" : "user");
+      }
+      int code =
+          run(
+              env,
+              "delivery",
+              "--action",
+              "publish",
+              "--profile",
+              profile.toString(),
+              "--plan-sha256",
+              planHash());
+      assertThat(code)
+          .isEqualTo("valid".equals(scenario) ? 0 : "redirect".equals(scenario) ? 4 : 2);
+      assertThat(uploads.get()).isEqualTo("valid".equals(scenario) ? 1 : 0);
+      assertThat(readbacks.get())
+          .isEqualTo("valid".equals(scenario) || "redirect".equals(scenario) ? 1 : 0);
+      assertThat(forwarded.get()).isZero();
+      assertThat(error.toString(StandardCharsets.UTF_8))
+          .doesNotContain("user:name", "password", "dXNlcjpw");
+    } finally {
+      other.stop(0);
+    }
+  }
+
   private int run(Map<String, String> environment, String... args) {
     return CensusCli.run(
         args,

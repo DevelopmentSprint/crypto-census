@@ -89,6 +89,31 @@ class ProfileTransportTest {
   }
 
   @Test
+  void ambientMutationRetriesAreRefusedBeforeNetwork() {
+    String previous = System.getProperty("jdk.httpclient.enableAllMethodRetry");
+    try {
+      System.setProperty("jdk.httpclient.enableAllMethodRetry", "true");
+      var response =
+          new ProfileTransport(options, System.nanoTime())
+              .send(
+                  endpoint,
+                  new AdapterRequest(
+                      "PUT", "artifact", "application/json", new byte[] {1}, true, 0),
+                  "secret",
+                  AdapterOptions.AuthenticationScheme.BEARER,
+                  64);
+      assertThat(response.failureCode()).isEqualTo("UNSAFE_AUTOMATIC_RETRY");
+      assertThat(requests.get()).isZero();
+    } finally {
+      if (previous == null) {
+        System.clearProperty("jdk.httpclient.enableAllMethodRetry");
+      } else {
+        System.setProperty("jdk.httpclient.enableAllMethodRetry", previous);
+      }
+    }
+  }
+
+  @Test
   void apiKeyAndBodyAreSentOnlyToSelectedOrigin() {
     var response =
         new ProfileTransport(options, System.nanoTime())

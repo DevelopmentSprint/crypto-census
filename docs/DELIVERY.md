@@ -1,6 +1,6 @@
 # Deliver an existing CBOM over HTTPS
 
-For typed preparation, sealed plans and guarded vendor delivery, see [delivery profiles](DELIVERY-PROFILES.md).
+For typed preparation, sealed plans and guarded vendor delivery, see [delivery profiles](DELIVERY-PROFILES.md). Additional destination guides cover [Sonatype SBOM Manager](SONATYPE-SBOM-MANAGER.md), [Artifactory evidence storage](ARTIFACTORY.md), and [Anchore Enterprise](ANCHORE.md). These adapters are experimental and tested against local HTTPS fixtures derived from vendor documentation; no live commercial tenant validation is claimed.
 
 Use the Maven `publish` goal or standalone CLI to send an existing Crypto Census CBOM to a company-operated HTTPS receiver. Both use the same delivery engine and preserve the original file. Publication is explicit and never runs inside the observed application.
 

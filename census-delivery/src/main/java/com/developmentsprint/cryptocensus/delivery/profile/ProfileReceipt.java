@@ -10,4 +10,17 @@ public record ProfileReceipt(
     Instant startedAt,
     Instant finishedAt,
     int exchanges,
-    boolean successful) {}
+    boolean successful,
+    VerifiedRetention destinationReadback) {
+  /** Constructs a receipt without a verified destination download. */
+  public ProfileReceipt(
+      String planSha256,
+      AdapterResult observation,
+      VerifiedRetention retention,
+      Instant startedAt,
+      Instant finishedAt,
+      int exchanges,
+      boolean successful) {
+    this(planSha256, observation, retention, startedAt, finishedAt, exchanges, successful, null);
+  }
+}

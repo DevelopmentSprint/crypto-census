@@ -94,6 +94,24 @@ class DeliveryEngineTest {
   }
 
   @Test
+  void ambientAutomaticRetriesCannotOverrideSingleAttemptContract() throws Exception {
+    String previous = System.getProperty("jdk.httpclient.enableAllMethodRetry");
+    try {
+      System.setProperty("jdk.httpclient.enableAllMethodRetry", "true");
+      DeliveryReceipt receipt = new DeliveryEngine().deliver(request(options));
+      assertThat(receipt.successful()).isFalse();
+      assertThat(receipt.reasonCode()).isEqualTo("UNSAFE_AUTOMATIC_RETRY");
+      assertThat(attempts.get()).isZero();
+    } finally {
+      if (previous == null) {
+        System.clearProperty("jdk.httpclient.enableAllMethodRetry");
+      } else {
+        System.setProperty("jdk.httpclient.enableAllMethodRetry", previous);
+      }
+    }
+  }
+
+  @Test
   void deliversOriginalBytesAndWritesAnAtomicPrivateNonsecretReceipt() throws Exception {
     byte[] original = Files.readAllBytes(artifact);
     DeliveryRequest request = request(options);
