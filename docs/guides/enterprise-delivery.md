@@ -76,3 +76,5 @@ Receipts distinguish upload acceptance, ingestion completion, original retention
 If you require searchable, field-preserving crypto inventory, verify those semantics on the exact target version before adoption. Accepting named loss codes records a conscious allowance; it does not turn an unverified capability into a proven one. Keep original evidence available independently of the target UI.
 
 For CI that must finalize evidence after failed tests, bind delivery to the exact sealed manifest as described in the [CI guide](ci.md). Use [delivery troubleshooting](../troubleshooting/delivery.md) for failures, and [delivery operations](../DELIVERY-OPERATIONS.md) for proxy, retry, and credential configuration.
+
+See [enterprise validation](../reference/enterprise-validation.md) for the evidence behind each capability and the distinction between verified limited delivery and native cryptographic-field preservation.
