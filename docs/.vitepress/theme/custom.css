@@ -17,7 +17,7 @@
 }
 .VPNavBarTitle .logo { width: 29px; height: 29px; }
 .VPNavBarTitle .title { font-weight: 750; letter-spacing: -.5px; }
-.VPHome .VPHero { padding-top: 72px; padding-bottom: 52px; }
+.VPHome .VPHero { padding-top: calc(var(--vp-nav-height) + 48px); padding-bottom: 52px; }
 .VPHero .name { font-size: 20px; line-height: 1.4; letter-spacing: -.4px; }
 .VPHero .text { margin-top: 15px; max-width: 590px; font-size: clamp(36px,4.4vw,58px); line-height: 1.07; letter-spacing: -2.2px; }
 .VPHero .tagline { max-width: 530px; font-size: 19px; line-height: 1.6; }
@@ -62,7 +62,7 @@
 .diagram-status { padding: 20px; color: var(--vp-c-text-2); font-size: 13px; }
 :focus-visible { outline: 3px solid var(--vp-c-brand-1); outline-offset: 3px; }
 @media (max-width: 959px) {
-  .VPHome .VPHero { padding-top: 40px; }
+  .VPHome .VPHero { padding-top: calc(var(--vp-nav-height) + 40px); }
   .VPHero .image { padding-left: 0; margin: 30px 0 0; order: 2; }
   .VPHero .image-container { display: flex; justify-content: center; margin: 0 auto; }
   .evidence-illustration { max-width: 430px; margin-top: 14px; }
