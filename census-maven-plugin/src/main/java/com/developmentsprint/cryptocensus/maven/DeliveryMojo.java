@@ -157,15 +157,19 @@ public class DeliveryMojo extends AbstractMojo {
   }
 
   private String resolve(SecretReference reference) {
-    if (reference.kind() == SecretReference.Kind.ENV) {
+    if (reference.kind() == SecretReference.Kind.ENV
+        || reference.kind() == SecretReference.Kind.ENV_BASIC) {
       String token = environment(reference.name());
       if (token == null || token.isEmpty()) {
         throw new ConfigurationException(
             "Configured authentication environment variable is absent or empty");
       }
-      return token;
+      return reference.basic()
+          ? SecretReference.encodeBasic(environment(reference.usernameName()), token)
+          : token;
     }
-    if (reference.kind() != SecretReference.Kind.MAVEN_SERVER
+    if ((reference.kind() != SecretReference.Kind.MAVEN_SERVER
+            && reference.kind() != SecretReference.Kind.MAVEN_SERVER_BASIC)
         || session == null
         || settingsDecrypter == null) {
       throw new ConfigurationException("Maven server credential resolution is unavailable");
@@ -183,7 +187,10 @@ public class DeliveryMojo extends AbstractMojo {
       throw new ConfigurationException(
           "Maven server credential decryption failed or password is empty");
     }
-    return decrypted.getServer().getPassword();
+    return reference.basic()
+        ? SecretReference.encodeBasic(
+            decrypted.getServer().getUsername(), decrypted.getServer().getPassword())
+        : decrypted.getServer().getPassword();
   }
 
   String environment(String name) {

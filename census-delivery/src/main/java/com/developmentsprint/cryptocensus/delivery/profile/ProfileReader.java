@@ -184,6 +184,15 @@ public final class ProfileReader {
             retention,
             path(directory, outputs, "plan"),
             path(directory, outputs, "receipt"));
+    if (decoded.authentication().basic()
+        != (decoded.options().authenticationScheme()
+            == AdapterOptions.AuthenticationScheme.BASIC)) {
+      throw new IllegalArgumentException("Authentication provider does not match adapter scheme");
+    }
+    if (adapter.requiresAuthentication()
+        && decoded.authentication().kind() == SecretReference.Kind.NONE) {
+      throw new IllegalArgumentException("Destination requires authentication");
+    }
     validator.accept(decoded);
     return decoded;
   }

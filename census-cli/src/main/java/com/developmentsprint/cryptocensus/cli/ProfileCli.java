@@ -61,7 +61,8 @@ final class ProfileCli {
   }
 
   private static String resolve(SecretReference reference, Map<String, String> environment) {
-    if (reference.kind() != SecretReference.Kind.ENV) {
+    if (reference.kind() != SecretReference.Kind.ENV
+        && reference.kind() != SecretReference.Kind.ENV_BASIC) {
       throw new UsageException(
           "Standalone delivery requires an ENV secret reference; Maven server references are"
               + " available through the Maven goal");
@@ -70,7 +71,9 @@ final class ProfileCli {
     if (value == null || value.isEmpty()) {
       throw new UsageException("Configured authentication environment variable is absent or empty");
     }
-    return value;
+    return reference.basic()
+        ? SecretReference.encodeBasic(environment.get(reference.usernameName()), value)
+        : value;
   }
 
   private static Map<String, String> parse(String[] args) {

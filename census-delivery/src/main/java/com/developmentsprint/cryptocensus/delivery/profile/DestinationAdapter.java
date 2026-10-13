@@ -21,6 +21,16 @@ public interface DestinationAdapter {
     return false;
   }
 
+  /** Whether successful delivery also requires an exact-byte download from the destination. */
+  default boolean requiresPublicationReadback() {
+    return false;
+  }
+
+  /** Whether anonymous execution is prohibited by this destination contract. */
+  default boolean requiresAuthentication() {
+    return false;
+  }
+
   /** Open a pure state machine over verified publication bytes. */
   AdapterSession open(AdapterContext context, byte[] publicationBytes);
 }

@@ -120,7 +120,11 @@ final class ProfileTransport {
         }
         message.header(
             scheme == AdapterOptions.AuthenticationScheme.API_KEY ? "X-Api-Key" : "Authorization",
-            scheme == AdapterOptions.AuthenticationScheme.API_KEY ? secret : "Bearer " + secret);
+            switch (scheme) {
+              case API_KEY -> secret;
+              case BEARER -> "Bearer " + secret;
+              case BASIC -> "Basic " + secret;
+            });
       }
       message.method(
           request.method(),

@@ -82,8 +82,9 @@ public final class ProfileExecutor {
             null,
             List.of());
     VerifiedRetention retention = null;
+    VerifiedRetention destinationReadback = null;
     int exchanges = 0;
-    persist(plan, result, null, started, 0, false);
+    persist(plan, result, null, null, started, 0, false);
     if (profile.retention() != null) {
       String evidenceSecret = resolve(profile.retention().authentication(), resolver);
       ProtocolResponse evidence =
@@ -91,7 +92,9 @@ public final class ProfileExecutor {
               profile.retention().endpoint(),
               new AdapterRequest("GET", "", null, new byte[0], false, 0),
               evidenceSecret,
-              AdapterOptions.AuthenticationScheme.BEARER,
+              profile.retention().authentication().basic()
+                  ? AdapterOptions.AuthenticationScheme.BASIC
+                  : AdapterOptions.AuthenticationScheme.BEARER,
               16 * 1024 * 1024);
       exchanges++;
       if (evidence.statusCode() != 200
@@ -106,7 +109,7 @@ public final class ProfileExecutor {
                 null,
                 null,
                 List.of());
-        return persist(plan, result, null, started, exchanges, false);
+        return persist(plan, result, null, null, started, exchanges, false);
       }
       retention =
           new VerifiedRetention(
@@ -134,7 +137,7 @@ public final class ProfileExecutor {
       result = step.observation();
       if (exchanges >= 64 || transport.remaining() <= 0) {
         result = stopped(result, "OPERATION_LIMIT", mutation);
-        return persist(plan, result, retention, started, exchanges, false);
+        return persist(plan, result, retention, destinationReadback, started, exchanges, false);
       }
       AdapterRequest request = step.request();
       if (preflight && request.mutation()) {
@@ -147,16 +150,16 @@ public final class ProfileExecutor {
                 null,
                 result.serverVersion(),
                 result.lossCodes());
-        return persist(plan, result, retention, started, exchanges, false);
+        return persist(plan, result, retention, destinationReadback, started, exchanges, false);
       }
       if (request.mutation() && ++mutations > 1) {
         result = stopped(result, "MUTATION_LIMIT", mutation);
-        return persist(plan, result, retention, started, exchanges, false);
+        return persist(plan, result, retention, destinationReadback, started, exchanges, false);
       }
       mutation |= request.mutation();
       if (request.mutation()) {
         result = stopped(result, "ATTEMPT_STARTED", true);
-        persist(plan, result, retention, started, exchanges, false);
+        persist(plan, result, retention, destinationReadback, started, exchanges, false);
       }
       GenericProfileAdapter.Options retry =
           profile.options() instanceof GenericProfileAdapter.Options generic
@@ -187,7 +190,7 @@ public final class ProfileExecutor {
                 request,
                 secret,
                 profile.options().authenticationScheme(),
-                65536);
+                request.publicationReadback() ? 16 * 1024 * 1024 : 65536);
         ambiguous |= response.statusCode() >= 500 || response.failureCode() != null;
         attempts++;
         exchanges++;
@@ -200,7 +203,14 @@ public final class ProfileExecutor {
           break;
         }
         // Preserve ambiguity before waiting; a crash must never leave an old success receipt.
-        persist(plan, stopped(result, "RETRY_PENDING", true), retention, started, exchanges, false);
+        persist(
+            plan,
+            stopped(result, "RETRY_PENDING", true),
+            retention,
+            destinationReadback,
+            started,
+            exchanges,
+            false);
         try {
           java.util.concurrent.TimeUnit.MILLISECONDS.sleep(delay);
         } catch (InterruptedException interrupted) {
@@ -214,21 +224,41 @@ public final class ProfileExecutor {
           && !(response.statusCode() >= 200 && response.statusCode() < 300)) {
         response = new ProtocolResponse(0, new byte[0], "RETRY_OUTCOME_UNKNOWN");
       }
+      if (request.publicationReadback()) {
+        destinationReadback = null;
+        if (response.failureCode() == null
+            && response.statusCode() == 200
+            && ProfileFiles.hash(response.body()).equals(plan.bundle().publication().sha256())) {
+          destinationReadback =
+              new VerifiedRetention(
+                  plan.bundle().publication().sha256(),
+                  ProfileFiles.hash(
+                      ProfileTransport.resolve(profile.endpoint(), request.relativePath())
+                          .toASCIIString()
+                          .getBytes(StandardCharsets.UTF_8)),
+                  Instant.now());
+        } else {
+          step = session.accept(response);
+          result = stopped(step.observation(), "DESTINATION_READBACK_UNVERIFIED", mutation);
+          return persist(plan, result, retention, null, started, exchanges, false);
+        }
+      }
       step = session.accept(response);
       result = step.observation();
-      persist(plan, result, retention, started, exchanges, false);
+      persist(plan, result, retention, destinationReadback, started, exchanges, false);
       if (response.failureCode() != null && step.request() != null) {
         result = stopped(result, response.failureCode(), mutation);
-        return persist(plan, result, retention, started, exchanges, false);
+        return persist(plan, result, retention, destinationReadback, started, exchanges, false);
       }
     }
     result = step.observation();
     boolean accepted = result.upload() == AdapterResult.Upload.ACCEPTED;
     boolean success =
         accepted
+            && (!profile.adapter().requiresPublicationReadback() || destinationReadback != null)
             && (profile.policy().completion() == DeliveryPolicy.Completion.UPLOAD_ACCEPTED
                 || result.ingestion() == AdapterResult.Ingestion.COMPLETED);
-    return persist(plan, result, retention, started, exchanges, success);
+    return persist(plan, result, retention, destinationReadback, started, exchanges, success);
   }
 
   private static String deliveryIdentity(PlannedDelivery plan) {
@@ -276,13 +306,21 @@ public final class ProfileExecutor {
       PlannedDelivery plan,
       AdapterResult result,
       VerifiedRetention retention,
+      VerifiedRetention destinationReadback,
       Instant started,
       int exchanges,
       boolean success)
       throws IOException {
     ProfileReceipt receipt =
         new ProfileReceipt(
-            plan.planSha256(), result, retention, started, Instant.now(), exchanges, success);
+            plan.planSha256(),
+            result,
+            retention,
+            started,
+            Instant.now(),
+            exchanges,
+            success,
+            destinationReadback);
     boolean interrupted = Thread.interrupted();
     try {
       ProfileReceiptStore.write(plan, receipt);

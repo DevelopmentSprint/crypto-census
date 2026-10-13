@@ -96,6 +96,22 @@ final class ProfileReceiptStore {
                 "verifiedAt",
                 result.retention().verifiedAt().toString()));
     root.put("evidenceHealthReference", "ORIGINAL_ARTIFACT");
+    root.put(
+        "destinationReadback",
+        result.destinationReadback() == null
+            ? Map.of("observation", "UNVERIFIED")
+            : Map.of(
+                "observation",
+                "RETRIEVED_EXACT_BYTES",
+                "scope",
+                "PUBLICATION_ARTIFACT_ONLY",
+                "artifactSha256",
+                result.destinationReadback().artifactSha256(),
+                "endpointSha256",
+                result.destinationReadback().endpointSha256(),
+                "verifiedAt",
+                result.destinationReadback().verifiedAt().toString()));
+    root.put("requiresPublicationReadback", plan.profile().adapter().requiresPublicationReadback());
     root.put("metadataSource", "CALLER_SUPPLIED");
     root.put("effectiveCompletionGate", plan.profile().policy().completion().name());
     root.put("gatePassed", result.successful());
