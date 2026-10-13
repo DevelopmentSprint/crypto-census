@@ -1,6 +1,6 @@
 # Release runbook
 
-The `0.1.0` candidate is unpublished. Preparing and testing artifacts does not publish them. The maintainer owns signing, Central publication, release tagging, remote pushes, and the final public-visibility decision.
+Preparing and testing artifacts does not publish them. The maintainer owns signing, Central publication, release tagging, remote pushes, and the final public-visibility decision.
 
 ## Immediate prerequisites
 

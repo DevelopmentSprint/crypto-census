@@ -83,7 +83,7 @@ A repository administrator must configure **Settings → Pages → Build and dep
 
 <https://developmentsprint.github.io/crypto-census/>
 
-The site tracks the development branch and identifies the current version as a prerelease. Changes do not publish merely because a local build passes. Follow the repository's review and acceptance process before merging.
+The site tracks the development branch. Keep release availability in the shared banner in `docs/.vitepress/theme/index.ts`, rather than repeating status notices in individual pages. Update or remove the banner when publication is verified; keep source-build prerequisites and release verification steps in their respective guides. Changes do not publish merely because a local build passes. Follow the repository's review and acceptance process before merging.
 
 ## Diagnose a failed publication
 

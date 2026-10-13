@@ -18,15 +18,15 @@ flowchart TD
     G --> J[Preserve crypto and collection gate status]
 ```
 
-## Prepare the candidate on the runner
+## Install Census on the runner
 
-The unpublished plugin must be installed before a separate consumer invocation can resolve it. This repository uses the following bootstrap from the checkout, then runs the demo as the consumer:
+Install the plugin in the runner’s Maven repository before running the application build. This repository uses the following bootstrap from the checkout, then runs the demo as the consumer:
 
 ```sh
 ./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -Dinvoker.skip=true
 ```
 
-Only bootstrap skips tests. In your own CI, install the candidate from the intended revision into the repository used by the application build. Run the application's normal tests with the [plugin configured](../examples/maven-project.md).
+Only bootstrap skips tests. In your own CI, install Census from the intended revision into the repository used by the application build. Run the application's normal tests with the [plugin configured](../examples/maven-project.md).
 
 ## Give each attempt an identity
 

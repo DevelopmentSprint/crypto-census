@@ -1,6 +1,6 @@
 # Deliver evidence with a profile
 
-Delivery profiles use the same preparation, validation and transport engine from the standalone CLI and Maven. They are available in the enterprise implementation candidate; they have not been published as a release. The existing [`publish` command and goal](DELIVERY.md) remain compatible.
+Delivery profiles use the same preparation, validation and transport engine from the standalone CLI and Maven. The existing [`publish` command and goal](DELIVERY.md) remain compatible.
 
 Census produces cryptographic evidence. Your existing software SBOM generator remains responsible for software components, dependency graphs and licenses. Profiles can retain these documents separately, link them, or explicitly prepare a derived combined CycloneDX document. Read [SBOM preparation](SBOM-PREPARATION.md) for supported inputs and transformation limits.
 

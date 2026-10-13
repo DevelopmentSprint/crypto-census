@@ -37,7 +37,7 @@ Start with a [small working example](./examples/crypto-walkthrough.md), follow t
 
 <div class="home-note">
 
-**Current status: 0.1.0 prerelease.** Build and install from source; Maven Central publication is pending. Java 17+ is required at runtime. Current positioning is tests and staging; production overhead is not benchmarked. Read the [compatibility matrix](./COMPATIBILITY.md) and [safety boundaries](./SAFETY.md) before deployment.
+Java 17+ is required at runtime. Current positioning is tests and staging; production overhead is not benchmarked. Read the [compatibility matrix](./COMPATIBILITY.md) and [safety boundaries](./SAFETY.md) before deployment.
 
 </div>
 
