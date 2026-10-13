@@ -60,6 +60,10 @@ test('mobile layout and navigation remain usable', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.goto('architecture/overview.html')
   await expect(page.locator('.census-diagram svg')).toHaveCount(2)
+  expect(await page.locator('.census-diagram svg').evaluateAll(elements => elements.every(element => {
+    const svg = element as SVGSVGElement
+    return svg.getBoundingClientRect().width >= svg.viewBox.baseVal.width - 1
+  }))).toBe(true)
   await page.screenshot({ path: 'test-results/architecture-mobile.png', fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
