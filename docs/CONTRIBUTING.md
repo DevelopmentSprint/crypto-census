@@ -44,7 +44,7 @@ Every build on JDK 21+ runs a strict static analysis suite; every tool fails the
 
 PMD and Checkstyle exclusions live in [`config/`](../config); SpotBugs findings are suppressed only on
 the reviewed method or field, with `@SuppressFBWarnings` and a justification. Each one states why.
-The Maven Wrapper pins Maven 3.9.12 and verifies its SHA-256.
+The Maven Wrapper pins Maven 3.10.0 and verifies its SHA-256. See [dependency compatibility](reference/dependency-compatibility.md) for reviewed toolchain upgrades and migration constraints.
 
 **Git hooks** are installed by the first build (`core.hooksPath .githooks`):
 
@@ -64,7 +64,7 @@ released version go through `hotfix/*`. Open pull requests against `develop`.
 
 ## Toolchain and local configuration
 
-The agent and ordinary build require JDK 17 or newer; full static analysis requires JDK 21 or newer. Use JDK 25 for contribution work and `./mvnw --version` to confirm the selected Java. Maven 3.6.3 is the enforced minimum; the wrapper pins and checksums Maven 3.9.12. On Windows use `mvnw.cmd`.
+The agent and ordinary build require JDK 17 or newer; full static analysis requires JDK 21 or newer. Use JDK 25 for contribution work and `./mvnw --version` to confirm the selected Java. Maven 3.6.3 is the enforced minimum; the wrapper pins and checksums Maven 3.10.0. On Windows use `mvnw.cmd`.
 
 The first lifecycle build through `initialize` sets this repository's `core.hooksPath` to `.githooks`. This replaces a previous local hooks-path choice; check `git config --show-origin --get core.hooksPath` before building if you maintain custom hooks. Linked worktrees share repository configuration unless you explicitly use Git's worktree configuration support.
 
