@@ -129,7 +129,10 @@ class EnterpriseTransportTest {
     for (String username : List.of("", "user:name", "user\r\n", "é")) {
       assertThatThrownBy(() -> SecretReference.encodeBasic(username, "password"))
           .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("Basic credentials are missing or invalid");
+          .hasMessage(
+              "BASIC_CREDENTIALS_INVALID: Basic credentials are missing or invalid; check"
+                  + " the selected username and password sources.")
+          .hasNoCause();
     }
     assertThatThrownBy(() -> SecretReference.encodeBasic("user", "password\n"))
         .isInstanceOf(IllegalArgumentException.class);

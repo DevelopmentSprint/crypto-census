@@ -124,6 +124,9 @@ final class ProfileTransport {
         }
         message.header(header.getKey(), header.getValue());
       }
+      if (scheme == AdapterOptions.AuthenticationScheme.BASIC) {
+        SecretReference.validateBasic(secret);
+      }
       if (secret != null) {
         if (secret.isEmpty() || secret.length() > 8192 || !secret.matches("[\\x21-\\x7e]+")) {
           throw new IllegalArgumentException("Invalid resolved authentication secret");
