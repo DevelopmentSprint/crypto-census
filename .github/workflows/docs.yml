@@ -21,7 +21,8 @@ jobs:
     name: Build and check documentation
     if: >-
       github.event_name == 'pull_request' ||
-      (github.event.workflow_run.conclusion == 'success' &&
+      (github.repository == 'DevelopmentSprint/crypto-census' &&
+       github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'develop' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
@@ -63,6 +64,14 @@ jobs:
           path: .docs-coverage
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
+      - name: Download exact source example CBOM
+        if: github.event_name == 'workflow_run' && steps.source.outputs.current == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: docs-cbom
+          path: .docs-cbom
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
       - name: Install locked documentation dependencies
         if: steps.source.outputs.current == 'true'
         run: npm ci
@@ -74,12 +83,18 @@ jobs:
         run: |
           node --test scripts/docs/prepare_test.mjs
           python3 scripts/coverage_badges_test.py
+          python3 scripts/docs/example_cbom_test.py
       - name: Type check theme
         if: steps.source.outputs.current == 'true'
         run: npm run docs:typecheck
       - name: Build site and check every internal link
         if: steps.source.outputs.current == 'true'
         env:
+          DOCS_CBOM_DIR: ${{ github.event_name == 'workflow_run' && '.docs-cbom' || '' }}
+          DOCS_REQUIRE_CBOM: ${{ github.event_name == 'workflow_run' }}
+          DOCS_REPOSITORY: ${{ github.repository }}
+          DOCS_RUN_ID: ${{ github.event.workflow_run.id }}
+          DOCS_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
           DOCS_COVERAGE_DIR: ${{ github.event_name == 'workflow_run' && '.docs-coverage' || '' }}
           DOCS_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
           DOCS_RUN_URL: ${{ github.event.workflow_run.html_url }}

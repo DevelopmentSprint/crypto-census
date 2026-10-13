@@ -39,6 +39,8 @@ flowchart LR
 
 ## Inspect the report
 
+[Browse the published CI example](./example-cbom.md) to explore the same workload’s observed assets, verdicts, and call sites before running it yourself.
+
 Open `census-demo/target/cryptocensus/cbom.json` in your editor. Find `bomFormat`, `specVersion`, cryptographic components, and the `cryptocensus:` properties. Follow an application call site back to the corresponding demo class.
 
 Check collection-health and target metadata as well as risk verdicts. An inventory with no observed errors is still limited to the executed tests. Counts reflect the observed initialization/entry-point calls rather than bytes processed or every cryptographic operation.

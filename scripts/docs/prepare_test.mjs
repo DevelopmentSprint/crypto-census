@@ -16,6 +16,8 @@ function fixture(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), 'census-docs-prepare-'))
   t.after(() => rmSync(directory, { recursive: true, force: true }))
   writeFileSync(path.join(directory, 'prepare.mjs'), script)
+  mkdirSync(path.join(directory, 'scripts/docs'), { recursive: true })
+  writeFileSync(path.join(directory, 'scripts/docs/example_cbom.py'), readFileSync(fileURLToPath(new URL('./example_cbom.py', import.meta.url))))
   const input = path.join(directory, 'input')
   mkdirSync(input)
   const metadata = {
@@ -32,7 +34,7 @@ function fixture(t) {
   const output = path.join(directory, 'docs/public/badges')
   const run = (overrides = {}) => {
     const env = { ...process.env }
-    for (const key of ['DOCS_COVERAGE_DIR', 'DOCS_REQUIRE_COVERAGE', 'DOCS_SOURCE_SHA', 'DOCS_RUN_URL']) delete env[key]
+    for (const key of ['DOCS_COVERAGE_DIR', 'DOCS_REQUIRE_COVERAGE', 'DOCS_SOURCE_SHA', 'DOCS_RUN_URL', 'DOCS_CBOM_DIR', 'DOCS_REQUIRE_CBOM']) delete env[key]
     for (const [key, value] of Object.entries(overrides)) if (value !== undefined) env[key] = value
     return spawnSync(process.execPath, ['prepare.mjs'], { cwd: directory, env, encoding: 'utf8' })
   }

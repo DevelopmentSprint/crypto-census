@@ -154,7 +154,10 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crypto-census-cbom
-          path: ${{ steps.evidence.outputs.run_dir }}/revisions/1/
+          overwrite: true
+          path: |
+            ${{ steps.evidence.outputs.run_dir }}/revisions/1/evidence.json
+            ${{ steps.evidence.outputs.run_dir }}/revisions/1/manifest.json
           if-no-files-found: error
           retention-days: 14
       - name: Enforce current-run crypto and collection policy
@@ -165,11 +168,33 @@ jobs:
         run: |
           ./mvnw -B -ntp -pl census-demo com.developmentsprint:census-maven-plugin:0.1.0:enforce \
             -Dcensus.runId="$CENSUS_RUN_ID" -Dcensus.manifest="$GITHUB_WORKSPACE/$CENSUS_MANIFEST"
+      - name: Test public example evidence boundary
+        run: python3 scripts/docs/example_cbom_test.py
+      - name: Package public example from this trusted build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
+        env:
+          CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+          CENSUS_RUN_DIR: ${{ steps.evidence.outputs.run_dir }}
+        run: python3 scripts/docs/example_cbom.py package --input "$CENSUS_RUN_DIR/revisions/1" --output "$RUNNER_TEMP/docs-cbom"
+      - name: Upload exact public example evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docs-cbom
+          # A successful producer rerun replaces this name with a new artifact ID.
+          overwrite: true
+          path: |
+            ${{ runner.temp }}/docs-cbom/index.json
+            ${{ runner.temp }}/docs-cbom/evidence.json
+            ${{ runner.temp }}/docs-cbom/manifest.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Preserve exact run descriptor and individual JVM reports
         if: always() && steps.evidence.outcome == 'success'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crypto-census-cbom-jvm-reports
+          overwrite: true
           path: |
             ${{ steps.evidence.outputs.run_dir }}/run.json
             ${{ steps.evidence.outputs.run_dir }}/cbom-*.json

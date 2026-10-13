@@ -27,7 +27,7 @@ export default defineConfig({
       { text: 'Start here', link: '/getting-started/' },
       { text: 'Architecture', link: '/architecture/overview' },
       { text: 'Reference', link: '/guides/configuration' },
-      { text: 'Examples', link: '/examples/crypto-walkthrough' },
+      { text: 'Example CBOM', link: '/examples/example-cbom' },
       { text: '0.1.0 · prerelease', items: [
         { text: 'Build from source', link: '/getting-started/installation' },
         { text: 'Changelog', link: repository + '/blob/develop/CHANGELOG.md' },
@@ -53,6 +53,7 @@ export default defineConfig({
         { text: 'CI & failed-test evidence', link: '/guides/ci' },
         { text: 'Standalone JVMs & containers', link: '/guides/runtime-deployment' },
         { text: 'Choose a delivery destination', link: '/guides/enterprise-delivery' },
+        { text: 'Live example CBOM', link: '/examples/example-cbom' },
         { text: 'Cryptography walkthrough', link: '/examples/crypto-walkthrough' },
         { text: 'Maven example project', link: '/examples/maven-project' },
         { text: 'JaCoCo, Failsafe & more recipes', link: '/RECIPES' },

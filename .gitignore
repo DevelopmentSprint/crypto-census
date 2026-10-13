@@ -30,3 +30,7 @@ docs/public/badges/
 test-results/
 playwright-report/
 __pycache__/
+
+# Exact CI evidence is generated/downloaded, never committed.
+docs/public/example-cbom/
+.docs-cbom/

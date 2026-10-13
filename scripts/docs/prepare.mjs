@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -32,3 +33,6 @@ if (input) {
   await writeFile(path.join(destination, 'coverage.json'), JSON.stringify({ schemaVersion: 1, status: 'not measured locally' }, null, 2) + '\n')
   console.log('Local preview: neutral unmeasured badges (never used for Pages deployment).')
 }
+
+// The publication validator is shared with CI; only explicitly allowlisted files reach Pages.
+execFileSync('python3', ['scripts/docs/example_cbom.py', 'prepare'], { stdio: 'inherit' })
