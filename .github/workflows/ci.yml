@@ -59,7 +59,7 @@ jobs:
         run: ./mvnw -B -ntp verify
       - name: Upload demo CBOM
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cbom-jdk${{ matrix.java }}-${{ matrix.distribution }}-${{ matrix.os }}
           path: census-demo/target/cryptocensus/cbom.json
@@ -122,7 +122,7 @@ jobs:
             "$CENSUS_RUN_DIR/revisions/1/evidence.json"
       - name: Publish sealed runtime CBOM and manifest
         if: always() && steps.report.outcome == 'success'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crypto-census-cbom
           path: ${{ steps.evidence.outputs.run_dir }}/revisions/1/
@@ -138,7 +138,7 @@ jobs:
             -Dcensus.runId="$CENSUS_RUN_ID" -Dcensus.manifest="$GITHUB_WORKSPACE/$CENSUS_MANIFEST"
       - name: Preserve exact run descriptor and individual JVM reports
         if: always() && steps.evidence.outcome == 'success'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crypto-census-cbom-jvm-reports
           path: |
