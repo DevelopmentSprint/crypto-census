@@ -10,8 +10,8 @@ hero:
       text: Start with Maven →
       link: /getting-started/
     - theme: alt
-      text: Explore the architecture
-      link: /architecture/overview
+      text: Explore a real CBOM
+      link: /examples/example-cbom
 features:
   - title: Understand the evidence
     details: Learn what runtime observation reveals, where its limits are, and how a CBOM complements your software SBOM.
