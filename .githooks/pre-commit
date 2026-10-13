@@ -6,6 +6,9 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
+# Always enforce the private tracker boundary, including documentation-only commits.
+bash scripts/check-private-tracker.sh
+
 # Only Java sources, POMs and analysis configuration can change the analysis result.
 if ! git diff --cached --name-only --diff-filter=ACMR | grep -qE '(\.java|pom\.xml|^config/|^\.mvn/)'; then
   exit 0
