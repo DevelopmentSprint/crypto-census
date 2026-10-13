@@ -32,7 +32,7 @@ jobs:
     outputs:
       current: ${{ steps.source.outputs.current }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
@@ -93,7 +93,7 @@ jobs:
         run: npm run docs:test
       - name: Upload browser evidence
         if: always() && steps.source.outputs.current == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: documentation-browser-evidence
           path: test-results/
@@ -101,7 +101,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload review site
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: documentation-preview
           path: docs/.vitepress/dist/
@@ -146,4 +146,4 @@ jobs:
       - name: Deploy
         if: steps.source.outputs.current == 'true'
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

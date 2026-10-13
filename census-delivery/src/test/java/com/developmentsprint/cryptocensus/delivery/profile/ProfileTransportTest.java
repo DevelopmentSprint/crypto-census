@@ -78,6 +78,23 @@ class ProfileTransportTest {
         .isInstanceOf(IllegalArgumentException.class);
   }
 
+  @ParameterizedTest
+  @org.junit.jupiter.params.provider.MethodSource(
+      "com.developmentsprint.cryptocensus.delivery.profile.SecretReferenceTest#invalidBasicValues")
+  void malformedBasicPairsAreRefusedAtTransportBoundary(String value) {
+    assertThat(
+            new ProfileTransport(options, System.nanoTime())
+                .send(
+                    endpoint,
+                    new AdapterRequest("GET", "", null, new byte[0], false, 0),
+                    value,
+                    AdapterOptions.AuthenticationScheme.BASIC,
+                    64)
+                .failureCode())
+        .isEqualTo("TRANSPORT_FAILURE");
+    assertThat(requests.get()).isZero();
+  }
+
   @Test
   void typedRelativePathStaysWithinConfiguredPrefix() {
     assertThat(

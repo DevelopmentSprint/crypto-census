@@ -47,11 +47,44 @@ public record SecretReference(Kind kind, String name, String usernameName) {
         || password == null
         || !username.matches("[\\x21-\\x39\\x3b-\\x7e]{1,1024}")
         || !password.matches("[\\x20-\\x7e]{1,4096}")) {
-      throw new IllegalArgumentException("Basic credentials are missing or invalid");
+      throw new InvalidBasicCredentialsException();
     }
     return java.util.Base64.getEncoder()
         .encodeToString(
             (username + ":" + password).getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+  }
+
+  /** Rejects malformed, noncanonical or unsupported pairs from caller-owned resolvers. */
+  @SuppressWarnings(
+      "PMD.PreserveStackTrace") // Decoder messages must never expose credential bytes.
+  static void validateBasic(String value) {
+    if (value == null || value.isEmpty() || value.length() > 8192) {
+      throw new InvalidBasicCredentialsException();
+    }
+    final byte[] bytes;
+    try {
+      bytes = java.util.Base64.getDecoder().decode(value);
+    } catch (IllegalArgumentException error) {
+      throw new InvalidBasicCredentialsException();
+    }
+    String pair = new String(bytes, java.nio.charset.StandardCharsets.US_ASCII);
+    int separator = pair.indexOf(':');
+    if (separator < 0
+        || !encodeBasic(pair.substring(0, separator), pair.substring(separator + 1))
+            .equals(value)) {
+      throw new InvalidBasicCredentialsException();
+    }
+  }
+
+  /** Fixed, redacted diagnostic for missing or invalid resolved Basic credentials. */
+  public static final class InvalidBasicCredentialsException extends IllegalArgumentException {
+    private static final long serialVersionUID = 1L;
+
+    private InvalidBasicCredentialsException() {
+      super(
+          "BASIC_CREDENTIALS_INVALID: Basic credentials are missing or invalid; check the selected"
+              + " username and password sources.");
+    }
   }
 
   static SecretReference parse(Object input) {
@@ -75,7 +108,11 @@ public record SecretReference(Kind kind, String name, String usernameName) {
   /** Caller-owned environment or decrypted Maven settings resolver. */
   @FunctionalInterface
   public interface Resolver {
-    /** Resolves the selected provider at execution time; never used during local planning. */
+    /**
+     * Resolves the selected provider at execution time; never used during local planning. Basic
+     * references must return the canonical Base64 pair produced by {@link
+     * SecretReference#encodeBasic(String, String)}.
+     */
     String resolve(SecretReference reference);
   }
 }

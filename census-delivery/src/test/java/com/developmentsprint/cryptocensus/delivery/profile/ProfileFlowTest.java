@@ -74,6 +74,37 @@ class ProfileFlowTest {
     Thread.interrupted();
   }
 
+  @ParameterizedTest
+  @org.junit.jupiter.params.provider.MethodSource(
+      "com.developmentsprint.cryptocensus.delivery.profile.SecretReferenceTest#invalidBasicValues")
+  void malformedRetentionResolverNeverSendsRequests(String value) throws Exception {
+    config.put(
+        "retention",
+        Map.of(
+            "endpoint",
+            endpoint,
+            "authentication",
+            Map.of("type", "ENV_BASIC", "name", "PASSWORD", "usernameName", "USERNAME")));
+    profile = ProfileFixture.write(directory, config);
+    var plan =
+        ProfileCommand.run(
+            "plan",
+            profile,
+            null,
+            ref -> {
+              throw new AssertionError("Planning must not resolve credentials");
+            });
+    assertThatThrownBy(
+            () ->
+                ProfileCommand.run(
+                    "publish", profile, plan.planSha256(), ref -> ref.basic() ? value : "token"))
+        .isInstanceOf(SecretReference.InvalidBasicCredentialsException.class)
+        .hasNoCause();
+    assertThat(requests.get()).isZero();
+    assertThat(Files.readString(directory.resolve("receipt.json")))
+        .doesNotContain("password", "username", "BASIC_CREDENTIALS", "dXNlcjpw");
+  }
+
   @Test
   void declaredDedupContractRetriesStableIdentityAndOriginalBytes() throws Exception {
     config.put("options", Map.of("receiverSupportsIdempotency", true, "maxAttempts", 3));

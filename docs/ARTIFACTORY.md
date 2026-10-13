@@ -70,3 +70,11 @@ A collision fails closed, even when the existing artifact appears identical. A s
 If upload returned 201 but retrieval fails or differs, the receipt preserves upload `ACCEPTED` and delivery remains unsuccessful. Do not infer that an unsuccessful delivery left no remote object. Retain the receipt and investigate repository policies or concurrent privileged changes. The adapter never deletes objects, creates repositories, follows server-provided download URLs, or automatically retries a PUT.
 
 For this adapter, `remoteOperationId` is the planned artifact’s SHA-256 filename identifier, not a server-issued job ticket; its presence alone does not prove that the remote object exists.
+
+## Live validation access check — 2026-10-13
+
+A disposable official **Artifactory OSS 7.161.15**, revision **86115900**, started successfully and returned its version/license through `GET /artifactory/api/system/version`. Its image digest was `sha256:3f6d67f38805a25468a63fd257452168c894f53613b162f5b69b5e6859a9c627`. Requests used verified loopback HTTPS through an isolated TLS proxy; no shared development stack was changed.
+
+Provisioning stopped before any CBOM upload. The repository creation endpoint `PUT /artifactory/api/repositories/cbom-local` and the legacy user lookup endpoint returned HTTP 400 with a Pro-license requirement. Access v2 user management returned HTTP 403 with an admin-scoped token. We did not bypass those gates or treat startup as successful delivery validation.
+
+JFrog's non-commercial edition matrix includes Generic repositories, but that does not make every provisioning API available. A licensed installation or an OSS repository and restricted writer provisioned through a supported mechanism is still needed for packaged CLI/Maven upload, overwrite-denial and exact-byte readback measurements. Both packaged entry points successfully created digest-bound offline plans, then stopped at the missing-credential gate; neither submitted a CBOM. The disposable containers, networks, data volume and temporary credentials were removed. The adapter therefore remains experimental and contract-tested. Use the [live validation procedure](ENTERPRISE-LIVE-VALIDATION.md) to collect those measurements and distinguish artifact retention from native semantic ingestion.
