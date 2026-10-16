@@ -14,7 +14,7 @@ the workflow is right and the documents are a bug.
 
 ### JDKs
 
-Every gate row runs the complete build in every configured CI run (CI job name in the last column). Push triggers cover `main`, `develop`, `release/**`, and `hotfix/**`; pull-request triggers target `main` and `develop`. A local feature/integration branch has no fresh hosted CI evidence until a configured event runs.
+Every gate row runs the complete build in every full CI run (CI job name in the last column). The explicit documentation-only exemption below skips Java jobs without changing the supported matrix. Push triggers cover `main`, `develop`, `release/**`, and `hotfix/**`; pull-request triggers target `main` and `develop`. Manual CI dispatch always runs the full matrix. A local feature/integration branch has no fresh hosted CI evidence until a configured event runs.
 
 | JDK | Vendor / VM                | OS      | Tier     | CI job                                       |
 |-----|----------------------------|---------|----------|----------------------------------------------|
@@ -52,12 +52,20 @@ moves, move it to the Ryuk version that release asks for.
 
 ### Tiers
 
-- **gate**: a failure fails the CI run and is a bug to fix. Make these jobs required status checks
-  in the repository's branch protection for `develop` and `main` (job names are listed above; they
-  change when a row is added, so update the required checks with the matrix).
+- **gate**: a failure fails the CI run and is a bug to fix. Branch protection requires the
+  **Required CI** aggregate and **Build and check documentation**. The aggregate requires all
+  matrix, dogfood and application-server gates to succeed on full runs, and accepts their
+  skipped state only after successful documentation-only classification. It never treats a
+  classifier failure, cancellation or unexpected skipped gate as success.
 - **advisory**: an early warning. The job runs with `continue-on-error: true`. It exists to show
   *before* a JDK is released what will break, typically the class file version outrunning the
   bundled Byte Buddy. It never blocks a merge.
+
+## Documentation-only exemption
+
+Only regular-file changes under `docs/` or `scripts/docs/`, or to the exact root `package.json` and `package-lock.json`, qualify. The shared classifier checks complete Git history and both names of moved files. README changes still run Java because an executable Maven quickstart test consumes that file. Runtime, build-control, workflow, hook, classifier, unknown or mixed changes, symlink/submodule changes, and missing history always require the full matrix.
+
+This exemption does not claim fresh runtime measurements. Documentation checks, npm audit and browser checks remain required. A docs-only Pages build may reuse original coverage and CBOM artifacts only from a successful, trusted `develop` CI producer whose source is an ancestor and whose Git diff to the site source contains only allowed documentation changes. The original producer SHA, run and timestamps remain visible. Without qualifying live artifacts, publication fails with instructions to dispatch a full CI run on `develop`.
 
 ## How a row is verified
 
@@ -120,7 +128,7 @@ before running them.
 
 ### The ratchet rule
 
-A combination in the matrix is tested on every build, **and the matrix only grows**. A row leaves
+A combination in the matrix is tested on every full build, **and the matrix only grows**. A row leaves
 only through an explicit deprecation:
 
 1. A pull request adds an entry under "Deprecated" in [CHANGELOG.md](../CHANGELOG.md) naming the

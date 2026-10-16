@@ -1,11 +1,35 @@
 #!/usr/bin/env bash
-# Crypto Census pre-push hook: full build with tests before anything leaves the machine.
-# Bypass only in an emergency: git push --no-verify  (CI runs the same build anyway).
+# Check every outgoing ref; only a verified documentation-only push can skip Maven.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+refs=$(mktemp "${TMPDIR:-/tmp}/census-push-refs.XXXXXX")
+trap 'rm -f "$refs"' EXIT
+cat > "$refs"
 
-# Always enforce the private tracker boundary, including documentation-only commits.
-bash scripts/check-private-tracker.sh --pre-push "${1:-}"
-echo "pre-push: full build with tests and coverage..."
-./mvnw -B -q verify
-echo "pre-push: build passed."
+# Both checks need the complete input; never consume it only in the first guard.
+bash scripts/check-private-tracker.sh --pre-push "${1:-}" < "$refs"
+mode=full
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "pre-push: Python 3 is unavailable; requiring the full Maven build." >&2
+elif ! mode=$(python3 scripts/ci_changes.py pre-push "${1:-}" < "$refs"); then
+  echo "pre-push: changed-path classification failed; requiring the full Maven build." >&2
+  mode=full
+elif [ "$mode" != docs-only ] && [ "$mode" != full ]; then
+  echo "pre-push: invalid classification result; requiring the full Maven build." >&2
+  mode=full
+fi
+if [ "$mode" = docs-only ]; then
+  echo "pre-push: documentation-only outgoing history; validating the documentation site..."
+  npm ci
+  npm audit --audit-level=moderate
+  node --test scripts/docs/*_test.mjs
+  python3 -m unittest discover -s scripts/docs -p '*_test.py'
+  python3 scripts/coverage_badges_test.py
+  npm run docs:typecheck
+  npm run docs:build
+  # Browser coverage remains required in the hosted Documentation check.
+else
+  echo "pre-push: full build with tests and coverage..."
+  ./mvnw -B -q verify
+fi
+echo "pre-push: checks passed."

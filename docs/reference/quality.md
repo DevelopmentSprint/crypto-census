@@ -6,7 +6,7 @@ The project badges link to evidence. Build status comes from GitHub Actions; cov
 
 | Badge | What it says | What it does not establish |
 | --- | --- | --- |
-| CI | Latest GitHub Actions CI workflow status for `develop` | Every advisory job passed, or every possible platform was tested |
+| CI | Latest GitHub Actions CI workflow status for `develop` | A fresh Java build ran for a docs-only change, every advisory job passed, or every possible platform was tested |
 | Dependency check | Latest dependency-check workflow status for `develop` | Absence of all vulnerabilities; results depend on the vulnerability database at scan time |
 | Documentation | Documentation workflow status | Product test results or commercial destination compatibility |
 | Line coverage | Executed source lines divided by measured source lines across five production modules | Workload completeness, cryptographic safety or assertion quality |
@@ -15,11 +15,11 @@ The project badges link to evidence. Build status comes from GitHub Actions; cov
 | Java 17+ | Minimum agent/runtime requirement | A support claim for every future JDK; use the [compatibility matrix](../COMPATIBILITY.md) |
 | CycloneDX 1.6 | CBOM output format | A complete software dependency inventory |
 
-The JDK early-access CI job is advisory and uses `continue-on-error`. GitHub can report an overall passing CI workflow while that job fails. Required matrix jobs, Maven dogfooding and application-server conformance are separate gates. Consult the [conformance policy](../CONFORMANCE.md) and the linked run's individual jobs instead of interpreting a green badge as universal compatibility.
+The JDK early-access CI job is advisory and uses `continue-on-error`. GitHub can report an overall passing CI workflow while that job fails. The Required CI aggregate checks required matrix, Maven dogfood and application-server outcomes. Verified docs-only runs skip these Java jobs; the documentation check remains required. Consult the [conformance policy](../CONFORMANCE.md) and the linked run's individual jobs instead of interpreting a green badge as universal compatibility.
 
 ## Measured coverage, with provenance
 
-[Download coverage.json](https://developmentsprint.github.io/crypto-census/badges/coverage.json) to inspect the full source commit, producing CI run, measurement time, scope, per-module counts and aggregate percentages. The public badges show the most recently deployed successful, trusted `develop` CI measurement. They can lag the branch tip while a build is running or failing; `sourceSha` and `runUrl` identify exactly which measurement is displayed. Failed builds never replace the measurement with a fabricated zero or a hand-edited percentage.
+[Download coverage.json](https://developmentsprint.github.io/crypto-census/badges/coverage.json) to inspect the full source commit, producing CI run, measurement time, scope, per-module counts and aggregate percentages. The public badges show the most recently deployed successful, trusted `develop` CI measurement. They can lag the branch tip while a build is running or failing; `sourceSha` and `runUrl` identify exactly which measurement is displayed. Failed builds never replace the measurement with a fabricated zero or a hand-edited percentage. A successful docs-only build can reuse an unchanged measurement from a trusted ancestor when the runtime code is identical under the conservative path rules. [site-evidence.json](https://cryptocensus.developmentsprint.com/site-evidence.json) distinguishes the site source SHA from the measured source SHA. The original `coverage.json` remains byte-for-byte unchanged; a docs-only site deployment does not refresh its measurement time.
 
 ```mermaid
 flowchart LR

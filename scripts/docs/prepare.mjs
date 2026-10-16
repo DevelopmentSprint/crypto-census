@@ -2,14 +2,19 @@ import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises'
 import path from 'node:path'
 
+// A different producer SHA is allowed only after API selection and a fresh Git
+// ancestry/code-equivalence check. Never change the producer metadata itself.
+if (process.env.DOCS_EVIDENCE_PROOF || (process.env.DOCS_EVIDENCE_SHA && process.env.DOCS_EVIDENCE_SHA !== process.env.DOCS_SOURCE_SHA)) {
+  execFileSync('python3', ['scripts/docs/evidence_source.py', 'verify'], { stdio: 'inherit' })
+}
 const destination = 'docs/public/badges'
 await mkdir(destination, { recursive: true })
 const input = process.env.DOCS_COVERAGE_DIR
 if (input) {
   const metadata = JSON.parse(await readFile(path.join(input, 'coverage.json'), 'utf8'))
-  const expected = process.env.DOCS_SOURCE_SHA
+  const expected = process.env.DOCS_EVIDENCE_SHA || process.env.DOCS_SOURCE_SHA
   if (!expected || !/^[a-f0-9]{40}$/.test(expected) || metadata.sourceSha !== expected || metadata.schemaVersion !== 1) {
-    throw new Error('Coverage provenance must match the exact documentation source SHA (DOCS_SOURCE_SHA).')
+    throw new Error('Coverage provenance must match the verified producing source SHA.')
   }
   if (!process.env.DOCS_RUN_URL || metadata.runUrl !== process.env.DOCS_RUN_URL) {
     throw new Error('Coverage run URL must match the exact producing CI run (DOCS_RUN_URL).')
@@ -36,3 +41,14 @@ if (input) {
 
 // The publication validator is shared with CI; only explicitly allowlisted files reach Pages.
 execFileSync('python3', ['scripts/docs/example_cbom.py', 'prepare'], { stdio: 'inherit' })
+
+let siteEvidence = { schemaVersion: 1, status: 'unavailable in this preview' }
+if (process.env.DOCS_EVIDENCE_PROOF) {
+  const proof = JSON.parse(await readFile(process.env.DOCS_EVIDENCE_PROOF, 'utf8'))
+  siteEvidence = {
+    schemaVersion: 1, status: 'published', siteSourceSha: proof.siteSourceSha,
+    evidenceSourceSha: proof.evidenceSourceSha, runId: proof.runId,
+    selectedRunAttempt: proof.runAttempt, runUrl: proof.runUrl, reused: proof.reused,
+  }
+}
+await writeFile('docs/public/site-evidence.json', JSON.stringify(siteEvidence, null, 2) + '\n')

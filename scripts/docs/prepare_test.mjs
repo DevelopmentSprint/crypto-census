@@ -18,6 +18,9 @@ function fixture(t) {
   writeFileSync(path.join(directory, 'prepare.mjs'), script)
   mkdirSync(path.join(directory, 'scripts/docs'), { recursive: true })
   writeFileSync(path.join(directory, 'scripts/docs/example_cbom.py'), readFileSync(fileURLToPath(new URL('./example_cbom.py', import.meta.url))))
+  for (const name of ['evidence_source.py', '../ci_changes.py']) {
+    writeFileSync(path.join(directory, 'scripts/docs', name), readFileSync(fileURLToPath(new URL(name, import.meta.url))))
+  }
   const input = path.join(directory, 'input')
   mkdirSync(input)
   const metadata = {
@@ -34,7 +37,7 @@ function fixture(t) {
   const output = path.join(directory, 'docs/public/badges')
   const run = (overrides = {}) => {
     const env = { ...process.env }
-    for (const key of ['DOCS_COVERAGE_DIR', 'DOCS_REQUIRE_COVERAGE', 'DOCS_SOURCE_SHA', 'DOCS_RUN_URL', 'DOCS_CBOM_DIR', 'DOCS_REQUIRE_CBOM']) delete env[key]
+    for (const key of ['DOCS_COVERAGE_DIR', 'DOCS_REQUIRE_COVERAGE', 'DOCS_SOURCE_SHA', 'DOCS_RUN_URL', 'DOCS_CBOM_DIR', 'DOCS_REQUIRE_CBOM', 'DOCS_EVIDENCE_SHA', 'DOCS_EVIDENCE_PROOF']) delete env[key]
     for (const [key, value] of Object.entries(overrides)) if (value !== undefined) env[key] = value
     return spawnSync(process.execPath, ['prepare.mjs'], { cwd: directory, env, encoding: 'utf8' })
   }
@@ -130,4 +133,49 @@ test('invalid counters and empty denominators fail closed', t => {
     f.save()
     rejected(f.trusted())
   }
+})
+
+
+test('reused coverage requires actual code equivalence and keeps original bytes and source', t => {
+  const f = fixture(t)
+  const git = (...args) => {
+    const result = spawnSync('git', args, { cwd: f.directory, encoding: 'utf8' })
+    assert.equal(result.status, 0, result.stderr)
+    return result.stdout.trim()
+  }
+  git('init', '-q')
+  git('config', 'user.name', 'Synthetic Test')
+  git('config', 'user.email', 'test@example.invalid')
+  writeFileSync(path.join(f.directory, 'runtime.java'), 'runtime')
+  git('add', 'runtime.java')
+  git('commit', '-qm', 'synthetic baseline')
+  const producer = git('rev-parse', 'HEAD')
+  mkdirSync(path.join(f.directory, 'docs'), { recursive: true })
+  writeFileSync(path.join(f.directory, 'docs/page.md'), 'docs-only change')
+  git('add', 'docs/page.md')
+  git('commit', '-qm', 'synthetic documentation')
+  const site = git('rev-parse', 'HEAD')
+  f.metadata.sourceSha = producer
+  f.save()
+  const proof = { schemaVersion: 1, repository: 'DevelopmentSprint/crypto-census',
+    siteSourceSha: site, evidenceSourceSha: producer, runId: '123', runAttempt: '1',
+    runUrl, reused: true, coverageArtifactId: '12', cbomArtifactId: '13' }
+  const proofPath = path.join(f.directory, 'selection.json')
+  writeFileSync(proofPath, JSON.stringify(proof))
+  const env = { DOCS_SOURCE_SHA: site, DOCS_EVIDENCE_SHA: producer, DOCS_RUN_ID: '123',
+    DOCS_RUN_ATTEMPT: '1', DOCS_EVIDENCE_PROOF: proofPath }
+  rejected(f.trusted({ ...env, DOCS_EVIDENCE_PROOF: undefined }))
+  const result = f.trusted(env)
+  assert.equal(result.status, 0, result.stderr)
+  assert.deepEqual(readFileSync(path.join(f.output, 'coverage.json')), readFileSync(path.join(f.input, 'coverage.json')))
+  const published = JSON.parse(readFileSync(path.join(f.directory, 'docs/public/site-evidence.json')))
+  assert.equal(published.siteSourceSha, site)
+  assert.equal(published.evidenceSourceSha, producer)
+  assert.equal(published.selectedRunAttempt, '1')
+  writeFileSync(path.join(f.directory, 'runtime.java'), 'changed runtime')
+  git('add', 'runtime.java')
+  git('commit', '-qm', 'synthetic runtime change')
+  const changed = git('rev-parse', 'HEAD')
+  writeFileSync(proofPath, JSON.stringify({ ...proof, siteSourceSha: changed }))
+  rejected(f.trusted({ ...env, DOCS_SOURCE_SHA: changed }))
 })
