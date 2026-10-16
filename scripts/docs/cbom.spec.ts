@@ -171,7 +171,7 @@ test('CBOM overview, independent outcomes, filtering, operation identity and exa
   )
   await expect(
     page.getByRole('link', { name: 'Download CBOM' }),
-  ).toHaveAttribute('href', '/crypto-census/example-cbom/evidence.json')
+  ).toHaveAttribute('href', '/example-cbom/evidence.json')
   await expect(page.locator('.cbom-download').first()).toContainText(
     digest(evidenceText),
   )
@@ -317,7 +317,7 @@ test('generated publication renders its actual CI evidence without request mocks
   )
   await expect(page.locator('.cbom-viewer [role="alert"]')).toHaveCount(0)
   const download = await page.request.get(
-    '/crypto-census/example-cbom/evidence.json',
+    '/example-cbom/evidence.json',
   )
   expect(download.ok()).toBe(true)
   expect(await download.text()).toBe(raw)

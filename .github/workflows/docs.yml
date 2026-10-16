@@ -81,7 +81,7 @@ jobs:
       - name: Test coverage provenance and aggregation
         if: steps.source.outputs.current == 'true'
         run: |
-          node --test scripts/docs/prepare_test.mjs
+          node --test scripts/docs/prepare_test.mjs scripts/docs/analytics_test.mjs
           python3 scripts/coverage_badges_test.py
           python3 scripts/docs/example_cbom_test.py
       - name: Type check theme
@@ -90,6 +90,7 @@ jobs:
       - name: Build site and check every internal link
         if: steps.source.outputs.current == 'true'
         env:
+          DOCS_GA4_MEASUREMENT_ID: ${{ github.event_name == 'workflow_run' && vars.DOCS_GA4_MEASUREMENT_ID || '' }}
           DOCS_CBOM_DIR: ${{ github.event_name == 'workflow_run' && '.docs-cbom' || '' }}
           DOCS_REQUIRE_CBOM: ${{ github.event_name == 'workflow_run' }}
           DOCS_REPOSITORY: ${{ github.repository }}

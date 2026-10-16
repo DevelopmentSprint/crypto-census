@@ -1,6 +1,6 @@
 # Maintain the documentation site
 
-The site builds the Markdown files in `docs/` with VitePress. The same reference documents remain readable in the GitHub repository. There is no application server, analytics service, hosted search account or documentation database: GitHub Pages serves static HTML, styles, scripts and the local search index.
+The site builds the Markdown files in `docs/` with VitePress. The same reference documents remain readable in the GitHub repository. There is no application server, hosted search account or documentation database: GitHub Pages serves static HTML, styles, scripts and the local search index.
 
 ## Run locally
 
@@ -11,10 +11,10 @@ npm ci
 npm run docs:dev
 ```
 
-Open the loopback URL printed by VitePress. The site lives under `/crypto-census/`, including in local previews. To validate the production output:
+Open the loopback URL printed by VitePress. The custom-domain site lives at `/`, including in local previews. To validate the production output:
 
 ```sh
-node --test scripts/docs/prepare_test.mjs
+node --test scripts/docs/prepare_test.mjs scripts/docs/analytics_test.mjs
 python3 scripts/coverage_badges_test.py
 python3 scripts/docs/example_cbom_test.py
 npm run docs:typecheck
@@ -104,9 +104,33 @@ Only the deployment job has `pages: write` and `id-token: write`. Build jobs hav
 
 A repository administrator must configure **Settings → Pages → Build and deployment → Source: GitHub Actions** before the first deployment. Configure the `github-pages` environment to allow `develop` deployments and apply any desired approval policy. The workflow then publishes to:
 
-<https://developmentsprint.github.io/crypto-census/>
+<https://cryptocensus.developmentsprint.com/>
 
 The site tracks the development branch. Keep release availability in the shared banner in `docs/.vitepress/theme/index.ts`, rather than repeating status notices in individual pages. Update or remove the banner when publication is verified; keep source-build prerequisites and release verification steps in their respective guides. Changes do not publish merely because a local build passes. Follow the repository's review and acceptance process before merging.
+
+## Configure Google Analytics 4
+
+GA4 is optional and disabled when the `DOCS_GA4_MEASUREMENT_ID` repository variable is unset. To enable it:
+
+1. Create or select a GA4 web stream for `https://cryptocensus.developmentsprint.com/` and copy its measurement ID (`G-XXXXXXXXXX`).
+2. In GitHub, open **Settings → Secrets and variables → Actions → Variables** and set `DOCS_GA4_MEASUREMENT_ID` to that ID. It is public configuration, not an API key or secret.
+3. In the GA4 stream's **Enhanced measurement → Page views → Show advanced settings**, enable **Page loads** and **Page changes based on browser history events**. VitePress uses browser history for navigation. GA4 handles page views; the theme does not emit a second set of manual events. See [Google's SPA measurement guide](https://developers.google.com/analytics/devguides/collection/ga4/single-page-applications).
+4. Publish through the next successful `develop` CI run. Setting a repository variable alone does not change an already deployed site. To republish the current source without a code change, rerun its successful CI workflow while that commit remains the `develop` tip and its required artifacts are available.
+5. Visit the public site, navigate between documentation pages, and check GA4 Realtime or Tag Assistant/DebugView. Confirm one page view per navigation and the correct page URL. Ad blockers and a browser's Do Not Track setting can intentionally prevent collection.
+
+Only the trusted Pages build receives the ID. PR builds omit the tag. The generated loader also checks the exact public HTTPS origin before contacting Google, so serving a published artifact locally does not generate visits. A malformed nonempty ID fails the build with a configuration error.
+
+When enabled, the site loads Google's tag and uses GA4's normal analytics cookies and enhanced measurement settings. Google signals and advertising personalization signals are disabled in the tag configuration. This integration does not implement a consent banner or consent-management platform. Configure the GA4 property's collection settings for the site's intended use; do not add user identifiers or CBOM contents as custom analytics events.
+
+To disable analytics, remove the repository variable and publish again. If the Pages hostname or base path changes, update the production guard in `scripts/docs/analytics.mjs` as well as the site configuration. Local tests use a dummy measurement ID and do not send events to Google.
+
+## Custom domain and asset paths
+
+GitHub Pages serves this project at the root of `cryptocensus.developmentsprint.com`. Keep VitePress `base: '/'`, the favicon path, sitemap hostname, social preview URL, README badges and local browser-test URLs aligned with that location. Retaining the old `/crypto-census/` base after moving to the custom domain makes stylesheet and JavaScript requests return 404.
+
+The custom domain is configured in **Settings → Pages**, not a repository `CNAME` file: this site's custom Actions deployment ignores that file. Once the certificate is available, enable **Enforce HTTPS** so HTTP visits redirect to the HTTPS origin used by analytics. See [GitHub's custom-domain setup](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
+
+After deployment, check the home page and a nested documentation page. Both must load their stylesheets with HTTP 200 and `text/css`; verify search, navigation and example-CBOM downloads too. Changing Pages settings does not rebuild previously generated asset paths.
 
 ## Diagnose a failed publication
 

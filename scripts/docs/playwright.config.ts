@@ -17,11 +17,11 @@ export default defineConfig({
   testMatch: '*.spec.ts',
   workers: 1,
   timeout: 90_000,
-  use: { baseURL: `http://127.0.0.1:${port}/crypto-census/`, headless: true, trace: 'retain-on-failure' },
+  use: { baseURL: `http://127.0.0.1:${port}/`, headless: true, trace: 'retain-on-failure' },
   reporter: 'list',
   webServer: {
     command: `npm run docs:preview -- --port ${port} --strictPort`,
-    url: `http://127.0.0.1:${port}/crypto-census/`,
+    url: `http://127.0.0.1:${port}/`,
     reuseExistingServer: false,
     timeout: 30_000,
   },

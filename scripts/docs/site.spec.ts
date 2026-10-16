@@ -13,6 +13,26 @@ async function markdownFiles(directory: string): Promise<string[]> {
 }
 
 const markdownRenderer = await createMarkdownRenderer(path.resolve('docs'))
+
+test('custom-domain root and nested pages load their stylesheets', async ({ page }) => {
+  for (const route of ['./', 'examples/example-cbom.html']) {
+    const response = await page.goto(route)
+    expect(response?.status()).toBe(200)
+    const styles = await page.locator('link[rel~="stylesheet"]').evaluateAll(
+      links => links.map(link => (link as HTMLLinkElement).href),
+    )
+    expect(styles.length).toBeGreaterThan(0)
+    for (const url of styles) {
+      expect(new URL(url).pathname).not.toMatch(/^\/crypto-census\//)
+      const css = await page.request.get(url)
+      expect(css.status()).toBe(200)
+      expect(css.headers()['content-type']).toContain('text/css')
+    }
+    await expect(page.locator('.release-notice')).toHaveCSS('position', 'fixed')
+    await expect(page.locator('.release-notice')).toHaveCSS('display', 'flex')
+  }
+})
+
 for (const file of await markdownFiles('docs')) {
   const markdown = await readFile(file, 'utf8')
   const diagrams = markdownRenderer.parse(markdown, {}).filter(token => token.type === 'fence' && token.info.trim() === 'mermaid').length
