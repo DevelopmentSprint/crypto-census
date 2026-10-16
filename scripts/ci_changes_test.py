@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -189,6 +190,30 @@ class ChangesTest(unittest.TestCase):
         self.assertIn('npm:run docs:build', checks)
         self.assertNotIn('maven:', checks)
         log.unlink()
+        original_python = python.read_text()
+        for body, diagnostic in (('echo docs-only; exit 1', 'classification failed'),
+                                 ('echo unexpected; exit 0', 'invalid classification result')):
+            with self.subTest(classifier=body):
+                python.write_text('#!/bin/sh\n' + body + '\n')
+                result = push(docs)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn(diagnostic, result.stderr)
+                self.assertEqual(log.read_text().strip(), 'maven:-B -q verify')
+                log.unlink()
+        # A minimal real-tool PATH proves that missing Python does not block Java-only users.
+        python.unlink()
+        for command in ('bash', 'git', 'mktemp', 'cat', 'rm', 'grep'):
+            (bin_dir / command).symlink_to(shutil.which(command))
+        original_path = env['PATH']
+        env['PATH'] = str(bin_dir)
+        result = push(docs)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Python 3 is unavailable', result.stderr)
+        self.assertEqual(log.read_text().strip(), 'maven:-B -q verify')
+        log.unlink()
+        env['PATH'] = original_path
+        python.write_text(original_python)
+        python.chmod(0o755)
         runtime = self.save('runtime.java', 'new runtime')
         result = push(runtime)
         self.assertEqual(result.returncode, 0, result.stderr)

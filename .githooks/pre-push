@@ -8,7 +8,16 @@ cat > "$refs"
 
 # Both checks need the complete input; never consume it only in the first guard.
 bash scripts/check-private-tracker.sh --pre-push "${1:-}" < "$refs"
-mode=$(python3 scripts/ci_changes.py pre-push "${1:-}" < "$refs")
+mode=full
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "pre-push: Python 3 is unavailable; requiring the full Maven build." >&2
+elif ! mode=$(python3 scripts/ci_changes.py pre-push "${1:-}" < "$refs"); then
+  echo "pre-push: changed-path classification failed; requiring the full Maven build." >&2
+  mode=full
+elif [ "$mode" != docs-only ] && [ "$mode" != full ]; then
+  echo "pre-push: invalid classification result; requiring the full Maven build." >&2
+  mode=full
+fi
 if [ "$mode" = docs-only ]; then
   echo "pre-push: documentation-only outgoing history; validating the documentation site..."
   npm ci
