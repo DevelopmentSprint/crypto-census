@@ -4,14 +4,14 @@
 [![CI on develop](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/ci.yml?query=branch%3Adevelop)
 [![Dependency check on develop](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/dependency-check.yml/badge.svg?branch=develop)](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/dependency-check.yml?query=branch%3Adevelop)
 [![Documentation](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/docs.yml/badge.svg?branch=develop)](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/docs.yml)
-[![Measured line coverage](https://developmentsprint.github.io/crypto-census/badges/coverage.svg)](https://developmentsprint.github.io/crypto-census/reference/quality.html)
-[![Measured branch coverage](https://developmentsprint.github.io/crypto-census/badges/coverage-branches.svg)](https://developmentsprint.github.io/crypto-census/reference/quality.html)
+[![Measured line coverage](https://cryptocensus.developmentsprint.com/badges/coverage.svg)](https://cryptocensus.developmentsprint.com/reference/quality.html)
+[![Measured branch coverage](https://cryptocensus.developmentsprint.com/badges/coverage-branches.svg)](https://cryptocensus.developmentsprint.com/reference/quality.html)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Java: 17+](https://img.shields.io/badge/Java-17%2B-blue)](docs/COMPATIBILITY.md)
 [![CycloneDX: 1.6](https://img.shields.io/badge/CycloneDX-1.6-blue)](docs/SBOM-PREPARATION.md)
 <!-- project-badges:end -->
 
-[**Documentation website**](https://developmentsprint.github.io/crypto-census/) · [What the badges measure](docs/reference/quality.md)
+[**Documentation website**](https://cryptocensus.developmentsprint.com/) · [What the badges measure](docs/reference/quality.md)
 
 **See which cryptography your Java application actually uses.**
 

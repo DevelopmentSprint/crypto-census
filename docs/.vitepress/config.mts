@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import path from 'node:path'
+import { analyticsHead } from '../../scripts/docs/analytics.mjs'
 
 const repository = 'https://github.com/DevelopmentSprint/crypto-census'
 const docsRoot = path.resolve('docs')
@@ -7,19 +8,20 @@ const docsRoot = path.resolve('docs')
 export default defineConfig({
   title: 'Crypto Census',
   description: 'Runtime cryptographic evidence for Java. Understand algorithms, quantum exposure, and the code paths that use them.',
-  base: '/crypto-census/',
+  base: '/',
   lang: 'en-US',
   lastUpdated: true,
   cleanUrls: false,
   appearance: true,
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/crypto-census/favicon.svg' }],
+    ...analyticsHead(process.env.DOCS_GA4_MEASUREMENT_ID),
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#0b766e' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Crypto Census' }],
-    ['meta', { property: 'og:image', content: 'https://developmentsprint.github.io/crypto-census/social.svg' }],
+    ['meta', { property: 'og:image', content: 'https://cryptocensus.developmentsprint.com/social.svg' }],
   ],
-  sitemap: { hostname: 'https://developmentsprint.github.io/crypto-census/' },
+  sitemap: { hostname: 'https://cryptocensus.developmentsprint.com/' },
   themeConfig: {
     logo: '/favicon.svg',
     siteTitle: 'Crypto Census',

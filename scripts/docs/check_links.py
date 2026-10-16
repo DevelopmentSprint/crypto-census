@@ -6,7 +6,7 @@ from urllib.parse import unquote, urlsplit
 import sys
 
 ROOT = Path('docs/.vitepress/dist').resolve()
-BASE = '/crypto-census/'
+BASE = '/'
 
 
 class Document(HTMLParser):
