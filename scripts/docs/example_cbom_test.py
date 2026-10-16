@@ -13,12 +13,15 @@ import unittest
 import example_cbom as cbom
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+from git_test_env import isolate_git_for_test
 SHA = "a" * 40
 RUN = "9cf641d1-5d70-4377-876d-ea742cb4e42a"
 
 
 class PublicationTest(unittest.TestCase):
     def setUp(self):
+        isolate_git_for_test(self)
         self.temp = tempfile.TemporaryDirectory(prefix="census-example-cbom-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
