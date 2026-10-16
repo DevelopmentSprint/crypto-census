@@ -5,18 +5,18 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from git_test_env import isolate_git_for_test
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class PrivateTrackerTest(unittest.TestCase):
     def setUp(self):
+        isolate_git_for_test(self)
         self.directory = tempfile.TemporaryDirectory(prefix="census-private-tracker-")
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         self.env = os.environ.copy()
-        for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR"):
-            self.env.pop(name, None)
         self.git("init", "-q")
         self.git("config", "core.hooksPath", ".githooks")
         self.git("config", "user.name", "Synthetic Guard Test")
