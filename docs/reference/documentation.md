@@ -161,3 +161,5 @@ actionlint -ignore 'unexpected key "queue" for "concurrency" section' .github/wo
 ```
 
 Remove the exception when actionlint supports the field. Do not remove `queue: max`: the [GitHub concurrency contract](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) otherwise allows a new queued job to cancel an existing pending deployment.
+
+<!-- Temporary docs-only CI verification for census-o49; this branch will be closed without merging. -->
