@@ -83,7 +83,7 @@ The documentation workflow validates pull requests without publishing them. Depl
 
 ### Reuse evidence without claiming a new measurement
 
-The shared changed-path classifier skips Java jobs only for the [documented allowlist](../CONTRIBUTING.md#documentation-only-checks). The documentation build still installs locked dependencies, audits them, runs provenance tests, type checks, builds the site, checks links and exercises the browser suite.
+The shared changed-path classifier skips Java jobs only for the [documented allowlist](../CONTRIBUTING.md#documentation-only-checks). Classification depends on the changed files, not the branch name. Changes to CI workflows, Git hooks or the classifier itself run the full Java matrix, including when merged into `develop`. The documentation build still installs locked dependencies, audits them, runs provenance tests, type checks, builds the site, checks links and exercises the browser suite.
 
 `scripts/docs/evidence_source.py` first tries the exact successful triggering CI run. Otherwise it searches earlier successful runs of this repository's CI workflow on `develop`. A producer must be an original-repository push or explicit manual CI run, have both unique unexpired artifacts, and have a source commit present in the fetched Git history. That source must be an ancestor of the current site source, with only allowed regular-file documentation changes in the entire Git diff. Artifact download uses the verified artifact IDs and original run ID. Fork, pull-request, failed, unrelated-branch, nonancestor, expired and runtime-different candidates cannot qualify.
 
