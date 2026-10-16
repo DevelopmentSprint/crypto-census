@@ -1,6 +1,6 @@
 # Compatibility
 
-The agent is compiled for Java 17 bytecode. It is **verified on every row below in every configured CI push and
+The agent is compiled for Java 17 bytecode. It is **verified on every row below in every full CI push, manual and
 pull-request run**; the matrix in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) is the source of
 truth, and [Conformance](CONFORMANCE.md) lists which test proves what.
 
@@ -27,7 +27,9 @@ early-access row is an early warning only: it runs on the next JDK's EA build an
 blocking anything. Each verified row tests a specific version; newer patch releases of the same JDK,
 server or agent are expected to work but are proven only once CI runs on them.
 
-**The ratchet.** Once a combination is in the matrix it is tested on every build and stays there.
+**The ratchet.** Once a combination is in the matrix it is tested on every full build and stays there.
+The [documentation-only exemption](CONFORMANCE.md#documentation-only-exemption) skips Java jobs
+without changing the supported combinations or claiming new runtime evidence.
 Removing one requires an explicit deprecation, announced in [CHANGELOG.md](../CHANGELOG.md) at least one
 release before the row goes. See [Conformance](CONFORMANCE.md#adding-and-removing-rows).
 

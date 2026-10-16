@@ -67,11 +67,11 @@ def identity(env, prefix):
     if prefix == "GITHUB":
         values = {"repository": env.get("GITHUB_REPOSITORY"), "sourceSha": env.get("GITHUB_SHA"),
                   "runId": env.get("GITHUB_RUN_ID"), "runAttempt": env.get("GITHUB_RUN_ATTEMPT")}
-        require(env.get("GITHUB_EVENT_NAME") == "push" and env.get("GITHUB_REF") == "refs/heads/develop",
-                "Publication requires a trusted develop push")
+        require(env.get("GITHUB_EVENT_NAME") in ("push", "workflow_dispatch") and env.get("GITHUB_REF") == "refs/heads/develop",
+                "Publication requires a trusted develop push or manual CI run")
         values["runUrl"] = f"https://github.com/{values['repository']}/actions/runs/{values['runId']}"
     else:
-        values = {"repository": env.get("DOCS_REPOSITORY"), "sourceSha": env.get("DOCS_SOURCE_SHA"),
+        values = {"repository": env.get("DOCS_REPOSITORY"), "sourceSha": env.get("DOCS_EVIDENCE_SHA") or env.get("DOCS_SOURCE_SHA"),
                   "runId": env.get("DOCS_RUN_ID"), "runAttempt": env.get("DOCS_RUN_ATTEMPT"),
                   "runUrl": env.get("DOCS_RUN_URL")}
     require(values["repository"] == REPOSITORY, "Unexpected source repository")
@@ -158,6 +158,9 @@ def prepare(output, env):
         write_output(output, {"index.json": encode({"schemaVersion": 1, "status": "unavailable",
                      "message": "Published CI evidence is unavailable in this local or pull-request preview."})})
         return
+    if env.get("DOCS_EVIDENCE_SHA") and env.get("DOCS_EVIDENCE_SHA") != env.get("DOCS_SOURCE_SHA"):
+        from evidence_source import verify
+        verify(env)
     source = identity(env, "DOCS")
     input_dir = Path(input_name)
     directory_files(input_dir, FILES)

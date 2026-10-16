@@ -69,6 +69,51 @@ class PublicationTest(unittest.TestCase):
         self.assertEqual(metadata["downloads"]["manifest"]["sha256"], cbom.digest((self.raw / "manifest.json").read_bytes()))
         self.assertEqual(metadata["collection"]["runId"], RUN)
 
+    def test_reused_cbom_prepare_preserves_original_bytes_and_rejects_runtime_difference(self):
+        previous = Path.cwd()
+        os.chdir(self.root)
+        try:
+            def git(*args):
+                return subprocess.check_output(['git', *args], stderr=subprocess.DEVNULL).decode().strip()
+            git('init', '-q')
+            git('config', 'user.name', 'Synthetic Test')
+            git('config', 'user.email', 'test@example.invalid')
+            Path('runtime.java').write_text('baseline runtime')
+            git('add', 'runtime.java')
+            git('commit', '-qm', 'synthetic producer')
+            producer = git('rev-parse', 'HEAD')
+            self.producer['GITHUB_SHA'] = producer
+            self.pack()
+            Path('docs').mkdir()
+            Path('docs/page.md').write_text('updated documentation')
+            git('add', 'docs/page.md')
+            git('commit', '-qm', 'synthetic site change')
+            site = git('rev-parse', 'HEAD')
+            proof = {'schemaVersion': 1, 'repository': cbom.REPOSITORY, 'siteSourceSha': site,
+                     'evidenceSourceSha': producer, 'runId': '123', 'runAttempt': '2',
+                     'runUrl': self.consumer['DOCS_RUN_URL'], 'reused': True,
+                     'coverageArtifactId': '1000', 'cbomArtifactId': '1001'}
+            proof_file = self.root / 'selection.json'
+            proof_file.write_text(json.dumps(proof))
+            consumer = {**self.consumer, 'DOCS_SOURCE_SHA': site, 'DOCS_EVIDENCE_SHA': producer,
+                        'DOCS_EVIDENCE_PROOF': str(proof_file)}
+            cbom.prepare(self.site, consumer)
+            for name in cbom.FILES:
+                self.assertEqual((self.site / name).read_bytes(), (self.package / name).read_bytes())
+            index = cbom.decode((self.site / 'index.json').read_bytes())
+            self.assertEqual(index['sourceSha'], producer)
+            self.assertNotEqual(index['sourceSha'], site)
+            self.assertEqual(index['runAttempt'], '2')
+            Path('runtime.java').write_text('changed runtime')
+            git('add', 'runtime.java')
+            git('commit', '-qm', 'synthetic runtime change')
+            changed = git('rev-parse', 'HEAD')
+            proof_file.write_text(json.dumps({**proof, 'siteSourceSha': changed}))
+            with self.assertRaisesRegex(ValueError, 'only documentation'):
+                cbom.prepare(self.site, {**consumer, 'DOCS_SOURCE_SHA': changed})
+        finally:
+            os.chdir(previous)
+
     def test_missing_production_artifact_fails_closed(self):
         with self.assertRaises(ValueError):
             cbom.prepare(self.site, {"DOCS_REQUIRE_CBOM": "true"})
@@ -208,6 +253,11 @@ class PublicationTest(unittest.TestCase):
                 self.reject_pack()
             self.producer[key] = original
 
+    def test_manual_full_develop_ci_can_package_fresh_evidence(self):
+        self.producer['GITHUB_EVENT_NAME'] = 'workflow_dispatch'
+        self.pack()
+        self.assertEqual(cbom.decode((self.package / 'index.json').read_bytes())['sourceSha'], SHA)
+
     def test_duplicate_json_keys_and_malformed_documents_rejected(self):
         file = self.raw / "manifest.json"
         file.write_text('{"schema":"census.maven-evidence/1","schema":"other"}')
@@ -242,13 +292,16 @@ class PublicationTest(unittest.TestCase):
         self.assertIn("github.event.workflow_run.head_branch == 'develop'", docs)
         self.assertIn("github.event.workflow_run.head_repository.full_name == github.repository", docs)
         self.assertGreaterEqual(docs.count('git/ref/heads/develop'), 2)
-        download = docs.split('- name: Download exact source example CBOM')[1].split('- name:')[0]
-        self.assertIn("run-id: ${{ github.event.workflow_run.id }}", download)
-        self.assertIn("name: docs-cbom", download)
-        self.assertIn("DOCS_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}", docs)
+        download = docs.split('- name: Download verified producer example CBOM')[1].split('- name:')[0]
+        self.assertIn("run-id: ${{ steps.evidence.outputs.run_id }}", download)
+        self.assertIn("artifact-ids: ${{ steps.evidence.outputs.cbom_id }}", download)
+        self.assertIn("DOCS_RUN_ATTEMPT: ${{ steps.evidence.outputs.run_attempt }}", docs)
         self.assertIn("DOCS_REQUIRE_CBOM: ${{ github.event_name == 'workflow_run' }}", docs)
+        self.assertIn("DOCS_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}", docs)
+        self.assertIn("DOCS_EVIDENCE_SHA: ${{ steps.evidence.outputs.sha }}", docs)
+        self.assertIn("run: python3 scripts/docs/evidence_source.py select", docs)
         upload = ci.split('- name: Upload exact public example evidence')[1].split('- name:')[0]
-        self.assertIn("github.event_name == 'push' && github.ref == 'refs/heads/develop'", upload)
+        self.assertIn("(github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop'", upload)
         self.assertIn("github.repository == 'DevelopmentSprint/crypto-census'", upload)
         package = ci.split('- name: Package public example from this trusted build')[1].split('- name:')[0]
         self.assertIn("github.repository == 'DevelopmentSprint/crypto-census'", package)
@@ -256,7 +309,7 @@ class PublicationTest(unittest.TestCase):
         paths = [line.strip() for line in upload.splitlines() if '${{ runner.temp }}' in line]
         self.assertEqual(paths, [f'${{{{ runner.temp }}}}/docs-cbom/{name}' for name in ('index.json', 'evidence.json', 'manifest.json')])
         self.assertIn("python3 scripts/docs/example_cbom_test.py", ci)
-        self.assertIn("python3 scripts/docs/example_cbom_test.py", docs)
+        self.assertIn("python3 -m unittest discover -s scripts/docs", docs)
 
 
 if __name__ == '__main__':

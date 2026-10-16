@@ -16,7 +16,7 @@ Open the loopback URL printed by VitePress. The custom-domain site lives at `/`,
 ```sh
 node --test scripts/docs/prepare_test.mjs scripts/docs/analytics_test.mjs
 python3 scripts/coverage_badges_test.py
-python3 scripts/docs/example_cbom_test.py
+python3 -m unittest discover -s scripts/docs -p '*_test.py'
 npm run docs:typecheck
 npm run docs:build
 npx playwright install chromium
@@ -70,21 +70,32 @@ flowchart TD
   PR[Pull request] --> Review[Build, link checks and browser tests]
   Review --> Preview[Downloadable review artifact]
   Accepted[Accepted change merged to develop] --> CI[Complete CI workflow]
-  CI --> Coverage[Exact commit coverage artifact]
-  CI --> CBOM[Sealed payments-demo CBOM and manifest]
-  Coverage --> Match[Verify source SHA, CI run and current develop tip]
-  CBOM --> Match
+  CI --> Scope{Full or docs-only?}
+  Scope -->|Full| Producer[Current run evidence]
+  Scope -->|Docs-only| Prior[Trusted ancestor with unchanged runtime code]
+  Producer --> Match[Verify original producer, artifact IDs and current site tip]
+  Prior --> Match
   Match --> Build[Build and validate static site]
   Build --> Pages[GitHub Pages deployment]
 ```
 
-The documentation workflow validates pull requests without publishing them. Deployment runs only after a successful `CI` workflow triggered by a push to this repository's `develop` branch. It checks out that exact source SHA and downloads `docs-coverage` and `docs-cbom` from that exact run. Missing evidence or a mismatched SHA stops publication. Deployments are serialized with a queue that preserves waiting jobs. A second branch-tip check inside the deployment job skips a delayed build after `develop` has already advanced. A stale CI completion cannot cancel or replace a newer pending publication.
+The documentation workflow validates pull requests without publishing them. Deployment runs only after a successful `CI` workflow triggered by a push or manual dispatch on this repository's `develop` branch. It checks out that exact **site source SHA**. Full runs prefer that run's `docs-coverage` and `docs-cbom` artifacts. Docs-only runs reuse a prior producer only after the verification described below. Missing evidence, an untrusted producer or a mismatched identity stops publication. Deployments are serialized with a queue that preserves waiting jobs. A second branch-tip check inside the deployment job skips a delayed build after `develop` has already advanced. A stale CI completion cannot cancel or replace a newer pending publication.
+
+### Reuse evidence without claiming a new measurement
+
+The shared changed-path classifier skips Java jobs only for the [documented allowlist](../CONTRIBUTING.md#documentation-only-checks). The documentation build still installs locked dependencies, audits them, runs provenance tests, type checks, builds the site, checks links and exercises the browser suite.
+
+`scripts/docs/evidence_source.py` first tries the exact successful triggering CI run. Otherwise it searches earlier successful runs of this repository's CI workflow on `develop`. A producer must be an original-repository push or explicit manual CI run, have both unique unexpired artifacts, and have a source commit present in the fetched Git history. That source must be an ancestor of the current site source, with only allowed regular-file documentation changes in the entire Git diff. Artifact download uses the verified artifact IDs and original run ID. Fork, pull-request, failed, unrelated-branch, nonancestor, expired and runtime-different candidates cannot qualify.
+
+Before building, preparation rechecks Git ancestry and code equivalence, then checks coverage and CBOM metadata against the **evidence source SHA** and producing run. It copies the original bytes; it does not relabel the artifacts with the newer documentation commit. The example viewer's commit and run links continue to identify what generated its CBOM. [site-evidence.json](https://cryptocensus.developmentsprint.com/site-evidence.json) separately records the site commit, evidence commit and whether they differ. Its `selectedRunAttempt` identifies the successful run attempt used for selection; the CBOM index retains its actual artifact-producing attempt. Coverage metadata has no attempt field, so the site does not invent one.
+
+If no qualifying evidence exists, publication stops with an actionable message. It does not silently start an expensive Java fallback or fabricate new coverage/CBOM data. This can happen after artifact expiry or after a runtime change whose full CI run has not passed. Dispatch **CI** on `develop` with the GitHub Actions UI or `gh workflow run ci.yml --ref develop` to regenerate both artifacts. Manual CI runs always use the full path. A successful manual run then triggers the usual Pages checks and deployment; stale-tip protections continue to compare the actual site source, not the older evidence source.
 
 ### Publish the example CBOM
 
 The public example is the Maven plugin's runtime inventory of the **`census-demo` payments tests**. It is not an exhaustive inventory of this repository or a general dependency SBOM. The published files show what those tests exercised, including cryptographic risk classifications and collection limitations. A healthy manifest means the configured collection policy passed; it does not mean every instrumentation target loaded or every application path ran.
 
-After a successful dogfood job on a `develop` push, `scripts/docs/example_cbom.py package` validates the sealed revision and stages exactly three files for the `docs-cbom` artifact:
+After a successful dogfood job on a trusted `develop` push or manual CI run, `scripts/docs/example_cbom.py package` validates the sealed revision and stages exactly three files for the `docs-cbom` artifact:
 
 | File under `example-cbom/` | Purpose |
 | --- | --- |
@@ -92,13 +103,13 @@ After a successful dogfood job on a `develop` push, `scripts/docs/example_cbom.p
 | `manifest.json` | The original Maven evidence manifest, unchanged |
 | `index.json` | Public source commit, CI run and attempt, workload scope, outcomes, download paths and SHA-256 digests |
 
-Preparation verifies the exact merged CBOM bytes against the Maven manifest, the expected demo workload and Maven run identity, and passing test, collection and policy outcomes. It then binds the package to the repository, source SHA, GitHub Actions run ID and producing run attempt. The documentation build independently verifies those bindings against its triggering workflow and checks both download digests before copying the allowlisted files into `docs/public/example-cbom/`. Extra files, symlinks, unexpected paths and malformed or missing evidence stop the build. Raw per-JVM reports, separate run descriptors, logs, and private tracker state are not copied into the documentation artifact.
+Preparation verifies the exact merged CBOM bytes against the Maven manifest, the expected demo workload and Maven run identity, and passing test, collection and policy outcomes. It then binds the package to the repository, source SHA, GitHub Actions run ID and producing run attempt. The documentation build independently verifies those bindings against its independently verified producer selection and checks both download digests before copying the allowlisted files into `docs/public/example-cbom/`. Extra files, symlinks, unexpected paths and malformed or missing evidence stop the build. Raw per-JVM reports, separate run descriptors, logs, and private tracker state are not copied into the documentation artifact.
 
 The manifest retains hashes of its individual JVM input reports. The website preparation checks the merged artifact hash; it does not independently reverify those raw reports, which are not included in the Pages bundle. Hashes establish byte consistency, not a signature or independent proof that the CI runner is trustworthy.
 
 Pull-request and ordinary local builds generate an explicit **unavailable** example state. They never publish synthetic fixtures as measured evidence or silently reuse an old local CBOM. Test fixtures live only in disposable test directories. The deployed site retains the most recent successful publication when later builds fail, with its source commit and producing run visible. There is one current example, not an accumulating public history of every build.
 
-The artifact expires after 30 days; the successfully deployed static copy remains available until replaced. A successful rerun of the producer replaces the named artifact with a new artifact ID and records its new producing attempt. Partial CI reruns may retain a successful dogfood artifact from an earlier attempt of the same run and source SHA. The page preserves that actual producing attempt; an artifact claiming a future attempt is rejected. Rerun all jobs if a required artifact is missing or expired. To inspect an actual artifact locally, supply `DOCS_CBOM_DIR`, `DOCS_REPOSITORY`, `DOCS_SOURCE_SHA`, `DOCS_RUN_ID`, `DOCS_RUN_ATTEMPT` and `DOCS_RUN_URL` matching its `index.json`. This verifies the packaged data; the trusted GitHub workflow is what establishes that the metadata came from the intended CI job.
+The artifact expires after 30 days; the successfully deployed static copy remains available until replaced. A successful rerun of the producer replaces the named artifact with a new artifact ID and records its new producing attempt. Partial CI reruns may retain a successful dogfood artifact from an earlier attempt of the same run and source SHA. The page preserves that actual producing attempt; an artifact claiming a future attempt is rejected. Dispatch a fresh full CI run on `develop` if required artifacts are missing or expired. To inspect an actual artifact locally, supply `DOCS_CBOM_DIR`, `DOCS_REPOSITORY`, `DOCS_SOURCE_SHA`, `DOCS_RUN_ID`, `DOCS_RUN_ATTEMPT` and `DOCS_RUN_URL` matching its `index.json`. For reuse by a newer site source, also supply `DOCS_EVIDENCE_SHA` and the selection record `DOCS_EVIDENCE_PROOF`; preparation verifies the actual checkout and Git diff. This verifies the packaged data; the trusted GitHub workflow is what establishes that the metadata came from the intended CI job.
 
 Only the deployment job has `pages: write` and `id-token: write`. Build jobs have read permissions. Actions use full commit pins, dependencies use the npm lockfile, and dependency audit runs with the documentation checks. No personal token or external badge service credential is required.
 
@@ -134,10 +145,10 @@ After deployment, check the home page and a nested documentation page. Both must
 
 ## Diagnose a failed publication
 
-- **No deployment run:** confirm the upstream CI workflow completed successfully on a `develop` push. Pull requests and failed CI runs intentionally do not deploy.
+- **No deployment run:** confirm the upstream CI workflow completed successfully on an original-repository `develop` push or manual CI dispatch. Pull requests and failed CI runs intentionally do not deploy.
 - **Missing CBOM artifact or attempt mismatch:** inspect the Maven plugin dogfood job and its package/upload steps. Use a fresh trusted `develop` build; rerun all jobs when required artifacts have expired. A retained producer attempt must belong to the same run and source SHA and cannot be newer than the completed workflow. Do not disable provenance checks or replace the artifact with a local sample.
 - **Missing coverage artifact:** inspect the Temurin 25 Ubuntu CI row and its export/upload steps. Coverage artifacts expire after 30 days; use a fresh trusted CI run.
-- **Source mismatch or stale source:** the workflow will not combine documentation from one commit with coverage from another. Let CI complete for the current branch tip.
+- **Source mismatch or stale source:** evidence must match the verified producer, and only allowlisted docs changes may separate that producer from the site source. Let full CI pass for runtime changes; a stale site source is skipped after the branch advances.
 - **Pages permission or environment error:** check the repository's Pages source, Actions permissions and `github-pages` deployment branch policy.
 - **Broken navigation or missing diagram:** reproduce with the production build and browser tests above; fix the source instead of disabling validation.
 

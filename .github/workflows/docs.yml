@@ -23,7 +23,7 @@ jobs:
       github.event_name == 'pull_request' ||
       (github.repository == 'DevelopmentSprint/crypto-census' &&
        github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
        github.event.workflow_run.head_branch == 'develop' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
@@ -56,22 +56,32 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - name: Download exact source coverage
+      - name: Select verified evidence producer
+        id: evidence
+        if: github.event_name == 'workflow_run' && steps.source.outputs.current == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOCS_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          DOCS_TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: python3 scripts/docs/evidence_source.py select
+      - name: Download verified producer coverage
         if: github.event_name == 'workflow_run' && steps.source.outputs.current == 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: docs-coverage
+          artifact-ids: ${{ steps.evidence.outputs.coverage_id }}
+          merge-multiple: true
           path: .docs-coverage
           github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
-      - name: Download exact source example CBOM
+          run-id: ${{ steps.evidence.outputs.run_id }}
+      - name: Download verified producer example CBOM
         if: github.event_name == 'workflow_run' && steps.source.outputs.current == 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: docs-cbom
+          artifact-ids: ${{ steps.evidence.outputs.cbom_id }}
+          merge-multiple: true
           path: .docs-cbom
           github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ steps.evidence.outputs.run_id }}
       - name: Install locked documentation dependencies
         if: steps.source.outputs.current == 'true'
         run: npm ci
@@ -83,7 +93,8 @@ jobs:
         run: |
           node --test scripts/docs/prepare_test.mjs scripts/docs/analytics_test.mjs
           python3 scripts/coverage_badges_test.py
-          python3 scripts/docs/example_cbom_test.py
+          python3 -m unittest discover -s scripts/docs -p '*_test.py'
+          python3 scripts/ci_changes_test.py
       - name: Type check theme
         if: steps.source.outputs.current == 'true'
         run: npm run docs:typecheck
@@ -94,11 +105,13 @@ jobs:
           DOCS_CBOM_DIR: ${{ github.event_name == 'workflow_run' && '.docs-cbom' || '' }}
           DOCS_REQUIRE_CBOM: ${{ github.event_name == 'workflow_run' }}
           DOCS_REPOSITORY: ${{ github.repository }}
-          DOCS_RUN_ID: ${{ github.event.workflow_run.id }}
-          DOCS_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          DOCS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+          DOCS_RUN_ATTEMPT: ${{ steps.evidence.outputs.run_attempt }}
           DOCS_COVERAGE_DIR: ${{ github.event_name == 'workflow_run' && '.docs-coverage' || '' }}
           DOCS_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
-          DOCS_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          DOCS_RUN_URL: ${{ steps.evidence.outputs.run_url }}
+          DOCS_EVIDENCE_SHA: ${{ steps.evidence.outputs.sha }}
+          DOCS_EVIDENCE_PROOF: ${{ github.event_name == 'workflow_run' && '.docs-evidence.json' || '' }}
           DOCS_REQUIRE_COVERAGE: ${{ github.event_name == 'workflow_run' }}
         run: npm run docs:build
       - name: Install browser

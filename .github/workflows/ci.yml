@@ -4,6 +4,7 @@ name: CI
 on:
   push:
     branches: [main, develop, 'release/**', 'hotfix/**']
+  workflow_dispatch:
   pull_request:
     branches: [main, develop]
 
@@ -12,13 +13,33 @@ permissions:
   contents: read
 
 jobs:
+  classify:
+    name: Classify changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject private tracker state
+        run: bash scripts/check-private-tracker.sh
+      - name: Verify classification and aggregation boundaries
+        run: python3 scripts/ci_changes_test.py
+      - name: Classify exact event changes
+        id: scope
+        run: python3 scripts/ci_changes.py event
+
   # ---------------------------------------------------------------------------------------------
   # Conformance matrix. This list is the single source of truth for "supported": every row is
-  # built and tested on each configured CI event; docs/COMPATIBILITY.md and docs/CONFORMANCE.md mirror it.
+  # built and tested on every full CI event (explicit docs-only exemption); docs/COMPATIBILITY.md and docs/CONFORMANCE.md mirror it.
   # Ratchet rule: rows are only ever added. Removing one requires a deprecation announced in
   # CHANGELOG.md first (see docs/CONFORMANCE.md).
   # ---------------------------------------------------------------------------------------------
   build:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: JDK ${{ matrix.java }} ${{ matrix.distribution }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -83,6 +104,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docs-coverage
+          overwrite: true
           path: target/docs-coverage/
           if-no-files-found: error
           retention-days: 30
@@ -97,6 +119,8 @@ jobs:
   # Dogfood the plugin as a consumer, using the current checkout rather than a cached release.
   # The demo's payments tests exercise signing, encryption and checksums in a forked JVM.
   dogfood:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: Maven plugin dogfood / runtime CBOM
     runs-on: ubuntu-latest
     steps:
@@ -171,13 +195,13 @@ jobs:
       - name: Test public example evidence boundary
         run: python3 scripts/docs/example_cbom_test.py
       - name: Package public example from this trusted build
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
         env:
           CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
           CENSUS_RUN_DIR: ${{ steps.evidence.outputs.run_dir }}
         run: python3 scripts/docs/example_cbom.py package --input "$CENSUS_RUN_DIR/revisions/1" --output "$RUNNER_TEMP/docs-cbom"
       - name: Upload exact public example evidence
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docs-cbom
@@ -204,6 +228,8 @@ jobs:
   # Application servers in containers (Docker is preinstalled on GitHub's Ubuntu runners):
   # Open Liberty on IBM Semeru and WildFly, images pinned by digest in AppServerIT.
   app-servers:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: App servers (Open Liberty on Semeru, WildFly) / ubuntu-latest
     runs-on: ubuntu-latest
     steps:
@@ -233,6 +259,8 @@ jobs:
   # behind new JDKs and say nothing about the agent. Bump java-version when that JDK goes GA and
   # joins the matrix above.
   early-access:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: JDK 28-ea temurin / ubuntu-latest (advisory)
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -247,3 +275,17 @@ jobs:
           cache: maven
       - name: Build and test without static analysis
         run: ./mvnw -B -ntp verify -P '!quality'
+
+  required:
+    name: Required CI
+    if: always()
+    needs: [classify, build, dogfood, app-servers]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require exact outcomes for the classified scope
+        env:
+          CI_RESULTS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci_changes.py required

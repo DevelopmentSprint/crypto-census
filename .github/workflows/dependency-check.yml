@@ -13,7 +13,23 @@ permissions:
   contents: read
 
 jobs:
+  classify:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject private tracker state
+        run: bash scripts/check-private-tracker.sh
+      - name: Classify push changes (scheduled and manual scans are always full)
+        id: scope
+        run: python3 scripts/ci_changes.py event
   dependency-check:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
