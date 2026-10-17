@@ -87,6 +87,9 @@ jobs:
       - name: Verify enterprise qualification evidence checks
         if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
         run: python3 -m unittest discover -s scripts/enterprise -p 'test_*.py' -v
+      - name: Verify release provenance and signing boundaries
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        run: python3 -m unittest discover -s scripts/release -p '*_test.py'
       # One reproducible coverage view: five production modules, including the agent's
       # shaded child-JVM report and the plugin's merged unit/Invoker report.
       - name: Export measured documentation coverage
