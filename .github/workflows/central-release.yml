@@ -1,0 +1,137 @@
+name: Stage Maven Central release
+
+# Deliberately no push, tag or PR trigger. Publication stays a separate Portal action.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Accepted release commit (full 40-character SHA)
+        required: true
+        type: string
+      ci_run:
+        description: Successful full CI run ID for this commit and branch
+        required: true
+        type: string
+      dependency_run:
+        description: Successful Dependency check run ID for this commit and branch
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: maven-central-staging
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Verify release source and prior checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Reject private tracker state
+        run: bash scripts/check-private-tracker.sh
+      - name: Verify exact source and successful full checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CI_RUN: ${{ inputs.ci_run }}
+          DEPENDENCY_RUN: ${{ inputs.dependency_run }}
+        run: |
+          python3 -m unittest discover -s scripts/release -p '*_test.py'
+          python3 scripts/release/central.py preflight \
+            --expected-sha "$EXPECTED_SHA" --ci-run "$CI_RUN" \
+            --dependency-run "$DEPENDENCY_RUN" --output "$RUNNER_TEMP/release-preflight.json"
+
+  stage:
+    name: Sign and stage for manual publication
+    needs: preflight
+    if: >-
+      github.repository == 'DevelopmentSprint/crypto-census' &&
+      github.event_name == 'workflow_dispatch' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    environment: maven-central
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GPG_FINGERPRINT: ${{ vars.GPG_FINGERPRINT }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Reject private tracker state
+        run: bash scripts/check-private-tracker.sh
+      - name: Recheck evidence after environment approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CI_RUN: ${{ inputs.ci_run }}
+          DEPENDENCY_RUN: ${{ inputs.dependency_run }}
+        run: |
+          python3 scripts/release/central.py preflight \
+            --expected-sha "$EXPECTED_SHA" --ci-run "$CI_RUN" \
+            --dependency-run "$DEPENDENCY_RUN" --output "$RUNNER_TEMP/release-preflight.json"
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          # No shared dependency cache in the job that holds release credentials.
+      - name: Allocate an isolated signing home
+        run: echo "GNUPGHOME=$RUNNER_TEMP/census-release-gnupg" >> "$GITHUB_ENV"
+      - name: Import and verify the organization signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          python3 scripts/release/signing.py
+      - name: Build and sign a local bundle without uploading
+        env:
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$MAVEN_GPG_PASSPHRASE"
+          umask 077
+          ./mvnw -B -ntp -P release clean deploy -DskipUpload=true \
+            -Dgpg.bestPractices=true -Dgpg.skip=false -Dgpg.keyname="$GPG_FINGERPRINT!"
+      - name: Verify signed bundle and record public-safe evidence
+        id: inspect
+        run: |
+          python3 scripts/release/central.py evidence \
+            --bundle target/central-publishing/central-bundle.zip \
+            --preflight "$RUNNER_TEMP/release-preflight.json" \
+            --fingerprint "$GPG_FINGERPRINT" \
+            --output "$RUNNER_TEMP/census-release-evidence"
+      - name: Upload verified bytes and wait for validation
+        env:
+          CENSUS_CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENSUS_CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          python3 scripts/release/upload.py \
+            --bundle target/central-publishing/central-bundle.zip \
+            --evidence "$RUNNER_TEMP/census-release-evidence/release-evidence.json"
+      - name: Upload only release hashes and provenance
+        if: ${{ !cancelled() && steps.inspect.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: central-release-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/census-release-evidence/release-evidence.json
+            ${{ runner.temp }}/census-release-evidence/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 90
+      - name: Remove signing material
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${GNUPGHOME:-}" ] && [ -d "$GNUPGHOME" ]; then
+            gpgconf --homedir "$GNUPGHOME" --kill all
+            rm -rf -- "$GNUPGHOME"
+          fi
