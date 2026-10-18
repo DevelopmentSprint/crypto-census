@@ -1,0 +1,128 @@
+name: Publish development snapshots
+
+# Snapshots become public immediately. Stable publication has a separate workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Accepted develop commit (full 40-character SHA)
+        required: true
+        type: string
+      ci_run:
+        description: Successful full CI run ID for this exact develop commit
+        required: true
+        type: string
+      dependency_run:
+        description: Successful Dependency check run ID for this exact develop commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: maven-snapshots
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: bash scripts/check-private-tracker.sh
+      - name: Check snapshot guards and exact source evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CI_RUN: ${{ inputs.ci_run }}
+          DEPENDENCY_RUN: ${{ inputs.dependency_run }}
+        run: |
+          python3 -m unittest discover -s scripts/release -p '*_test.py'
+          python3 scripts/release/snapshots.py preflight --expected-sha "$EXPECTED_SHA" \
+            --ci-run "$CI_RUN" --dependency-run "$DEPENDENCY_RUN" --output "$RUNNER_TEMP/snapshot-source.json"
+
+  publish:
+    needs: preflight
+    if: >-
+      github.repository == 'DevelopmentSprint/crypto-census' &&
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop'
+    outputs:
+      version: ${{ steps.prepare.outputs.version }}
+    environment: maven-snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: bash scripts/check-private-tracker.sh
+      - name: Recheck source evidence after environment approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          CI_RUN: ${{ inputs.ci_run }}
+          DEPENDENCY_RUN: ${{ inputs.dependency_run }}
+        run: |
+          python3 scripts/release/snapshots.py preflight --expected-sha "$EXPECTED_SHA" \
+            --ci-run "$CI_RUN" --dependency-run "$DEPENDENCY_RUN" --output "$RUNNER_TEMP/snapshot-source.json"
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          server-id: central-snapshots
+          server-username: CENSUS_CENTRAL_USERNAME
+          server-password: CENSUS_CENTRAL_PASSWORD
+          # No shared cache and no signing keys for snapshots.
+      - name: Prepare disposable snapshot reactor and verify without credentials
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python3 scripts/release/snapshots.py prepare --record "$RUNNER_TEMP/snapshot-source.json")
+          python3 scripts/release/snapshots.py verify --version "$version"
+          echo "SNAPSHOT_VERSION=$version" >> "$GITHUB_ENV"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          ./mvnw -B -ntp -P snapshot clean verify
+      - name: Deploy snapshot reactor
+        env:
+          CENSUS_CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENSUS_CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CENSUS_CENTRAL_USERNAME"
+          test -n "$CENSUS_CENTRAL_PASSWORD"
+          python3 scripts/release/snapshots.py verify --version "$SNAPSHOT_VERSION"
+          ./mvnw -B -ntp -P snapshot deploy -DskipTests -DskipITs -Dinvoker.skip=true
+      - name: Record public source identity
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/snapshot-source.json" ]; then
+            cat "$RUNNER_TEMP/snapshot-source.json" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  consumer:
+    name: Public consumer smoke (no publishing environment)
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Resolve and exercise public snapshots from two fresh caches
+        env:
+          SNAPSHOT_VERSION: ${{ needs.publish.outputs.version }}
+        run: python3 scripts/release/snapshot_consumer.py --version "$SNAPSHOT_VERSION" --maven "$GITHUB_WORKSPACE/mvnw"

@@ -19,7 +19,7 @@ Crypto Census observes JCA/JSSE calls at runtime and writes a CycloneDX 1.6 Cryp
 
 ## Quick start
 
-**Prerelease:** `0.1.0` is not published to Maven Central yet. First [build and install from source](docs/INSTALLATION.md#from-source), using JDK 21+ for the full quality gates. The agent itself requires Java 17+. Add this plugin under `<build><plugins>` in the Maven application whose tests you want to observe:
+**Prerelease:** `0.1.0` is not published to Maven Central yet. First [build and install from source](docs/INSTALLATION.md#from-source), using JDK 21+ for the full quality gates. For external prerelease testing, follow the separate [public snapshot procedure](docs/SNAPSHOTS.md) once a snapshot is available. The agent itself requires Java 17+. Add this plugin under `<build><plugins>` in the Maven application whose tests you want to observe:
 
 <!-- quickstart-plugin:start -->
 ```xml
