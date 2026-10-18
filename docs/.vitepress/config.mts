@@ -89,6 +89,7 @@ export default defineConfig({
         { text: 'Quality & coverage', link: '/reference/quality' },
         { text: 'Enterprise validation', link: '/reference/enterprise-validation' },
         { text: 'Maintaining this site', link: '/reference/documentation' },
+        { text: 'Development snapshots', link: '/SNAPSHOTS' },
         { text: 'Release runbook', link: '/RELEASING' },
         { text: 'Design & research', link: '/reference/design-records' },
       ] },

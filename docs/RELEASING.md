@@ -1,5 +1,7 @@
 # Release runbook
 
+For public development builds before a stable release, use the separate [snapshot procedure](SNAPSHOTS.md).
+
 Preparing and testing artifacts does not publish them. The maintainer owns signing, Central publication, release tagging, remote pushes, and the final public-visibility decision.
 
 ## Immediate prerequisites

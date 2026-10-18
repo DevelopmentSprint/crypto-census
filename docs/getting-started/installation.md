@@ -54,3 +54,5 @@ In the consumer project, use its wrapper or `mvn` with the identical `-Dmaven.re
 Do not assume locally installed `0.1.0` bytes match an eventual Central artifact with the same coordinates. Verify the release through an empty local repository or follow the cache replacement and signature-verification steps in the [artifact installation reference](../INSTALLATION.md#after-010-is-published).
 
 The [release runbook](../RELEASING.md) defines publication and verification steps.
+
+For testing development artifacts in an external application, follow the [public snapshot procedure](../SNAPSHOTS.md).

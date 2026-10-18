@@ -1,6 +1,6 @@
 # Installation
 
-Build and install from source using the steps below. For published artifacts, see [release installation](#after-010-is-published).
+Build and install from source using the steps below. For development artifacts, see [public snapshots](SNAPSHOTS.md). For stable published artifacts, see [release installation](#after-010-is-published).
 
 ## From source
 
