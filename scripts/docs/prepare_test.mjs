@@ -179,3 +179,21 @@ test('reused coverage requires actual code equivalence and keeps original bytes 
   writeFileSync(proofPath, JSON.stringify({ ...proof, siteSourceSha: changed }))
   rejected(f.trusted({ ...env, DOCS_SOURCE_SHA: changed }))
 })
+
+test('release archives label missing historical measurements without reusing Latest evidence', t => {
+  const f = fixture(t)
+  const archive = { DOCS_RELEASE_TAG: 'v9.9.9', DOCS_RELEASE_SHA: sha }
+  const result = f.run(archive)
+  assert.equal(result.status, 0, result.stderr)
+  assert.equal(JSON.parse(readFileSync(path.join(f.output, 'coverage.json'))).status, 'historical measurement unavailable')
+  assert.match(readFileSync(path.join(f.output, 'coverage.svg'), 'utf8'), /historical measurement unavailable/)
+  const cbom = JSON.parse(readFileSync(path.join(f.directory, 'docs/public/example-cbom/index.json')))
+  assert.equal(cbom.status, 'unavailable')
+  assert.match(cbom.message, /Historical CI evidence is unavailable/)
+  const evidence = JSON.parse(readFileSync(path.join(f.directory, 'docs/public/site-evidence.json')))
+  assert.equal(evidence.tag, 'v9.9.9')
+  assert.equal(evidence.siteSourceSha, sha)
+  assert.equal(evidence.status, 'historical evidence unavailable')
+  rejected(f.trusted(archive))
+  rejected(f.run({ ...archive, DOCS_CBOM_DIR: '/must-not-reuse-latest' }))
+})

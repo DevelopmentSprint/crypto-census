@@ -32,6 +32,7 @@ jobs:
       actions: read
     outputs:
       current: ${{ steps.source.outputs.current }}
+      tags: ${{ steps.site.outputs.tags }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -99,6 +100,7 @@ jobs:
         if: steps.source.outputs.current == 'true'
         run: npm run docs:typecheck
       - name: Build site and check every internal link
+        id: site
         if: steps.source.outputs.current == 'true'
         env:
           DOCS_GA4_MEASUREMENT_ID: ${{ github.event_name == 'workflow_run' && vars.DOCS_GA4_MEASUREMENT_ID || '' }}
@@ -119,7 +121,9 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check diagrams, search and mobile navigation
         if: steps.source.outputs.current == 'true'
-        run: npm run docs:test
+        run: |
+          npm run docs:test
+          python3 scripts/docs/release_fixture.py
       - name: Upload browser evidence
         if: always() && steps.source.outputs.current == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -159,17 +163,24 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
       - name: Recheck source before deployment
         id: source
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          BUILT_TAGS: ${{ needs.build.outputs.tags }}
         run: |
           tip=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/develop" --jq .object.sha)
-          if [ "$SOURCE_SHA" = "$tip" ]; then
+          tags=$(python3 scripts/docs/versions.py fingerprint)
+          if [ "$SOURCE_SHA" = "$tip" ] && [ "$BUILT_TAGS" = "$tags" ]; then
             echo "current=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Develop advanced; skipping stale site deployment."
+            echo "Develop or release tags changed; skipping stale site deployment."
             echo "current=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Deploy

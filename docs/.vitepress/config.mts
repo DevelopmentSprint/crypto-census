@@ -4,24 +4,32 @@ import { analyticsHead } from '../../scripts/docs/analytics.mjs'
 
 const repository = 'https://github.com/DevelopmentSprint/crypto-census'
 const docsRoot = path.resolve('docs')
+const base = process.env.DOCS_BASE || '/'
+const release = process.env.DOCS_RELEASE_TAG || ''
+const sourceRef = process.env.DOCS_RELEASE_SHA || 'develop'
+const versions: { tag: string; sha: string; path: string }[] = JSON.parse(process.env.DOCS_VERSIONS || '[]')
+
 
 export default defineConfig({
   title: 'Crypto Census',
   description: 'Runtime cryptographic evidence for Java. Understand algorithms, quantum exposure, and the code paths that use them.',
-  base: '/',
+  base,
+  srcExclude: ['versions/**'],
+  // Public build identity is consumed by the shared banner.
+  transformPageData(pageData) { pageData.frontmatter.docsRelease = release },
   lang: 'en-US',
   lastUpdated: true,
   cleanUrls: false,
   appearance: true,
   head: [
     ...analyticsHead(process.env.DOCS_GA4_MEASUREMENT_ID),
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
     ['meta', { name: 'theme-color', content: '#0b766e' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Crypto Census' }],
     ['meta', { property: 'og:image', content: 'https://cryptocensus.developmentsprint.com/social.svg' }],
   ],
-  sitemap: { hostname: 'https://cryptocensus.developmentsprint.com/' },
+  sitemap: { hostname: `https://cryptocensus.developmentsprint.com${base}` },
   themeConfig: {
     logo: '/favicon.svg',
     siteTitle: 'Crypto Census',
@@ -30,10 +38,9 @@ export default defineConfig({
       { text: 'Architecture', link: '/architecture/overview' },
       { text: 'Reference', link: '/guides/configuration' },
       { text: 'Example CBOM', link: '/examples/example-cbom' },
-      { text: '0.1.0 · prerelease', items: [
-        { text: 'Build from source', link: '/getting-started/installation' },
-        { text: 'Changelog', link: repository + '/blob/develop/CHANGELOG.md' },
-        { text: 'Release process', link: '/RELEASING' },
+      { text: release || 'Latest · snapshot', items: [
+        { text: 'Latest · snapshot', link: 'https://cryptocensus.developmentsprint.com/' },
+        ...versions.map(version => ({ text: version.tag, link: `https://cryptocensus.developmentsprint.com${version.path}` })),
       ] },
     ],
     sidebar: [
@@ -97,7 +104,7 @@ export default defineConfig({
     search: { provider: 'local' },
     outline: { level: [2, 3], label: 'On this page' },
     socialLinks: [{ icon: 'github', link: repository }],
-    editLink: { pattern: repository + '/edit/develop/docs/:path', text: 'Improve this page' },
+    editLink: { pattern: repository + (release ? `/blob/${sourceRef}/docs/:path` : '/edit/develop/docs/:path'), text: release ? 'View tagged source' : 'Improve this page' },
     lastUpdated: { text: 'Last updated', formatOptions: { dateStyle: 'medium' } },
     footer: {
       message: 'Apache 2.0 · Runtime evidence, with explicit limits.',
@@ -123,14 +130,18 @@ export default defineConfig({
         for (const block of state.tokens) {
           for (const token of block.children ?? []) {
             if (token.type !== 'link_open') continue
-            const href = token.attrGet('href')
+            let href = token.attrGet('href')
+            if (release && href?.startsWith(`${repository}/`)) {
+              href = href.replace('/blob/develop/', `/blob/${sourceRef}/`).replace('/tree/develop/', `/tree/${sourceRef}/`)
+              token.attrSet('href', href)
+            }
             if (!href || /^(?:[a-z]+:|#|\/)/i.test(href)) continue
             const [pathname, fragment] = href.split('#', 2)
             const target = path.resolve(path.dirname(sourcePath), decodeURIComponent(pathname))
             const relative = path.relative(docsRoot, target)
             if (relative.startsWith('..' + path.sep)) {
               const repoPath = path.relative(path.dirname(docsRoot), target).split(path.sep).join('/')
-              if (!repoPath.startsWith('../')) token.attrSet('href', `${repository}/blob/develop/${repoPath}${fragment ? '#' + fragment : ''}`)
+              if (!repoPath.startsWith('../')) token.attrSet('href', `${repository}/blob/${sourceRef}/${repoPath}${fragment ? '#' + fragment : ''}`)
             }
           }
         }

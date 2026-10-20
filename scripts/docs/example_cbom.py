@@ -156,7 +156,7 @@ def prepare(output, env):
     if not input_name:
         require(env.get("DOCS_REQUIRE_CBOM") != "true", "Trusted CI example CBOM artifact is required for deployment")
         write_output(output, {"index.json": encode({"schemaVersion": 1, "status": "unavailable",
-                     "message": "Published CI evidence is unavailable in this local or pull-request preview."})})
+                     "message": ("Historical CI evidence is unavailable for this tagged documentation archive." if env.get("DOCS_RELEASE_TAG") else "Published CI evidence is unavailable in this local or pull-request preview.")})})
         return
     if env.get("DOCS_EVIDENCE_SHA") and env.get("DOCS_EVIDENCE_SHA") != env.get("DOCS_SOURCE_SHA"):
         from evidence_source import verify
