@@ -1,4 +1,8 @@
-# Install from source
+# Installation
+
+Public development artifacts are available as `0.1.0-SNAPSHOT` from Central’s snapshot repository. Follow [development snapshot installation](../SNAPSHOTS.md) for repository configuration and verification. `Latest` in the site navigation means the current development documentation; it is not a Maven version or Git tag.
+
+## Install from source
 
 A local source build installs the plugin and its libraries into your Maven repository and creates the standalone agent and CLI JARs.
 

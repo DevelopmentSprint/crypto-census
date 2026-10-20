@@ -4,9 +4,10 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 import sys
+import os
 
 ROOT = Path('docs/.vitepress/dist').resolve()
-BASE = '/'
+BASE = os.environ.get('DOCS_BASE', '/')
 
 
 class Document(HTMLParser):

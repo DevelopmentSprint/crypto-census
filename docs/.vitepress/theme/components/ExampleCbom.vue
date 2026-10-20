@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { withBase } from 'vitepress'
+import { withBase, useData } from 'vitepress'
 
 type Property = { name: string; value: string }
 type Occurrence = {
@@ -59,6 +59,7 @@ type Publication = {
     manifest: { path: string; sha256: string }
   }
 }
+const { frontmatter } = useData()
 const repository = 'https://github.com/DevelopmentSprint/crypto-census'
 const state = ref<'loading' | 'published' | 'unavailable' | 'error'>('loading')
 const publication = ref<Publication>()
@@ -327,7 +328,11 @@ onMounted(async () => {
     </div>
     <div v-else-if="state === 'unavailable'" class="cbom-state" role="status">
       <strong>No CI evidence available</strong>
-      <p>
+      <p v-if="frontmatter.docsRelease">
+        Historical CI evidence is unavailable for this tagged documentation archive.
+        The current snapshot’s evidence is not reused as evidence for this release.
+      </p>
+      <p v-else>
         This site build does not include published CI evidence. On the public
         site, a successful trusted develop build supplies the sealed census-demo
         outputs. Local previews can omit them; no sample findings or zero counts

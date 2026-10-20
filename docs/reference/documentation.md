@@ -45,7 +45,7 @@ A local build generates neutral **not measured locally** badges. It never substi
 | `.vitepress/` | Navigation, theme and rendering configuration |
 | `public/` | Static assets; coverage badges and example CBOM files are generated and ignored by Git |
 
-Link to the canonical reference instead of copying a configuration table into multiple pages. Label proposed features, experimental adapters and historical release plans explicitly. Examples must distinguish unpublished source builds from released artifacts. Code links point to `develop`; update version references when a release changes installation instructions.
+Link to the canonical reference instead of copying a configuration table into multiple pages. Label proposed features, experimental adapters and historical release plans explicitly. Examples must distinguish unpublished source builds from released artifacts. Latest code links point to `develop`; archived source links identify the pinned release commit. Update version references when a release changes installation instructions.
 
 Use relative Markdown links such as `[policy](../POLICY.md)`. Links outside `docs/`, such as `../SECURITY.md`, are rendered as GitHub source links. Add new pages to the navigation in `.vitepress/config.mts`; a document without a sidebar entry can still be found by local search.
 
@@ -63,6 +63,22 @@ flowchart LR
 
 Mermaid is bundled locally and renders with strict security settings. Raw HTML labels and interactive callbacks are unnecessary. Each diagram has a source disclosure for inspection and a visible fallback if rendering fails. The browser suite treats rendering failures as failures, including diagrams added to existing references.
 
+## Keep tagged release documentation
+
+The root site is **Latest · snapshot**: the current development documentation. Its banner links to public [snapshot installation](../SNAPSHOTS.md). Latest is a site label, not a Git tag, Maven version, or Maven `LATEST` alias. The version menu contains Latest plus the tagged releases actually included in the current publication. With no release tags, the menu contains only Latest.
+
+Only release tags retain older documentation. The compositor accepts the `v?X.Y.Z[-prerelease]` release-tag convention, such as `v0.1.0`, `0.1.0` or `v0.2.0-rc.1`. Numeric fields and numeric prerelease identifiers cannot have leading zeroes. Tags with build-metadata suffixes (`+...`), snapshot tags and other naming conventions are excluded. It never archives every commit, branch build, or snapshot. A tag must resolve to a commit with `docs/index.md`; missing documentation or private tracker paths stop publication rather than producing an invented release entry. Keep release tags immutable: moving or deleting a tag changes the inventory and fails an in-progress publication.
+
+`npm run docs:build` builds Latest at `/`, then exports each release’s pinned documentation into a disposable directory and rebuilds it at `/versions/<tag>/`. The current trusted renderer, theme, dependencies and navigation render the tagged Markdown and static assets. Tagged documentation is trusted repository content and can contain Vue or server-rendered code. These archives preserve tagged content; they are rebuilds, not byte-for-byte copies of a release’s original site output. A release whose content is incompatible with current tooling fails the build for repair before publication.
+
+Every archived page identifies its release and links to Latest. Styles, icons, internal links, search and example-CBOM requests use the archive base. Source and edit links point to the pinned commit; the archive offers source viewing rather than editing historical content. Archive builds clear Latest’s coverage, CBOM and producer-proof environment. They show **historical measurement unavailable** for coverage and an explicit unavailable historical CBOM state; current evidence never becomes evidence for an older release. Latest retains its existing verified producer checks and original measurement metadata.
+
+The combined site’s `versions.json` lists only the built release tags, their commit SHAs and paths. Build and deployment compare the release inventory fingerprint as well as checking the Latest branch tip, so a build made before a tag change cannot replace a newer inventory. Tags appear on the next successful documentation publication after CI on `develop`; creating a tag alone does not trigger Pages. If a refresh is needed, dispatch CI on `develop` as described below. This uses the existing publication flow and permissions.
+
+GitHub Pages serves one combined site and limits its published size to 1 GB. The compositor stops before packaging if the output reaches that limit. Tagged content and dependencies can also increase build duration as releases accumulate; review the build size and duration before adding an alternative retention policy. There is no Git archive branch, per-commit site history, or separate persistent archive storage.
+
+For a release integration check without creating real tags, run `python3 scripts/docs/release_fixture.py`. It creates a disposable Git repository with a synthetic release tag, snapshot tag and untagged commit; builds both bases; checks links; and exercises the archived site in a browser. It removes the fixture afterward. Ordinary `npm run docs:test` exercises the current built site.
+
 ## Publish through CI
 
 ```mermaid
@@ -79,7 +95,7 @@ flowchart TD
   Build --> Pages[GitHub Pages deployment]
 ```
 
-The documentation workflow validates pull requests without publishing them. Deployment runs only after a successful `CI` workflow triggered by a push or manual dispatch on this repository's `develop` branch. It checks out that exact **site source SHA**. Full runs prefer that run's `docs-coverage` and `docs-cbom` artifacts. Docs-only runs reuse a prior producer only after the verification described below. Missing evidence, an untrusted producer or a mismatched identity stops publication. Deployments are serialized with a queue that preserves waiting jobs. A second branch-tip check inside the deployment job skips a delayed build after `develop` has already advanced. A stale CI completion cannot cancel or replace a newer pending publication.
+The documentation workflow validates pull requests without publishing them. Deployment runs only after a successful `CI` workflow triggered by a push or manual dispatch on this repository's `develop` branch. It checks out that exact **site source SHA**. Full runs prefer that run's `docs-coverage` and `docs-cbom` artifacts. Docs-only runs reuse a prior producer only after the verification described below. Missing evidence, an untrusted producer or a mismatched identity stops publication. Deployments are serialized with a queue that preserves waiting jobs. A second branch-tip and release-inventory check inside the deployment job skips a delayed build after `develop` or release tags have changed. A stale CI completion cannot cancel or replace a newer pending publication.
 
 ### Reuse evidence without claiming a new measurement
 
@@ -117,7 +133,7 @@ A repository administrator must configure **Settings → Pages → Build and dep
 
 <https://cryptocensus.developmentsprint.com/>
 
-The site tracks the development branch. Keep release availability in the shared banner in `docs/.vitepress/theme/index.ts`, rather than repeating status notices in individual pages. Update or remove the banner when publication is verified; keep source-build prerequisites and release verification steps in their respective guides. Changes do not publish merely because a local build passes. Follow the repository's review and acceptance process before merging.
+The root site tracks the development branch, and release-tag archives retain older documentation. Keep release availability in the shared banner in `docs/.vitepress/theme/index.ts`, rather than repeating status notices in individual pages; keep source-build prerequisites and release verification steps in their respective guides. Changes do not publish merely because a local build passes. Follow the repository's review and acceptance process before merging.
 
 ## Configure Google Analytics 4
 
