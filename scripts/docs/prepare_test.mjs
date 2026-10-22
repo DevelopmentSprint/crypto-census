@@ -11,6 +11,13 @@ const script = readFileSync(process.env.DOCS_PREPARE_SCRIPT || fileURLToPath(new
 const sha = 'a'.repeat(40)
 const runUrl = 'https://github.com/DevelopmentSprint/crypto-census/actions/runs/123'
 const metric = { covered: 9, missed: 1, percent: 90 }
+// A hook's GIT_DIR/GIT_COMMON_DIR/config/object overrides defeat `cwd` isolation.
+// Strip the full Git namespace, a superset of `git rev-parse --local-env-vars`.
+const fixtureEnv = {
+  ...Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.toUpperCase().startsWith('GIT_'))),
+  GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null',
+  GIT_CONFIG_NOSYSTEM: '1',
+}
 
 function fixture(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), 'census-docs-prepare-'))
@@ -36,7 +43,7 @@ function fixture(t) {
   }
   const output = path.join(directory, 'docs/public/badges')
   const run = (overrides = {}) => {
-    const env = { ...process.env }
+    const env = { ...fixtureEnv }
     for (const key of ['DOCS_COVERAGE_DIR', 'DOCS_REQUIRE_COVERAGE', 'DOCS_SOURCE_SHA', 'DOCS_RUN_URL', 'DOCS_CBOM_DIR', 'DOCS_REQUIRE_CBOM', 'DOCS_EVIDENCE_SHA', 'DOCS_EVIDENCE_PROOF']) delete env[key]
     for (const [key, value] of Object.entries(overrides)) if (value !== undefined) env[key] = value
     return spawnSync(process.execPath, ['prepare.mjs'], { cwd: directory, env, encoding: 'utf8' })
@@ -52,6 +59,13 @@ function rejected(result) {
   assert.notEqual(result.status, 0, `Unexpected success: ${result.stdout}`)
   assert.equal(result.signal, null)
 }
+
+test('fixture subprocess environment excludes caller Git overrides', () => {
+  assert.deepEqual(Object.keys(fixtureEnv).filter(name => name.toUpperCase().startsWith('GIT_')).sort(),
+    ['GIT_CONFIG_GLOBAL', 'GIT_CONFIG_NOSYSTEM'])
+  assert.equal(fixtureEnv.GIT_CONFIG_GLOBAL, process.platform === 'win32' ? 'NUL' : '/dev/null')
+  assert.equal(fixtureEnv.GIT_CONFIG_NOSYSTEM, '1')
+})
 
 test('deployment requires a coverage artifact', t => {
   const f = fixture(t)
@@ -139,7 +153,7 @@ test('invalid counters and empty denominators fail closed', t => {
 test('reused coverage requires actual code equivalence and keeps original bytes and source', t => {
   const f = fixture(t)
   const git = (...args) => {
-    const result = spawnSync('git', args, { cwd: f.directory, encoding: 'utf8' })
+    const result = spawnSync('git', args, { cwd: f.directory, env: fixtureEnv, encoding: 'utf8' })
     assert.equal(result.status, 0, result.stderr)
     return result.stdout.trim()
   }
