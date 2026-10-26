@@ -17,3 +17,13 @@ dependency-reduced-pom.xml
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Private tracker state is local-only, including nested copies.
+**/.beads/
+**/.beadroad/
+**/.dolt/
+**/dolt/
+**/embeddeddolt/
+**/proxieddb/
+**/.beads-credential-key
+**/.beads.gate.lock

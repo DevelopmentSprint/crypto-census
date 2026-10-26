@@ -12,6 +12,13 @@ permissions:
   contents: read
 
 jobs:
+  private-tracker:
+    name: Private tracker boundary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: bash scripts/check-private-tracker.sh
+
   # ---------------------------------------------------------------------------------------------
   # Conformance matrix. This list is the single source of truth for "supported": every row is
   # built and tested on each configured CI event; docs/COMPATIBILITY.md and docs/CONFORMANCE.md mirror it.
