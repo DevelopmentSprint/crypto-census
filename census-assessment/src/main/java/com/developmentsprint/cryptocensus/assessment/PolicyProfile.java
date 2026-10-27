@@ -69,6 +69,8 @@ public record PolicyProfile(
             ruleSetVersion,
             "coreFactsVersion",
             coreFactsVersion,
+            "tlsFactsVersion",
+            com.developmentsprint.cryptocensus.core.TlsPolicy.VERSION,
             "sensitivity",
             sensitivity,
             "impact",
@@ -96,12 +98,17 @@ public record PolicyProfile(
         "schemaVersion",
         "ruleSetVersion",
         "coreFactsVersion",
+        "tlsFactsVersion",
         "sensitivity",
         "impact",
         "confidentialityYears",
         "authenticityYears",
         "sensitiveLevel",
         "highImpactLevel");
+    if (!com.developmentsprint.cryptocensus.core.TlsPolicy.VERSION.equals(
+        CanonicalJson.text(value, "tlsFactsVersion"))) {
+      throw new IllegalArgumentException("Unsupported TLS facts version");
+    }
     return new PolicyProfile(
         integer(value, "schemaVersion"),
         CanonicalJson.text(value, "ruleSetVersion"),

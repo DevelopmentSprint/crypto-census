@@ -56,3 +56,15 @@ row. Business-flow totals must deduplicate by event bucket and subject, while de
 retain the source identity. Only the active scope reference receives direct attribution. Scope
 integrity or restoration failures invalidate all scoped associations, including earlier snapshots.
 Unreconciled counts produce an unknown-count diagnostic bucket, never an invented missing delta.
+
+Guided change proposals may request Java-derived creation identities with an empty edit `id`,
+only when `base` is null and `proposed` is present. USER declaration and readiness proposals may
+use an empty source revision. Java validates and canonicalizes the typed proposal before computing
+its revision; other source kinds and all saved/base documents still require complete revisions.
+The browser copies existing edit identities and base hashes rather than recomputing them.
+
+Report reconciliation applies observed annotations only to their exact run and source identity.
+Saved business declarations remain keyed by stable application and flow. Business summaries show
+`savedContextFields`; each deployment instance shows its own reconciled `fields`. Priority aggregates
+existing findings without borrowing a different deployment's requirements. Readiness gaps contribute
+to `readinessIncomplete` and overall incompleteness independently of cryptographic priority.
