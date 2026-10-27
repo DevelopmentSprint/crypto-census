@@ -1,10 +1,11 @@
 # Annotation diagnostics
 
 When enrichment discovers an invalid declaration or an unsupported annotated method,
-Census records an enrichment transform error and emits a warning through the JVM's
+Census increments the separate `ANNOTATION_ERRORS` enrichment counter and emits a warning through the JVM's
 `System.Logger`. With the default JVM logger, look in the test process's standard
 error output or its captured test log. These diagnostics do not change the existing
-core inventory gate; the evidence sidecar retains its separate health counters.
+core inventory gate or independent TLS qualification. TLS hook transformation failures retain
+their `TRANSFORM_ERRORS` counter; the evidence sidecar keeps both signals separate.
 
 Each warning identifies a reason, declaring class, method and JVM descriptor when
 available. Descriptors distinguish overloaded methods. Annotation values, exception

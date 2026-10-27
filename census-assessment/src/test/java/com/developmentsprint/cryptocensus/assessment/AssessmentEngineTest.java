@@ -109,6 +109,52 @@ class AssessmentEngineTest {
   }
 
   @Test
+  void annotationHealthDoesNotOverrideTlsButRealTransformAndRecordingFailuresStillDo() {
+    for (var counter :
+        List.of(
+            EvidenceDocument.Counter.ANNOTATION_ERRORS,
+            EvidenceDocument.Counter.TRANSFORM_ERRORS,
+            EvidenceDocument.Counter.RECORDING_FAILURES)) {
+      var input =
+          input(
+              "12345678-1234-1234-1234-123456789abc",
+              "one",
+              "20",
+              value -> {
+                var tls = withTls(value, true, false);
+                var health = new java.util.EnumMap<>(tls.health());
+                health.put(counter, 1L);
+                return new EvidenceDocument(
+                    1,
+                    tls.runId(),
+                    tls.cbomHash(),
+                    tls.flows(),
+                    tls.observations(),
+                    tls.handshakes(),
+                    tls.identities(),
+                    tls.capabilities(),
+                    health);
+              });
+      var findings =
+          objects(
+              AssessmentEngine.assess(List.of(input), EMPTY, PolicyProfile.defaults())
+                  .data()
+                  .get("findings"));
+      assertThat(findings)
+          .filteredOn(finding -> "TLS_CONFIDENTIALITY".equals(finding.get("kind")))
+          .singleElement()
+          .satisfies(
+              finding ->
+                  assertThat(CanonicalJson.object(finding.get("technical")))
+                      .containsEntry(
+                          "quantumExposure",
+                          counter == EvidenceDocument.Counter.ANNOTATION_ERRORS
+                              ? "RESISTANT"
+                              : "NOT_ESTABLISHED"));
+    }
+  }
+
+  @Test
   void ambiguousTlsRetainsNegotiationButRequiresOwnershipContext() {
     var input =
         input(

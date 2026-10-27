@@ -10,7 +10,10 @@ and handshake arrays by their canonical JSON representation. Scope paths retain 
 Only integral JSON numbers are accepted; no strings-to-numbers coercion occurs. Files are limited
 to 8 MiB and nesting to 32 levels. Unknown fields or versions are rejected.
 
-Every evidence document carries all health counters, including zero counters. The run UUID must
+Every evidence document carries the original health counters, including zero counters.
+The additive `ANNOTATION_ERRORS` counter is optional in v1: absent means zero, and canonical
+output omits it when zero to preserve existing healthy evidence bytes. It records declaration
+and annotation-instrumentation gaps independently of TLS hook `TRANSFORM_ERRORS`. The run UUID must
 match `cryptocensus:runId` in the paired CBOM, and `cbomHash` is SHA-256 of its exact bytes. Hashes
 provide pairing and revision checks, not authentication. Healthy evidence conserves each effective
 CBOM occurrence count. Saturation requires a diagnostic; drain or conservation uncertainty is

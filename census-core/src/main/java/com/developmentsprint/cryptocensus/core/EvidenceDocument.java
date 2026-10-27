@@ -208,8 +208,9 @@ public record EvidenceDocument(
     }
   }
 
-  /** Independent enrichment diagnostics; all counters are required in every v1 document. */
+  /** Independent enrichment diagnostics; ANNOTATION_ERRORS is an optional v1 extension. */
   public enum Counter {
+    ANNOTATION_ERRORS,
     TRANSFORM_ERRORS,
     RECORDING_FAILURES,
     DROPPED_FLOWS,

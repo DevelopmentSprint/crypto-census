@@ -113,6 +113,6 @@ class ScopeBoundaryIT {
         .isEqualTo(virtual ? 11 : 8);
     assertThat(evidence.health().get(EvidenceDocument.Counter.SCOPE_INTEGRITY)).isZero();
     assertThat(evidence.health().get(EvidenceDocument.Counter.SCOPE_RESTORE_FAILURES)).isZero();
-    assertThat(evidence.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isZero();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS)).isZero();
   }
 }

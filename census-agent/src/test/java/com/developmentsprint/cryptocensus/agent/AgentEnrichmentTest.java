@@ -109,7 +109,7 @@ class AgentEnrichmentTest {
     AgentEnrichment.record(null, inventory.recordWithOutcome(ASSET, SITE));
     assertThat(inventory.entries().get(0).total()).isEqualTo(1);
     assertThat(Recorder.failures()).isEqualTo(failures);
-    AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+    AgentEnrichment.diagnostic(EvidenceDocument.Counter.ANNOTATION_ERRORS);
     write(output, inventory);
     AgentEnrichment.stop(1);
     assertThat(AgentEnrichment.publish(inventory.entries(), 5000)).isTrue();
@@ -170,7 +170,7 @@ class AgentEnrichmentTest {
     assertThat(AgentEnrichment.runId()).isNull();
     assertThat(AgentEnrichment.enabled()).isFalse();
     AgentEnrichment.installed();
-    AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+    AgentEnrichment.diagnostic(EvidenceDocument.Counter.ANNOTATION_ERRORS);
     AgentEnrichment.record(null, null);
     AgentEnrichment.stop(0);
     assertThat(AgentEnrichment.context().association())

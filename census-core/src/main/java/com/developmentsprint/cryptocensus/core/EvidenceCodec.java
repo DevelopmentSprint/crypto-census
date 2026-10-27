@@ -38,7 +38,14 @@ public final class EvidenceCodec {
         ContextJson.ordered(
             document.capabilities().stream().map(EvidenceCodec::capability).toList()));
     Map<String, Object> health = new TreeMap<>();
-    document.health().forEach((counter, count) -> health.put(counter.name(), count));
+    document
+        .health()
+        .forEach(
+            (counter, count) -> {
+              if (counter != EvidenceDocument.Counter.ANNOTATION_ERRORS || count != 0) {
+                health.put(counter.name(), count);
+              }
+            });
     values.put("health", health);
     return CanonicalJson.encode(values);
   }
@@ -62,6 +69,7 @@ public final class EvidenceCodec {
     for (String key : rawHealth.keySet()) {
       health.put(EvidenceDocument.Counter.valueOf(key), CanonicalJson.integer(rawHealth, key));
     }
+    health.putIfAbsent(EvidenceDocument.Counter.ANNOTATION_ERRORS, 0L);
     return new EvidenceDocument(
         intField(object, "schemaVersion"),
         CanonicalJson.text(object, "runId"),

@@ -247,7 +247,7 @@ public final class Installer {
         }
       } catch (Throwable failure) {
         AgentEnrichment.diagnostic(
-            com.developmentsprint.cryptocensus.core.EvidenceDocument.Counter.TRANSFORM_ERRORS);
+            com.developmentsprint.cryptocensus.core.EvidenceDocument.Counter.ANNOTATION_ERRORS);
         System.getLogger(Installer.class.getName())
             .log(
                 System.Logger.Level.WARNING,

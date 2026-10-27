@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.assessment;
 
+import com.developmentsprint.cryptocensus.core.ContextModel;
 import com.developmentsprint.cryptocensus.core.EvidenceDocument;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,10 +17,18 @@ final class DeploymentOwnership {
     if (evidence == null) {
       return Set.of();
     }
+    Set<String> relevant = new HashSet<>();
+    evidence.flows().forEach(flow -> relevant.add(flow.identityId()));
+    for (EvidenceDocument.Observation observation : evidence.observations()) {
+      ContextModel.Origin origin = observation.projectFrame().origin();
+      if (origin == ContextModel.Origin.MAIN || origin == ContextModel.Origin.TEST) {
+        relevant.add(observation.context().identityId());
+      }
+    }
     Map<String, Set<String>> loaders = new HashMap<>();
     Map<String, Set<String>> deployments = new HashMap<>();
     for (EvidenceDocument.IdentityMapping identity : evidence.identities()) {
-      if (!identity.applicationId().isEmpty()) {
+      if (relevant.contains(identity.id()) && !identity.applicationId().isEmpty()) {
         loaders
             .computeIfAbsent(identity.applicationId(), ignored -> new HashSet<>())
             .add(identity.loaderId());
@@ -32,7 +41,8 @@ final class DeploymentOwnership {
     }
     Set<String> result = new HashSet<>();
     for (EvidenceDocument.IdentityMapping identity : evidence.identities()) {
-      if (!identity.applicationId().isEmpty()
+      if (relevant.contains(identity.id())
+          && !identity.applicationId().isEmpty()
           && (loaders.get(identity.applicationId()).size() > 1
               || deployments.getOrDefault(identity.applicationId(), Set.of()).size() > 1)
           && !explicit(identity)) {
