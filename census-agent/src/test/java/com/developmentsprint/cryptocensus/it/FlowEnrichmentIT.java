@@ -88,6 +88,20 @@ class FlowEnrichmentIT {
   }
 
   @Test
+  void invalidDeclarationsIdentifyMethodsWithoutLeakingValues() throws Exception {
+    Path cbom = run("invalid", true, true, "", List.of("invalid"));
+    var evidence = EvidenceCodec.read(sidecar("invalid"));
+    EvidenceCodec.validatePair(evidence, Cbom.readBytes(cbom));
+    assertThat(evidence.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isPositive();
+    assertThat(evidence.flows()).isEmpty();
+    assertThat(evidence.observations())
+        .allSatisfy(
+            value ->
+                assertThat(value.context().association())
+                    .isEqualTo(EvidenceDocument.Association.SCOPE_LOST));
+  }
+
+  @Test
   void caughtStackExhaustionDoesNotClaimTrustedParentInTheCleanupWindow() throws Exception {
     Path cbom = run("stack", true, true, "", List.of("stack"));
     var evidence = EvidenceCodec.read(sidecar("stack"));
@@ -146,6 +160,23 @@ class FlowEnrichmentIT {
             FlowWorkload.class,
             args);
     assertThat(result.exitCode()).as(result.stderr()).isZero();
+    if (enrichment && !api) {
+      assertThat(result.stderr())
+          .contains(
+              "INVALID_OR_UNRESOLVED_DECLARATION",
+              "LateAnnotatedWorkload",
+              "method=run descriptor=(Z)V");
+    }
+    if (args.contains("invalid")) {
+      assertThat(result.stderr())
+          .contains(
+              "INVALID_OR_UNRESOLVED_DECLARATION",
+              "InvalidAnnotationsWorkload",
+              "method=invalid descriptor=()V",
+              "UNSUPPORTED_METHOD",
+              "method=unsupported descriptor=()V")
+          .doesNotContain("private invalid value", "private-classification");
+    }
     return output;
   }
 
