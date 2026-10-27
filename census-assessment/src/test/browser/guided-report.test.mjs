@@ -10,13 +10,13 @@ const root = fileURLToPath(new URL('../../../../', import.meta.url));
 const target = resolve(root, 'census-assessment/target');
 const java = process.env.JAVA_HOME ? resolve(process.env.JAVA_HOME, 'bin/java') : 'java';
 const classpath = ['census-assessment/target/test-classes', 'census-assessment/target/classes', 'census-core/target/classes'].map(path => resolve(root, path)).join(delimiter);
-function generate(directory, changes) {
-  execFileSync(java, ['-cp', classpath, 'com.developmentsprint.cryptocensus.assessment.GuidedReportFixture', directory, ...(changes ? [changes] : [])], {stdio: 'pipe'});
+function generate(directory, changes, scenario) {
+  execFileSync(java, ['-cp', classpath, 'com.developmentsprint.cryptocensus.assessment.GuidedReportFixture', directory, ...(changes || scenario ? [changes || '-', ...(scenario ? [scenario] : [])] : [])], {stdio: 'pipe'});
 }
-async function fixture(t) {
+async function fixture(t, scenario) {
   await mkdir(target, {recursive:true});
   const directory = await mkdtemp(resolve(target, 'browser-'));
-  generate(directory);
+  generate(directory, null, scenario);
   const browser = await chromium.launch({headless:true, ...(process.env.CENSUS_BROWSER_EXECUTABLE ? {executablePath:process.env.CENSUS_BROWSER_EXECUTABLE} : {})});
   const page = await browser.newPage({acceptDownloads:true});
   const requests = [], errors = [], violations = [];
@@ -69,7 +69,7 @@ test('unmodified flow can be enriched, exported, applied and reassessed without 
   await page.locator('#new-application').fill('demo'); await page.locator('#new-flow').fill('archive');
   await page.locator('#new-label').fill('Records archive'); await page.locator('#new-binding').selectOption('0');
   await page.getByRole('button', {name:'Start context draft', exact:true}).click();
-  await page.locator('#draft-field-CLASSIFICATION').fill('sensitive'); await page.locator('#draft-field-CONFIDENTIALITY_YEARS').fill('20');
+  await page.locator('#draft-field-CLASSIFICATION').selectOption('sensitive'); await page.locator('#draft-field-CONFIDENTIALITY_YEARS').fill('20');
   await page.locator('#draft-field-OWNER').fill('Records team');
   await page.getByRole('button', {name:'Add answers to draft', exact:true}).click();
   assert.match(await page.locator('#status').textContent(), /stale/);
@@ -175,14 +175,14 @@ test('existing flow creation is rejected and filters consume recorded verdicts',
 test('pending answers hydrate after navigation and reverting removes the old proposal', async t => {
   const {page, directory} = await fixture(t);
   const flowId = await page.locator('#flow-navigation').inputValue();
-  await page.locator('#field-CLASSIFICATION').fill('restricted');
+  await page.locator('#field-CLASSIFICATION').selectOption('restricted');
   await page.locator('#field-OWNER').fill('Records team');
   await page.getByRole('button', {name:'Add answers to draft', exact:true}).click();
   await page.locator('#flow-navigation').selectOption('');
   await page.locator('#flow-navigation').selectOption(flowId);
   assert.equal(await page.locator('#field-CLASSIFICATION').inputValue(), 'restricted');
   assert.equal(await page.locator('#field-OWNER').inputValue(), 'Records team');
-  await page.locator('#field-CLASSIFICATION').fill('sensitive');
+  await page.locator('#field-CLASSIFICATION').selectOption('sensitive');
   await page.getByRole('button', {name:'Add answers to draft', exact:true}).click();
   const {path, value} = await exportChanges(page, directory);
   assert.equal(value.edits.length, 1); assert.equal(value.edits[0].proposed.field, 'OWNER');
@@ -204,4 +204,115 @@ test('renaming a flow preserves imported pending exact bindings', async t => {
   assert.deepEqual(value.edits[0].proposed.bindings, [binding]);
   assert.equal(value.edits[0].proposed.state, 'RETIRED');
   generate(resolve(directory, 'renamed'), path);
+});
+
+
+test('exact binding selects its owning application and rejects a mismatched draft', async t => {
+  const {page, directory} = await fixture(t);
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  await page.locator('#new-application').fill('wrong-app');
+  await page.locator('#new-flow').fill('owned-flow');
+  await page.locator('#new-binding').selectOption('0');
+  assert.equal(await page.locator('#new-application').inputValue(), 'demo');
+  assert.equal(await page.locator('#new-application').getAttribute('readonly'), '');
+  await page.locator('#new-application').evaluate(node => { node.value = 'wrong-app'; });
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  assert.match(await page.locator('#status').textContent(), /different application/);
+  assert.equal(await page.locator('#export-changes').isDisabled(), true);
+  await page.locator('#new-binding').selectOption('');
+  await page.locator('#new-binding').selectOption('0');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  const {path, value} = await exportChanges(page, directory);
+  assert.equal(value.edits[0].proposed.subject.applicationId, 'demo');
+  generate(resolve(directory, 'owned'), path);
+  const after = JSON.parse(await readFile(resolve(directory, 'owned/assessment.json'), 'utf8'));
+  assert.equal(after.flows.find(flow => flow.subject.flowId === 'owned-flow').directCount, 3);
+});
+
+test('unresolved declaring ownership remains visible and cannot be bound', async t => {
+  const {page} = await fixture(t, 'unresolved');
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  assert.equal(await page.locator('#new-binding option').count(), 1);
+  assert.match(await page.locator('#selection').textContent(), /declaring application or exact method is unresolved/);
+  assert.match(await page.locator('#selection').textContent(), /observations remain unassigned/);
+});
+
+test('unknown classification stays unanswered while deliberate custom IDs round-trip', async t => {
+  const {page, directory} = await fixture(t);
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  await page.locator('#new-flow').fill('unknown-class');
+  await page.locator('#new-binding').selectOption('0');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  assert.equal(await page.locator('#draft-field-CLASSIFICATION').inputValue(), '');
+  await page.locator('#draft-field-CLASSIFICATION').selectOption('sensitive');
+  await page.locator('#draft-field-CLASSIFICATION').selectOption('');
+  await page.locator('#draft-field-CONFIDENTIALITY_YEARS').fill('20');
+  await page.getByRole('button', {name:'Add answers to draft', exact:true}).click();
+  let exported = await exportChanges(page, directory);
+  assert.ok(exported.value.edits.every(edit => edit.proposed.field !== 'CLASSIFICATION'));
+  generate(resolve(directory, 'unknown'), exported.path);
+  let after = JSON.parse(await readFile(resolve(directory, 'unknown/assessment.json'), 'utf8'));
+  let flow = after.flows.find(flow => flow.subject.flowId === 'unknown-class');
+  assert.equal(flow.savedContextFields.find(field => field.field === 'CLASSIFICATION').status, 'UNKNOWN');
+  for (const identifier of ['pii', 'unknown']) {
+    await page.locator('#draft-field-CLASSIFICATION').selectOption('__custom');
+    await page.locator('#draft-field-CLASSIFICATION-custom').fill(identifier);
+    await page.getByRole('button', {name:'Add answers to draft', exact:true}).click();
+    exported = await exportChanges(page, directory);
+    assert.equal(exported.value.edits.find(edit => edit.proposed.field === 'CLASSIFICATION').proposed.value, identifier);
+    generate(resolve(directory, identifier + '-custom'), exported.path);
+    after = JSON.parse(await readFile(resolve(directory, identifier + '-custom/assessment.json'), 'utf8'));
+    flow = after.flows.find(flow => flow.subject.flowId === 'unknown-class');
+    assert.equal(flow.savedContextFields.find(field => field.field === 'CLASSIFICATION').value, identifier);
+  }
+});
+
+
+test('lost scope with a resolved MAIN frame cannot be offered as a recoverable binding', async t => {
+  const {page, directory} = await fixture(t, 'lost');
+  const report = JSON.parse(await readFile(resolve(directory, 'assessment.json'), 'utf8'));
+  const finding = report.findings.find(item => !item.subject && item.projectFrame?.origin === 'MAIN');
+  assert.equal(finding.association, 'SCOPE_LOST');
+  assert.equal(report.runs[0].identities[0].status, 'RESOLVED');
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  assert.equal(await page.locator('#new-binding option').count(), 1);
+  assert.match(await page.locator('#selection').textContent(), /scope evidence is lost or unverified/);
+});
+
+test('one draft cannot create competing flow bindings for the same observed application site', async t => {
+  const {page} = await fixture(t);
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  await page.locator('#new-flow').fill('first');
+  await page.locator('#new-binding').selectOption('0');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  await page.locator('#new-flow').fill('second');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  assert.match(await page.locator('#status').textContent(), /already bound to another flow/);
+});
+
+test('ambiguous saved bindings are not offered as another recoverable call site', async t => {
+  const {page, directory} = await fixture(t);
+  const context = JSON.parse(await readFile(resolve(directory, 'context.json'), 'utf8'));
+  const binding = {className:'example.Archive', method:'save', descriptor:'()V', sourceArtifact:'example:archive', origin:'MAIN'};
+  for (const flowId of ['first-owner', 'second-owner']) {
+    context.flows.push({subject:{applicationId:'demo', flowId}, label:flowId, state:'ACTIVE', bindings:[binding]});
+  }
+  await page.locator('#import-context').setInputFiles({name:'context.json', mimeType:'application/json', buffer:Buffer.from(JSON.stringify(context))});
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('Imported 2'));
+  const {path} = await exportChanges(page, directory);
+  const destination = resolve(directory, 'ambiguous');
+  generate(destination, path);
+  const report = JSON.parse(await readFile(resolve(destination, 'assessment.json'), 'utf8'));
+  assert.ok(report.gaps.includes('AMBIGUOUS_SAVED_BINDING'));
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto(pathToFileURL(resolve(destination, 'assessment.html')).href);
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  assert.equal(await page.locator('#new-binding option').count(), 1);
+  assert.match(await page.locator('#selection').textContent(), /saved bindings conflict/);
 });
