@@ -29,9 +29,16 @@ public final class AssessmentInputs {
     private final byte[] evidence;
     private final String workload;
     private final String environment;
+    private final boolean evidenceUnreadable;
 
     /** Validates sizes before copying; a null evidence buffer explicitly means no sidecar. */
     public Input(byte[] cbom, byte[] evidence, String workload, String environment) {
+      this(cbom, evidence, workload, environment, false);
+    }
+
+    private Input(
+        byte[] cbom, byte[] evidence, String workload, String environment, boolean unreadable) {
+      evidenceUnreadable = unreadable;
       Objects.requireNonNull(cbom, "cbom");
       if (cbom.length > Cbom.MAX_INPUT_BYTES
           || (evidence != null && evidence.length > CanonicalJson.MAX_BYTES)) {
@@ -42,6 +49,13 @@ public final class AssessmentInputs {
       this.workload = ContextModel.text(workload, "workload label", 256, false);
       this.environment = ContextModel.text(environment, "environment label", 256, false);
     }
+  }
+
+  /**
+   * Retains valid inventory when a present optional sidecar cannot be read; no digest is invented.
+   */
+  public static Input unreadableEvidence(byte[] cbom, String workload, String environment) {
+    return new Input(cbom, null, workload, environment, true);
   }
 
   /** Immutable inventory snapshot; invalid sidecars never supply relationship evidence. */
@@ -115,7 +129,7 @@ public final class AssessmentInputs {
                 run.metadata(),
                 run.coreHealth(),
                 run.evidence(),
-                run.gaps(),
+                union(previous.gaps(), run.gaps()),
                 union(previous.workloads(), run.workloads()),
                 union(previous.environments(), run.environments())));
       }
@@ -142,7 +156,7 @@ public final class AssessmentInputs {
     }
     EvidenceDocument evidence = null;
     if (input.evidence == null) {
-      gaps.add("NO_FLOW_OR_CORRELATION_EVIDENCE");
+      gaps.add(input.evidenceUnreadable ? "SIDECAR_UNREADABLE" : "NO_FLOW_OR_CORRELATION_EVIDENCE");
     } else {
       try {
         EvidenceDocument candidate = EvidenceCodec.parse(input.evidence);
