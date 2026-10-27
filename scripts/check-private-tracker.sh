@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Reject private tracker paths in the index or unpublished outgoing commit trees.
 set -euo pipefail
+# Replacements are local views; pushes send the original objects. Inspect originals only.
+export GIT_NO_REPLACE_OBJECTS=1
 cd "$(git rev-parse --show-toplevel)"
 paths_file=$(mktemp "${TMPDIR:-/tmp}/census-private-paths.XXXXXX")
 commits_file=$(mktemp "${TMPDIR:-/tmp}/census-private-commits.XXXXXX")
