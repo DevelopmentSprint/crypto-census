@@ -1,0 +1,17 @@
+:root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; color: #172638; background: #f3f6fa; }
+body { margin: 0; } main { max-width: 1180px; margin: auto; padding: 2rem; }
+h1,h2,h3 { line-height: 1.2; } h1 { margin-bottom: .5rem; }
+button,input,select,textarea { font: inherit; } button { cursor: pointer; background: #124568; color: white; border: 1px solid #124568; border-radius: .3rem; padding: .45rem .8rem; }
+button:disabled { cursor: default; opacity: .55; } button.secondary { background: white; color: #124568; }
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible { outline: 3px solid #dd8b00; outline-offset: 3px; }
+.toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; }
+.panel { background: white; padding: 1.3rem; margin: 1rem 0; border: 1px solid #d1dae3; border-radius: .4rem; }
+.notice { padding: .8rem 1rem; border-left: 4px solid #bd7500; background: #fff4d8; }
+.error { color: #8b1722; } .muted { color: #485d71; } .badge { display: inline-block; background: #eaf0f6; padding: .2rem .5rem; border-radius: .2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 1rem; }
+label { display: block; margin: .4rem 0; font-weight: 600; } input,select,textarea { box-sizing: border-box; width: 100%; padding: .45rem; background: white; color: #172638; border: 1px solid #728497; border-radius: .2rem; }
+textarea { min-height: 6rem; } input[type=file] { max-width: 25rem; } input[type=checkbox] { width: auto; }
+table { border-collapse: collapse; width: 100%; } th,td { padding: .6rem; text-align: left; border-bottom: 1px solid #d1dae3; vertical-align: top; }
+.scroll { overflow-x: auto; } pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f3f6fa; padding: .8rem; } details { margin: .8rem 0; } summary { cursor: pointer; font-weight: 600; }
+small { display: block; } [hidden] { display: none !important; }
+@media(max-width:600px) { main { padding: 1rem; } th,td { padding: .3rem; } }
