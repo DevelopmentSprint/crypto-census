@@ -235,6 +235,8 @@
                                         <exclude>**/Installer$*.class</exclude>
                                         <exclude>**/Advices.class</exclude>
                                         <exclude>**/Advices$*.class</exclude>
+                                        <exclude>**/TlsInstrumentation*.class</exclude>
+                                        <exclude>**/TlsAdvices*.class</exclude>
                                     </excludes>
                                 </configuration>
                             </execution>

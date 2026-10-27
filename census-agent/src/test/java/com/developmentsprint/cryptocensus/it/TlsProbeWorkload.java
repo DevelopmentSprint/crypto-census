@@ -28,13 +28,22 @@ public final class TlsProbeWorkload {
 
   /** Runs successful, resumed, delegated-task and rejected-certificate paths. */
   public static void main(String[] args) throws Exception {
-    SSLContext trusted = context(Path.of(args[0]), args[1]);
+    run(Path.of(args[0]), args[1]);
+    Files.write(Path.of(args[2]), TlsProbeBridge.snapshot());
+  }
+
+  /** Shared real-network workload for the feasibility and production collectors. */
+  public static void run(Path store, String password) throws Exception {
+    SSLContext trusted = context(store, password);
     socketConnections(trusted, trusted, 2, false);
     concurrentEngines(trusted);
-    SSLContext untrusted = SSLContext.getInstance("TLSv1.3");
+    SSLContext untrusted = SSLContext.getInstance(protocol());
     untrusted.init(null, null, null);
     socketConnections(trusted, untrusted, 1, true);
-    Files.write(Path.of(args[2]), TlsProbeBridge.snapshot());
+  }
+
+  private static String protocol() {
+    return System.getProperty("census.tls.protocol", "TLSv1.3");
   }
 
   private static SSLContext context(Path store, String password) throws Exception {
@@ -46,7 +55,7 @@ public final class TlsProbeWorkload {
     keyManagers.init(keys, password.toCharArray());
     TrustManagerFactory trustManagers = TrustManagerFactory.getInstance("PKIX");
     trustManagers.init(keys);
-    SSLContext context = SSLContext.getInstance("TLSv1.3");
+    SSLContext context = SSLContext.getInstance(protocol());
     context.init(keyManagers.getKeyManagers(), trustManagers.getTrustManagers(), null);
     return context;
   }
@@ -60,6 +69,7 @@ public final class TlsProbeWorkload {
             serverContext
                 .getServerSocketFactory()
                 .createServerSocket(0, 10, java.net.InetAddress.getLoopbackAddress())) {
+      listener.setEnabledProtocols(new String[] {protocol()});
       listener.setSoTimeout(10_000);
       Future<?> server =
           executor.submit(
@@ -90,6 +100,7 @@ public final class TlsProbeWorkload {
                 clientContext
                     .getSocketFactory()
                     .createSocket("localhost", listener.getLocalPort())) {
+          client.setEnabledProtocols(new String[] {protocol()});
           client.setSoTimeout(10_000);
           client.startHandshake();
           if (failureExpected) {
@@ -142,8 +153,10 @@ public final class TlsProbeWorkload {
       SSLContext context, ExecutorService tasks, CountDownLatch ready) throws Exception {
     SSLEngine client = context.createSSLEngine("localhost", 443);
     client.setUseClientMode(true);
+    client.setEnabledProtocols(new String[] {protocol()});
     SSLEngine server = context.createSSLEngine();
     server.setUseClientMode(false);
+    server.setEnabledProtocols(new String[] {protocol()});
     final ByteBuffer toServer = ByteBuffer.allocate(65_536);
     final ByteBuffer toClient = ByteBuffer.allocate(65_536);
     final ByteBuffer application = ByteBuffer.allocate(65_536);
