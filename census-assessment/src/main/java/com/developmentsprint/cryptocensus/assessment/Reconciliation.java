@@ -40,6 +40,9 @@ public final class Reconciliation {
       Objects.requireNonNull(field, "field");
       Objects.requireNonNull(status, "status");
       value = ContextModel.text(value, "effective value", 256, true);
+      if (!value.isEmpty()) {
+        value = field.validate(value);
+      }
       sources = ContextModel.bounded(sources, ContextModel.MAX_DECLARATIONS, "field sources");
     }
 
