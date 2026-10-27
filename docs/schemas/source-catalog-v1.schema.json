@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "entries"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "locationUri",
+          "artifactId",
+          "applicationId",
+          "origin",
+          "deploymentId"
+        ],
+        "properties": {
+          "locationUri": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 1
+          },
+          "artifactId": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          },
+          "applicationId": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          },
+          "origin": {
+            "enum": [
+              "MAIN",
+              "TEST",
+              "LIBRARY",
+              "UNKNOWN"
+            ]
+          },
+          "deploymentId": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1
+          }
+        }
+      },
+      "maxItems": 4096
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crypto Census source catalog v1"
+}
