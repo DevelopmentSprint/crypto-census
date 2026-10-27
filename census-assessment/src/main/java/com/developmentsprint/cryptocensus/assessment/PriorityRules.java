@@ -107,8 +107,7 @@ public final class PriorityRules {
     boolean reviewRequired = fields.values().stream().anyMatch(Reconciliation.Result::conflict);
     boolean conflict =
         fields.entrySet().stream()
-            .anyMatch(
-                entry -> applicable(entry.getKey(), facts.role()) && entry.getValue().conflict());
+            .anyMatch(entry -> applicableConflict(entry.getValue(), facts.role()));
     String classification = value(fields, ContextModel.Field.CLASSIFICATION);
     Integer sensitivity = profile.sensitivity().get(classification);
     if (!classification.isEmpty() && sensitivity == null) {
@@ -128,6 +127,11 @@ public final class PriorityRules {
     }
     if (conflict) {
       reasons.add("DECLARATION_REVIEW_REQUIRED");
+      String unresolvedUrgency = urgency(facts, fields, profile);
+      if (!unresolvedUrgency.isEmpty()) {
+        reasons.add(unresolvedUrgency);
+        reasons.add("POSITIVE_FINDING_UNRESOLVED");
+      }
       return decision(
           "declaration-review",
           Priority.NEEDS_CONTEXT,
@@ -220,6 +224,27 @@ public final class PriorityRules {
         missing,
         "Collect the missing technical or relationship evidence; algorithm presence alone does not"
             + " establish readiness.");
+  }
+
+  private static boolean applicableConflict(
+      Reconciliation.Result result, TechnicalFacts.ObservedRole role) {
+    if (!result.conflict() || !applicable(result.field(), role)) {
+      return false;
+    }
+    if (result.field() != ContextModel.Field.PURPOSE
+        || role == TechnicalFacts.ObservedRole.NOT_ESTABLISHED
+        || result.sources().isEmpty()) {
+      return true;
+    }
+    boolean hasSpecific =
+        result.sources().stream()
+            .anyMatch(
+                source ->
+                    source.subject().equals(result.subject())
+                        && result.field().substantive(source.value()));
+    return result.sources().stream()
+        .filter(source -> !hasSpecific || source.subject().equals(result.subject()))
+        .anyMatch(source -> contradictoryPurpose(role, source.value()));
   }
 
   private static boolean applicable(ContextModel.Field field, TechnicalFacts.ObservedRole role) {
