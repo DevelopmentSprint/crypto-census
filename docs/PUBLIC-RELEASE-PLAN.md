@@ -79,3 +79,11 @@ The reactor now uses `0.1.0` as an **unpublished candidate**. The implementation
 - Independent collection and documentation reviews report no findings. Final combined review identified an additional pre-existing signature-composition gap (a broken hash hidden by an unknown key type); its fix passes unit and real-provider Maven regressions. Targeted independent re-review reports no remaining material findings. A supported-maximum inventory probe preserves 2,000 assets and all observation counts across 200,000 call sites, compacts below the byte budget, and parses under a 256 MiB heap. A persistent maximum-collection regression passes under a 256 MiB heap; default-limit boundary regressions also pass under a 128 MiB heap.
 
 The maintainer has confirmed the private security reporting address. Those October 10 local checks alone did not establish credential rotation, hosting controls, signatures, or published artifacts. The current publication-status section records subsequent operator confirmations; final candidate verification, signing and artifact publication remain pending.
+
+### Business-context integration update — 2026-10-27
+
+The publication set now also includes `census-annotations` and `census-assessment`: eight
+coordinates and 30 primary POM/JAR artifacts, plus signatures and checksums. The bundle
+validator, snapshot reactor transformation and fresh consumer checks require both modules.
+The earlier six-coordinate/22-artifact paragraph records the enterprise-only checkpoint;
+publication permissions and release acceptance requirements remain unchanged.

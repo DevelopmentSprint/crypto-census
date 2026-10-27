@@ -86,6 +86,7 @@ test('unmodified flow can be enriched, exported, applied and reassessed without 
   assert.equal(after.runs[0].cbomHash, before.runs[0].cbomHash);
   assert.equal(after.runs[0].evidenceHash, before.runs[0].evidenceHash);
   await page.locator('#import-context').setInputFiles(path);
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('Imported 4'));
   assert.match(await page.locator('#status').textContent(), /Imported 4/);
 });
 

@@ -120,7 +120,7 @@ public class CryptoTest { @Test void usesCrypto() throws Exception { CryptoWorkl
                           '-Dartifact=' + coordinate, f'-DoutputDirectory={standalone}',
                           '-Dmdep.stripVersion=true'], standalone)
         invoke(['java', '-jar', 'census-cli.jar', '--help'], standalone)
-        print(f'External {args.version} consumer passed: quickstart, strict policy failure, standalone agent, CLI, all 22 artifacts; two fresh caches')
+        print(f'External {args.version} consumer passed: quickstart, strict policy failure, standalone agent, CLI, all {len(artifacts)} artifacts; two fresh caches')
 
 
 def main():
