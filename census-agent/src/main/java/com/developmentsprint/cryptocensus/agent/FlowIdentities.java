@@ -53,9 +53,9 @@ final class FlowIdentities {
   EvidenceDocument.IdentityMapping resolve(ProtectionDomain domain, ClassLoader loader) {
     Optional<SourceCatalog.Entry> source = source(domain, loader);
     String application =
-        applicationId.isEmpty()
-            ? source.map(SourceCatalog.Entry::applicationId).orElse("")
-            : applicationId;
+        source
+            .map(SourceCatalog.Entry::applicationId)
+            .orElse(sources.entries().isEmpty() ? applicationId : "");
     String artifact = source.map(SourceCatalog.Entry::artifactId).orElse("");
     String deployment = source.map(SourceCatalog.Entry::deploymentId).orElse("unspecified");
     lock.lock();
@@ -83,9 +83,9 @@ final class FlowIdentities {
               application.isEmpty()
                   ? EvidenceDocument.IdentityStatus.UNRESOLVED
                   : EvidenceDocument.IdentityStatus.RESOLVED,
-              !applicationId.isEmpty()
-                  ? "explicit-application-id"
-                  : source.isPresent() ? "source-catalog" : "unmapped-code-source");
+              source.isPresent()
+                  ? "source-catalog"
+                  : !application.isEmpty() ? "explicit-application-id" : "unmapped-code-source");
       identities.put(key, mapping);
       return mapping;
     } finally {

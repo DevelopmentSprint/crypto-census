@@ -47,6 +47,39 @@ class PriorityRulesTest {
   }
 
   @Test
+  void unrelatedConflictsRetainUrgencyAndRemainIncomplete() {
+    for (ContextModel.Field field :
+        List.of(ContextModel.Field.OWNER, ContextModel.Field.AUTHENTICITY_YEARS)) {
+      Map<ContextModel.Field, Reconciliation.Result> context = new EnumMap<>(confidential());
+      context.put(
+          field,
+          new Reconciliation.Result(SUBJECT, field, Reconciliation.Status.CONFLICT, "", List.of()));
+      PriorityRules.Decision result =
+          PriorityRules.evaluate(rsa(2048), context, true, true, PROFILE);
+      assertThat(result.businessPriority()).isEqualTo(PriorityRules.Priority.URGENT_PLANNING);
+      assertThat(result.incomplete()).isTrue();
+      assertThat(result.reasons()).contains("NON_APPLICABLE_DECLARATION_REVIEW_REQUIRED");
+    }
+    TechnicalFacts signature =
+        POLICY.facts(
+            CryptoAsset.of(Primitive.SIGNATURE, "SHA256withRSA", 2048, "provider", Operation.SIGN));
+    PriorityRules.Decision result =
+        PriorityRules.evaluate(
+            signature,
+            fields(
+                Map.of(
+                    ContextModel.Field.CLASSIFICATION, "custom",
+                    ContextModel.Field.IMPACT, "high",
+                    ContextModel.Field.AUTHENTICITY_YEARS, "20")),
+            true,
+            true,
+            PROFILE);
+    assertThat(result.businessPriority()).isEqualTo(PriorityRules.Priority.URGENT_PLANNING);
+    assertThat(result.incomplete()).isTrue();
+    assertThat(result.reasons()).contains("CLASSIFICATION_UNMAPPED");
+  }
+
+  @Test
   void unmappedImpactRequiresReviewEvenWhenLifetimeWouldEstablishUrgency() {
     PolicyProfile profile =
         new PolicyProfile(

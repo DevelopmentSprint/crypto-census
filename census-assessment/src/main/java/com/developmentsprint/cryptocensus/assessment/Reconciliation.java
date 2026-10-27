@@ -125,8 +125,13 @@ public final class Reconciliation {
     if (resolution != null) {
       Set<ContextDocument.SourceRef> current = new HashSet<>();
       applicable.forEach(value -> current.add(ContextDocument.SourceRef.of(value)));
-      if (!current.equals(new HashSet<>(resolution.sources()))) {
+      if (!new HashSet<>(resolution.sources()).containsAll(current)) {
         return new Result(subject, field, Status.STALE_RESOLUTION, "", applicable);
+      }
+      if (current.isEmpty()) {
+        // Saved review remains in context; absence of its sources establishes neither change nor
+        // freshly reconciled evidence for this workload.
+        return new Result(subject, field, Status.UNKNOWN, "", applicable);
       }
       if (field.substantive(resolution.value())) {
         return new Result(

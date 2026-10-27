@@ -55,8 +55,9 @@ final class ReportWorkflow {
         protect(target, file.toFile());
       }
     }
+    byte[] presentation = GuidedReport.bytes(report);
     report.write(json);
-    GuidedReport.write(report, html);
+    DocumentFiles.write(html, presentation);
     return report;
   }
 

@@ -361,6 +361,23 @@ class ContextWorkflowTest {
         Reconciliation.resolve(SUBJECT, user.field(), List.of(annotation), resolved);
     assertThat(effective.status()).isEqualTo(Reconciliation.Status.REVIEWED);
     assertThat(effective.value()).isEqualTo("20");
+    Reconciliation.Result subset =
+        Reconciliation.resolve(SUBJECT, user.field(), List.of(), resolved);
+    assertThat(subset.status()).isEqualTo(Reconciliation.Status.REVIEWED);
+    assertThat(subset.value()).isEqualTo("20");
+    assertThat(subset.sources()).containsExactly(user);
+    ContextDocument savedReviewOnly =
+        new ContextDocument(1, List.of(), List.of(), List.of(resolution), List.of());
+    Reconciliation.Result absent =
+        Reconciliation.resolve(SUBJECT, user.field(), List.of(), savedReviewOnly);
+    assertThat(absent.status()).isEqualTo(Reconciliation.Status.UNKNOWN);
+    assertThat(absent.value()).isEmpty();
+    assertThat(absent.sources()).isEmpty();
+    assertThat(savedReviewOnly.resolutions()).containsExactly(resolution);
+    Reconciliation.Result otherSubset =
+        Reconciliation.resolve(SUBJECT, user.field(), List.of(annotation), savedReviewOnly);
+    assertThat(otherSubset.status()).isEqualTo(Reconciliation.Status.REVIEWED);
+    assertThat(otherSubset.sources()).containsExactly(annotation);
     ContextModel.Declaration changed =
         new ContextModel.Declaration(
             SUBJECT,
@@ -407,6 +424,25 @@ class ContextWorkflowTest {
     assertThat(conflict.merge().conflicts()).hasSize(1);
     assertThat(conflict.written()).isFalse();
     assertThat(Files.readAllBytes(destination)).isEqualTo(before);
+  }
+
+  @Test
+  void missingDestinationCannotSilentlyDropUneditedBaseAnswers(@TempDir Path directory)
+      throws Exception {
+    ContextModel.Declaration owner = declaration(SUBJECT, ContextModel.Field.OWNER, "Team", "a");
+    ContextDocument base = document(owner);
+    ContextDocument proposed =
+        document(owner, declaration(SUBJECT, ContextModel.Field.CLASSIFICATION, "sensitive", "b"));
+    Path destination = directory.resolve("mistyped-context.json");
+    ContextChanges.ChangeSet changes = ContextChanges.between(base, proposed);
+    assertThatThrownBy(() -> ContextStore.apply(destination, changes))
+        .isInstanceOf(java.io.IOException.class)
+        .hasMessageContaining("destination is missing")
+        .hasMessageContaining("original context file");
+    assertThat(Files.exists(destination)).isFalse();
+    Files.write(destination, ContextCodec.encode(base));
+    assertThat(ContextStore.apply(destination, changes).written()).isTrue();
+    assertThat(Files.readAllBytes(destination)).isEqualTo(ContextCodec.encode(proposed));
   }
 
   @Test
