@@ -74,9 +74,19 @@ Every JDK job runs `./mvnw -B -ntp verify` with that JDK as the build JDK, so ev
 | `AgentIT` | the shaded agent in a child JVM: every instrumented entry point, verdicts, call-site attribution, a loopback TLS 1.3 handshake, post-quantum algorithms (JDK 24+), health counters at zero, **every fixed target instrumented with no gaps**, `-Dnet.bytebuddy.experimental` reaching the shaded Byte Buddy. On Semeru: OpenJCEPlus provider frames are not mistaken for the caller. On a JDK newer than Byte Buddy supports: the agent reports errors and gaps by default and works with `experimental=true` |
 | `ApmCoexistenceIT` | the same workload with the OpenTelemetry Java agent loaded before and after Crypto Census: the application runs, the CBOM is complete and healthy, expected assets are present and attributed to the application |
 | `TomcatIT` | embedded Tomcat serving HTTPS with crypto in a servlet, with and without the OpenTelemetry agent: servlet crypto attributed to `doGet`, server-side TLS sessions attributed to Tomcat's connector via JSSE |
+| `AlternativeProviderIT` | real BCJSSE TLS 1.3 sockets complete with core-only and enriched agents; the application marker remains recorded, no SunJSSE handshake joins are invented, and `tls-other-providers` remains unavailable |
 | Maven Invoker ITs (`census-maven-plugin/src/it`) | `prepare-agent`/`check` in real Maven builds on that JDK, including the merged `cryptocensus:targets` |
 | `census-demo` | the plugin on itself |
 | Static analysis (JDK 21+ rows) | Spotless, Checkstyle, Error Prone, `javac -Werror`, PMD, CPD, SpotBugs/FindSecBugs, JaCoCo floors, Enforcer |
+
+The alternative-provider fixture uses test-only `bctls-jdk18on` 1.86.1 and
+`bcprov-jdk18on`/`bcutil-jdk18on` 1.86, pinned in the root POM. It establishes
+unsupported-correlation behavior, not a verified BCJSSE adapter or migration
+readiness. The fixture uses a generated test keystore and loopback sockets; no
+external TLS service is involved. The artifacts are published by
+[Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/);
+the TLS artifact was published on Maven Central on September 15, 2026, before
+the repository's two-week dependency-age cutoff for this change.
 
 The `App servers` job runs `./mvnw -B -ntp -P app-servers -pl census-app-servers -am verify`.
 `AppServerIT` deploys a WAR with a crypto servlet into each server container, enables the agent the
