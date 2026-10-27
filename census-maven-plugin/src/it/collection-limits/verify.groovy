@@ -4,7 +4,7 @@ new File(basedir, "target/cryptocensus").eachFileRecurse { file ->
 }
 assert reports.size() == 1 : "expected one forked JVM report"
 def raw = new groovy.json.JsonSlurper().parse(reports[0])
-def props = raw.metadata.properties.collectEntries { [(it.name): it.value] }
+def props = raw.metadata.get('properties').collectEntries { [(it.name): it.value] }
 assert props['cryptocensus:maxAssets'] == '7'
 assert props['cryptocensus:maxSites'] == '1'
 assert props['cryptocensus:dropped'] == '0'

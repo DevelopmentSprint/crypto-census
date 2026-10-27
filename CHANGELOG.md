@@ -17,11 +17,15 @@ All notable changes to Crypto Census. The format follows
 - Optional capability-qualified TLS attempt correlation with separate confidentiality and
   authentication findings and conservative PSK lineage handling.
 
+- Enterprise CBOM preparation and explicit delivery through the Maven plugin and standalone CLI, with pluggable destination profiles, offline plans, preflight checks and private delivery receipts. Original cryptographic evidence remains available separately from derived software-BOM combinations.
+- A guarded Dependency-Track 5.2 integration for dedicated crypto-only projects, with explicit acknowledgement of documented fidelity losses and preservation of the original CBOM. It does not replace a general software inventory or provide full-fidelity cryptographic ingestion.
+- A public repository with protected integration/release branches and [private vulnerability reporting](https://github.com/DevelopmentSprint/crypto-census/security/advisories/new).
+
 - Project license/notice resources in each published main JAR, with project and Byte Buddy notices merged in the shaded agent. Release-profile checks reject snapshot project/dependency versions, and candidate SCM metadata identifies the intended `v0.1.0` tag.
 
 - Validated `prepare-agent` parameters `maxAssets` (1–2000), `maxSites` (1–100), and `debug`, with collection limits recorded in agent CBOM metadata.
 - Executable README quickstart regression coverage, standalone acquisition instructions, Maven/agent parameter references, integration recipes, operator guidance, and a staged release runbook.
-- A security policy defining support and response targets; confirmation of the private reporting channel remains a public-release prerequisite.
+- A security policy defining support and response targets, with GitHub private reporting and a private security email address.
 
 - Conformance matrix, enforced in CI on every build: Eclipse Temurin 17, 21, 25, 26 and 27 on Linux;
   Temurin 17, 25 and 27 on Windows; IBM Semeru 17, 21 and 25 on Linux; the next JDK's early-access

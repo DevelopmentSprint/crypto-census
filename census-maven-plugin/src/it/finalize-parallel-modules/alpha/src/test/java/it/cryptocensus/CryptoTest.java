@@ -1,0 +1,1 @@
+package it.cryptocensus; import org.junit.jupiter.api.Test; import java.security.MessageDigest; class CryptoTest { @Test void digest() throws Exception { MessageDigest.getInstance("SHA-256").digest(new byte[] {1}); } }

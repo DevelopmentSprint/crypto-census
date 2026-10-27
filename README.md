@@ -1,12 +1,25 @@
 # Crypto Census
 
+<!-- project-badges:start -->
+[![CI on develop](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/ci.yml?query=branch%3Adevelop)
+[![Dependency check on develop](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/dependency-check.yml/badge.svg?branch=develop)](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/dependency-check.yml?query=branch%3Adevelop)
+[![Documentation](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/docs.yml/badge.svg?branch=develop)](https://github.com/DevelopmentSprint/crypto-census/actions/workflows/docs.yml)
+[![Measured line coverage](https://cryptocensus.developmentsprint.com/badges/coverage.svg)](https://cryptocensus.developmentsprint.com/reference/quality.html)
+[![Measured branch coverage](https://cryptocensus.developmentsprint.com/badges/coverage-branches.svg)](https://cryptocensus.developmentsprint.com/reference/quality.html)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Java: 17+](https://img.shields.io/badge/Java-17%2B-blue)](docs/COMPATIBILITY.md)
+[![CycloneDX: 1.6](https://img.shields.io/badge/CycloneDX-1.6-blue)](docs/SBOM-PREPARATION.md)
+<!-- project-badges:end -->
+
+[**Documentation website**](https://cryptocensus.developmentsprint.com/) · [What the badges measure](docs/reference/quality.md)
+
 **See which cryptography your Java application actually uses.**
 
 Crypto Census observes JCA/JSSE calls at runtime and writes a CycloneDX 1.6 Cryptography Bill of Materials (CBOM): algorithms, key sizes when observable, risk verdicts, and application call sites. Use it in tests and staging to find broken cryptography and plan post-quantum migration. No server or paid tier is required.
 
 ## Quick start
 
-**Prerelease:** `0.1.0` is not published to Maven Central yet. First [build and install from source](docs/INSTALLATION.md#from-source), using JDK 21+ for the full quality gates. The agent itself requires Java 17+. Add this plugin under `<build><plugins>` in the Maven application whose tests you want to observe:
+**Prerelease:** `0.1.0` is not published to Maven Central yet. First [build and install from source](docs/INSTALLATION.md#from-source), using JDK 21+ for the full quality gates. For external prerelease testing, follow the separate [public snapshot procedure](docs/SNAPSHOTS.md) once a snapshot is available. The agent itself requires Java 17+. Add this plugin under `<build><plugins>` in the Maven application whose tests you want to observe:
 
 <!-- quickstart-plugin:start -->
 ```xml
@@ -76,6 +89,7 @@ The agent observes without changing application cryptographic operations, bounds
 
 - [Installation and artifact verification](docs/INSTALLATION.md)
 - [Maven parameters and check guarantees](docs/MAVEN.md)
+- [Finalize and deliver evidence after failed CI tests](docs/CI-FINALIZATION.md)
 - [JaCoCo, Failsafe, multimodule, container, and app-server recipes](docs/RECIPES.md)
 - [Agent options, troubleshooting, sensitivity, and retention](docs/OPERATIONS.md)
 - [Contributing and quality gates](docs/CONTRIBUTING.md)
@@ -91,3 +105,5 @@ Production overhead benchmarks and sampling; periodic/on-demand flushing; additi
 Copyright 2026 Development Sprint, LLC. [Apache License 2.0](LICENSE).
 
 Explicit artifact and deployment mappings, including named-loader selectors and local application-server URLs, are described in [source catalogs](docs/SOURCE-CATALOG.md).
+
+For delivery to a company HTTPS receiver, see [CBOM delivery](docs/DELIVERY.md). [Delivery profiles](docs/DELIVERY-PROFILES.md) also support guarded Dependency-Track delivery and experimental Sonatype SBOM Manager, JFrog Artifactory, and Anchore Enterprise adapters. Each guide distinguishes stored evidence from imported inventory and documents verification limits.

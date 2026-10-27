@@ -1,6 +1,6 @@
 # Integration recipes
 
-These examples use the locally installed, unpublished `0.1.0` candidate. Complete [installation](INSTALLATION.md) first. Keep your application's existing dependency and compiler configuration; add the plugins under `<build><plugins>`. Run `mvn verify` and inspect `target/cryptocensus/cbom.json`.
+Complete [installation](INSTALLATION.md) first. Keep your application's existing dependency and compiler configuration; add the plugins under `<build><plugins>`. Run `mvn verify` and inspect `target/cryptocensus/cbom.json`.
 
 ## JaCoCo and custom JVM options
 
@@ -98,20 +98,20 @@ Keep the default per-module destinations. `check` merges JVM reports for one pro
 
 ## CI scanning and downloadable CBOMs
 
-This repository's [CI workflow](../.github/workflows/ci.yml) includes a **Maven plugin dogfood / runtime CBOM** job. It installs the plugin and agent from the current checkout, then uses the plugin to scan the demo's payments tests in a separate Maven invocation. The tests exercise signing, encryption and checksums; the normal conformance matrix independently runs the full test suite.
+This repository's [CI workflow](https://github.com/DevelopmentSprint/crypto-census/blob/develop/.github/workflows/ci.yml) includes a **Maven plugin dogfood / runtime CBOM** job. It installs the plugin and agent from the current checkout, then uses the plugin to scan the demo's payments tests in a separate Maven invocation. The tests exercise signing, encryption and checksums; the normal conformance matrix independently runs the full test suite.
 
-Open the GitHub Actions run summary and download **crypto-census-cbom** from **Artifacts**. Its `cbom.json` is the merged CycloneDX runtime cryptographic inventory. **crypto-census-cbom-jvm-reports** contains the individual JVM reports for diagnosis. Both artifacts have a 14-day retention period.
+Open the GitHub Actions run summary and download **crypto-census-cbom** from **Artifacts**. It contains the selected sealed revision's `evidence.json` runtime cryptographic inventory and `manifest.json`. **crypto-census-cbom-jvm-reports** contains the exact run descriptor and available individual JVM reports for diagnosis. Both artifacts have a 14-day retention period.
 
-Reproduce the job from the repository root with JDK 17:
+Reproduce the basic scan from the repository root with JDK 17:
 
 ```sh
-./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -Dinvoker.skip=true
+./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -DskipITs -Dinvoker.skip=true
 ./mvnw -B -ntp -pl census-demo clean verify
 ```
 
-Only the bootstrap skips tests; the second command runs the demo tests with Census attached and writes `census-demo/target/cryptocensus/cbom.json`. Cleaning the demo before scanning prevents an old report from appearing as current evidence. CI rejects a missing report or one without cryptographic assets.
+Only the bootstrap skips tests; the second command runs the demo tests with Census attached and writes `census-demo/target/cryptocensus/cbom.json`. Cleaning the demo before scanning prevents an old report from appearing as current evidence. This basic invocation uses `check`; the CI job additionally supplies a fresh `census.runId` and runs independent finalization and enforcement steps.
 
-Artifact upload runs even when a risk policy fails, and the job keeps Maven's failure status. For example, add `-Dcensus.failOn=quantum-vulnerable` to the second command: the demo fails the stricter policy after writing its merged CBOM. A test failure before `check` can prevent merging; any available individual JVM reports remain downloadable, but their presence does not satisfy the merged-report requirement. Abrupt JVM termination can leave no reports.
+The workflow runs `report` even when the producer fails, seals available current-run evidence, uploads it when finalization succeeds, and runs `enforce` independently. It keeps the original Maven failure status. For example, a `quantum-vulnerable` threshold rejects the demo's observed findings without suppressing evidence archival. A test failure before `check` can still leave JVM reports for `report` to finalize; a missing or corrupted run fails finalization, and abrupt JVM termination may leave no reports. See [CI finalization](CI-FINALIZATION.md) for the exact identity, manifest, and policy requirements, or the [CI guide](guides/ci.md) for the workflow walkthrough.
 
 This inventory covers cryptography observed in the demo workload. It is not a dependency SBOM or a scan of every path in the tool's own implementation. Uploading a workflow artifact also does not deliver it to an enterprise security platform.
 

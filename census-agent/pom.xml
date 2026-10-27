@@ -216,8 +216,9 @@
                  always show as uncovered.
               3. The check fails the build below jacoco.runtime.minimum.*; the report is in
                  target/site/jacoco-runtime. The parent's unit-test gate (jacoco.minimum.*) still
-                 applies on its own. Without test runs (-DskipTests, -DskipITs, -Djacoco.skip) the
-                 runtime gate is skipped; with tests it fails if no child-JVM data was written.
+                 applies on its own. Without integration tests (-DskipITs, -Dmaven.test.skip,
+                 -Djacoco.skip) the runtime gate is skipped; -DskipTests skips unit tests only.
+                 With integration tests it fails if no child-JVM data was written.
         -->
         <profile>
             <id>quality</id>
@@ -314,7 +315,6 @@
                                             <property name="report.dir" value="${project.reporting.outputDirectory}/jacoco-runtime"/>
                                             <property name="minimum.line" value="${jacoco.runtime.minimum.line}"/>
                                             <property name="minimum.branch" value="${jacoco.runtime.minimum.branch}"/>
-                                            <property name="skip.tests" value="${skipTests}"/>
                                             <property name="skip.its" value="${skipITs}"/>
                                             <property name="skip.test.compile" value="${maven.test.skip}"/>
                                             <property name="skip.jacoco" value="${jacoco.skip}"/>

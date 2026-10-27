@@ -20,7 +20,7 @@
     <properties>
         <!-- Set by JaCoCo's prepare-agent-integration in the quality profile; empty otherwise. -->
         <invoker.mavenOpts/>
-        <invoker.groovy.version>4.0.33</invoker.groovy.version>
+        <invoker.groovy.version>6.0.0</invoker.groovy.version>
     </properties>
 
     <prerequisites>
@@ -28,6 +28,24 @@
     </prerequisites>
 
     <dependencies>
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
+            <artifactId>census-delivery</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
+            <artifactId>census-delivery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-settings-builder</artifactId>
+            <version>${maven.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.developmentsprint</groupId>
             <artifactId>census-core</artifactId>
@@ -97,7 +115,8 @@
                     <!--
                         verify.groovy hooks: the Groovy 4.0.31 that Invoker 3.10.1 ships embeds an ASM that
                         cannot read Java 27 class files ("Unsupported class file major version 71"), so every
-                        post-build hook failed on JDK 27. 4.0.33 is the first 4.x with ASM support for V27.
+                        post-build hook failed on JDK 27. Keep core, JSON and XML on the reviewed Groovy 6
+                        release together; JSON map keys in hooks use explicit access for properties.
                     -->
                     <dependency>
                         <groupId>org.apache.groovy</groupId>
@@ -122,6 +141,7 @@
                     </extraArtifacts>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <settingsFile>src/it/settings.xml</settingsFile>
+                    <preBuildHookScript>setup</preBuildHookScript>
                     <postBuildHookScript>verify</postBuildHookScript>
                     <goals>
                         <goal>verify</goal>

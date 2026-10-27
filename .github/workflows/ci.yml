@@ -4,6 +4,7 @@ name: CI
 on:
   push:
     branches: [main, develop, 'release/**', 'hotfix/**']
+  workflow_dispatch:
   pull_request:
     branches: [main, develop]
 
@@ -12,7 +13,27 @@ permissions:
   contents: read
 
 jobs:
+  classify:
+    name: Classify changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject private tracker state
+        run: bash scripts/check-private-tracker.sh
+      - name: Verify classification and aggregation boundaries
+        run: python3 scripts/ci_changes_test.py
+      - name: Classify exact event changes
+        id: scope
+        run: python3 scripts/ci_changes.py event
+
   private-tracker:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: Private tracker boundary
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +43,8 @@ jobs:
         run: bash scripts/test-private-tracker.sh
 
   advisory-demo:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: Advisory demo outcomes
     runs-on: ubuntu-latest
     steps:
@@ -48,6 +71,8 @@ jobs:
       # Enriched artifacts are deliberately not uploaded.
 
   guided-report:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: Offline guided report browser workflow
     runs-on: ubuntu-latest
     steps:
@@ -71,11 +96,13 @@ jobs:
 
   # ---------------------------------------------------------------------------------------------
   # Conformance matrix. This list is the single source of truth for "supported": every row is
-  # built and tested on each configured CI event; docs/COMPATIBILITY.md and docs/CONFORMANCE.md mirror it.
+  # built and tested on every full CI event (explicit docs-only exemption); docs/COMPATIBILITY.md and docs/CONFORMANCE.md mirror it.
   # Ratchet rule: rows are only ever added. Removing one requires a deprecation announced in
   # CHANGELOG.md first (see docs/CONFORMANCE.md).
   # ---------------------------------------------------------------------------------------------
   build:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: JDK ${{ matrix.java }} ${{ matrix.distribution }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -99,10 +126,16 @@ jobs:
           - { os: ubuntu-latest, distribution: semeru, java: '25' }
     steps:
       # Actions are pinned to full commit SHAs; tags can be moved.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+      - name: Reject private tracker state
+        shell: bash
+        run: bash scripts/check-private-tracker.sh
+      - name: Verify private tracker boundary checks
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        run: python3 -m unittest discover -s scripts -p 'private_tracker_test.py' -v
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.java }}
@@ -114,9 +147,36 @@ jobs:
       # Tomcat.
       - name: Build, test and analyze
         run: ./mvnw -B -ntp verify
+      - name: Verify enterprise qualification evidence checks
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        run: python3 -m unittest discover -s scripts/enterprise -p 'test_*.py' -v
+      - name: Verify release provenance and signing boundaries
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        run: python3 -m unittest discover -s scripts/release -p '*_test.py'
+      # One reproducible coverage view: five production modules, including the agent's
+      # shaded child-JVM report and the plugin's merged unit/Invoker report.
+      - name: Export measured documentation coverage
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        env:
+          COVERAGE_SOURCE_SHA: ${{ github.sha }}
+          COVERAGE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$COVERAGE_SOURCE_SHA"
+          python3 scripts/coverage_badges_test.py
+          python3 scripts/coverage_badges.py --output target/docs-coverage \
+            --sha "$COVERAGE_SOURCE_SHA" --run-url "$COVERAGE_RUN_URL"
+      - name: Upload measured documentation coverage
+        if: matrix.java == '25' && matrix.distribution == 'temurin' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docs-coverage
+          overwrite: true
+          path: target/docs-coverage/
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload demo CBOM
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cbom-jdk${{ matrix.java }}-${{ matrix.distribution }}-${{ matrix.os }}
           path: census-demo/target/cryptocensus/cbom.json
@@ -125,13 +185,15 @@ jobs:
   # Dogfood the plugin as a consumer, using the current checkout rather than a cached release.
   # The demo's payments tests exercise signing, encryption and checksums in a forked JVM.
   dogfood:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: Maven plugin dogfood / runtime CBOM
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: '17'
@@ -139,45 +201,109 @@ jobs:
       # Tests and static analysis run in the full matrix above. This first invocation only
       # bootstraps the plugin and its dependencies before a separate consumer invocation.
       - name: Install this checkout's Maven plugin and agent
-        run: ./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -Dinvoker.skip=true
+        run: ./mvnw -B -ntp -pl census-maven-plugin -am clean install -DskipTests -DskipITs -Dinvoker.skip=true
+      - name: Allocate an explicit current-run identity
+        id: evidence
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, os, uuid
+          run_id = str(uuid.uuid4())
+          module_hash = hashlib.sha256(b"com.developmentsprint:census-demo").hexdigest()
+          run_dir = f"census-demo/target/cryptocensus/run-{run_id}-{module_hash}"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"run_id={run_id}\nrun_dir={run_dir}\nmanifest={run_dir}/revisions/1/manifest.json\n")
+          PYTHON
       - name: Scan the payments workload with the Maven plugin
-        run: ./mvnw -B -ntp -pl census-demo clean verify
-      # check writes the merged CBOM before failing a risk policy. Keep that evidence while
-      # preserving Maven's failure. Test failures before check may leave only raw JVM reports.
+        id: scan
+        run: ./mvnw -B -ntp -pl census-demo clean verify -Dcensus.runId=${{ steps.evidence.outputs.run_id }}
+      # Separate always-run invocations preserve the producer failure and cannot suppress each other.
+      - name: Finalize current-run evidence
+        id: report
+        if: always() && steps.evidence.outcome == 'success'
+        env:
+          PRODUCER_OUTCOME: ${{ steps.scan.outcome }}
+          CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+        run: |
+          case "$PRODUCER_OUTCOME" in
+            success) outcome=passed ;;
+            failure) outcome=failed ;;
+            *) outcome=unknown ;;
+          esac
+          ./mvnw -B -ntp -pl census-demo com.developmentsprint:census-maven-plugin:0.1.0:report \
+            -Dcensus.runId="$CENSUS_RUN_ID" -Dcensus.testOutcome="$outcome"
       - name: Require a nonempty cryptographic inventory
-        if: always()
+        if: always() && steps.report.outcome == 'success'
+        env:
+          CENSUS_RUN_DIR: ${{ steps.evidence.outputs.run_dir }}
         run: |
           jq -e '.bomFormat == "CycloneDX" and any(.components[]; .type == "cryptographic-asset")' \
-            census-demo/target/cryptocensus/cbom.json
-      - name: Publish merged runtime CBOM
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+            "$CENSUS_RUN_DIR/revisions/1/evidence.json"
+      - name: Publish sealed runtime CBOM and manifest
+        if: always() && steps.report.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crypto-census-cbom
-          path: census-demo/target/cryptocensus/cbom.json
+          overwrite: true
+          path: |
+            ${{ steps.evidence.outputs.run_dir }}/revisions/1/evidence.json
+            ${{ steps.evidence.outputs.run_dir }}/revisions/1/manifest.json
           if-no-files-found: error
           retention-days: 14
-      - name: Preserve individual JVM reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - name: Enforce current-run crypto and collection policy
+        if: always() && steps.evidence.outcome == 'success'
+        env:
+          CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+          CENSUS_MANIFEST: ${{ steps.evidence.outputs.manifest }}
+        run: |
+          ./mvnw -B -ntp -pl census-demo com.developmentsprint:census-maven-plugin:0.1.0:enforce \
+            -Dcensus.runId="$CENSUS_RUN_ID" -Dcensus.manifest="$GITHUB_WORKSPACE/$CENSUS_MANIFEST"
+      - name: Test public example evidence boundary
+        run: python3 scripts/docs/example_cbom_test.py
+      - name: Package public example from this trusted build
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
+        env:
+          CENSUS_RUN_ID: ${{ steps.evidence.outputs.run_id }}
+          CENSUS_RUN_DIR: ${{ steps.evidence.outputs.run_dir }}
+        run: python3 scripts/docs/example_cbom.py package --input "$CENSUS_RUN_DIR/revisions/1" --output "$RUNNER_TEMP/docs-cbom"
+      - name: Upload exact public example evidence
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop' && github.repository == 'DevelopmentSprint/crypto-census'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docs-cbom
+          # A successful producer rerun replaces this name with a new artifact ID.
+          overwrite: true
+          path: |
+            ${{ runner.temp }}/docs-cbom/index.json
+            ${{ runner.temp }}/docs-cbom/evidence.json
+            ${{ runner.temp }}/docs-cbom/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve exact run descriptor and individual JVM reports
+        if: always() && steps.evidence.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crypto-census-cbom-jvm-reports
+          overwrite: true
           path: |
-            census-demo/target/cryptocensus/*/cbom-*.json
-            !census-demo/target/cryptocensus/**/*.evidence.json
+            ${{ steps.evidence.outputs.run_dir }}/run.json
+            ${{ steps.evidence.outputs.run_dir }}/cbom-*.json
+            !${{ steps.evidence.outputs.run_dir }}/*.evidence.json
           if-no-files-found: ignore
           retention-days: 14
 
   # Application servers in containers (Docker is preinstalled on GitHub's Ubuntu runners):
   # Open Liberty on IBM Semeru and WildFly, images pinned by digest in AppServerIT.
   app-servers:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: App servers (Open Liberty on Semeru, WildFly) / ubuntu-latest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: '25'
@@ -202,17 +328,33 @@ jobs:
   # behind new JDKs and say nothing about the agent. Bump java-version when that JDK goes GA and
   # joins the matrix above.
   early-access:
+    needs: classify
+    if: needs.classify.outputs.mode == 'full'
     name: JDK 28-ea temurin / ubuntu-latest (advisory)
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: '28-ea'
           cache: maven
       - name: Build and test without static analysis
         run: ./mvnw -B -ntp verify -P '!quality'
+
+  required:
+    name: Required CI
+    if: always()
+    needs: [classify, build, dogfood, app-servers, private-tracker, advisory-demo, guided-report]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require exact outcomes for the classified scope
+        env:
+          CI_RESULTS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci_changes.py required

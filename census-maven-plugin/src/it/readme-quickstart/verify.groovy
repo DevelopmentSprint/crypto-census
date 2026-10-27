@@ -1,5 +1,5 @@
 def bom = new groovy.json.JsonSlurper().parse(new File(basedir, "target/cryptocensus/cbom.json"))
-def props = { component -> component.properties.collectEntries { [(it.name): it.value] } }
+def props = { component -> component.get('properties').collectEntries { [(it.name): it.value] } }
 assert props(bom.metadata)["cryptocensus:policy"] == "cryptocensus-default/6"
 def log = new File(basedir, "build.log").text
 assert bom.components.collect(props).any {

@@ -15,7 +15,6 @@
     <target name="decide">
         <condition property="skipped">
             <or>
-                <istrue value="${skip.tests}"/>
                 <istrue value="${skip.its}"/>
                 <istrue value="${skip.test.compile}"/>
                 <istrue value="${skip.jacoco}"/>

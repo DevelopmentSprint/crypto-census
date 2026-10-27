@@ -1,6 +1,6 @@
 # Installation
 
-Version `0.1.0` is not yet published. The working prerelease path is a source build followed by local installation. Published-coordinate instructions below become usable only after the [release runbook](RELEASING.md) verifies Central publication.
+Build and install from source using the steps below. For development artifacts, see [public snapshots](SNAPSHOTS.md). For stable published artifacts, see [release installation](#after-010-is-published).
 
 ## From source
 
@@ -13,7 +13,7 @@ cd crypto-census
 ./mvnw -B -ntp clean install
 ```
 
-The current candidate version is `0.1.0`. `install` includes the complete verification lifecycle and puts the parent POM, core, annotations, assessment, agent and plugin in your local Maven repository. Use that version in the [quickstart](../README.md#quick-start) in your application; installing in one user account does not install into another account or CI runner's repository. On Windows, use `mvnw.cmd`.
+`install` includes the complete verification lifecycle and puts the parent POM, core, annotations, assessment, agent, delivery library, CLI and Maven plugin in your local Maven repository. Use version `0.1.0` in the [quickstart](../README.md#quick-start) in your application; installing in one user account does not install into another account or CI runner's repository. On Windows, use `mvnw.cmd`.
 
 ## Standalone agent
 
@@ -31,9 +31,11 @@ java -javaagent:census-agent.jar=output=cbom.json,app=payments-api -jar payments
 
 The destination directory must allow the JVM user to create and rename files. The agent writes the report at graceful shutdown. See [operations](OPERATIONS.md) for options and output security.
 
+<a id="after-010-is-published"></a>
+
 ## After 0.1.0 is published
 
-Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-annotations`, `census-assessment`, `census-agent`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
+Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-annotations`, `census-assessment`, `census-agent`, `census-delivery`, `census-cli`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
 
 Use `<version>0.1.0</version>` in the plugin snippet. To acquire the standalone artifact through Maven from an empty working directory:
 

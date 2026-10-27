@@ -53,7 +53,11 @@ while IFS= read -r oid; do
 done < <(git for-each-ref --format='%(objectname)' "$namespace/")
 
 zero=0000000000000000000000000000000000000000
-while read -r local_ref local_oid remote_ref remote_oid; do
+while read -r local_ref local_oid remote_ref remote_oid extra; do
+  if [ -n "${extra:-}" ] || ! [[ "$local_oid" =~ ^[0-9a-f]{40,64}$ ]] || ! [[ "$remote_oid" =~ ^[0-9a-f]{40,64}$ ]]; then
+    echo 'Malformed pre-push ref input; refusing publication.' >&2
+    exit 1
+  fi
   [ "$local_oid" = "$zero" ] && continue
   if ! tip=$(git rev-parse --verify "$local_oid^{commit}" 2>/dev/null); then
     echo 'private-tracker: outgoing refs must point to commits (possibly through annotated tags).' >&2
@@ -69,3 +73,7 @@ while read -r local_ref local_oid remote_ref remote_oid; do
     check_paths "outgoing commit $commit" < "$paths_file"
   done < "$commits_file"
 done
+
+# Also reject staged private state before the build, even when outgoing history is clean.
+git ls-files --cached -z > "$paths_file"
+check_paths index < "$paths_file"

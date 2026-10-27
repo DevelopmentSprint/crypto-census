@@ -1,6 +1,8 @@
 # Release runbook
 
-The `0.1.0` candidate is unpublished. Preparing and testing artifacts does not publish them. The maintainer owns signing, Central publication, release tagging, remote pushes, and the final public-visibility decision.
+For public development builds before a stable release, use the separate [snapshot procedure](SNAPSHOTS.md).
+
+Preparing and testing artifacts does not publish them. The maintainer owns signing, Central publication, release tagging, remote pushes, and the final public-visibility decision.
 
 ## Immediate prerequisites
 
@@ -8,6 +10,98 @@ The `0.1.0` candidate is unpublished. Preparing and testing artifacts does not p
 - Keep the mailbox in [SECURITY.md](../SECURITY.md) monitored. Verify delivery whenever the address or mail configuration changes.
 - Scan every reachable commit/ref with a dedicated secret detector, then review author emails, commit messages, session links and other metadata for privacy. Record tool/version, scope, findings and limits. Rotate confirmed secrets even if history is later rewritten; deletion is not revocation. Do not erase history without an explicit decision.
 - Confirm ownership of the `com.developmentsprint` Central namespace and a trusted signing key. Store the Central Portal token as Maven server ID `central` in private `~/.m2/settings.xml`. Keep credentials and passphrases out of the repository and command logs.
+
+## Set up the Central namespace and credentials
+
+The namespace `com.developmentsprint` requires control of `developmentsprint.com`. Sign in to [Central Portal](https://central.sonatype.com), open your account menu, select **View Namespaces**, and add `com.developmentsprint`. Copy its verification key into a new DNS TXT record at `developmentsprint.com` (usually host `@`). Preserve existing TXT records, including mail and other verification records.
+
+Check the record through public DNS before selecting **Verify Namespace**:
+
+```sh
+dig +short TXT developmentsprint.com
+```
+
+The TXT value must match the portal's verification key. Sonatype checks the exact domain, not a `maven-central` subdomain. Wait until the portal reports **Verified**. A GitHub login's automatically verified `io.github.<username>` namespace does not grant this domain namespace. See [Sonatype namespace registration](https://central.sonatype.org/register/namespace/) for verification and existing-namespace recovery.
+
+If the portal says the namespace is already registered to an inaccessible older account, keep `com.developmentsprint` and request publishing-access recovery from [Central Support](mailto:central-support@sonatype.com). Provide the current Portal account, namespace, public project URL, any known former account identity, and your ability to prove control of `developmentsprint.com`; follow the DNS challenge supplied by support. Previously verified namespaces require [human review to add users or transfer ownership](https://central.sonatype.org/faq/verify-ownership/). A new token alone does not restore namespace access. Continue unsigned verification while recovery is pending; do not switch coordinates or follow retired OSSRH/Jira registration instructions.
+
+Generate a publishing token at [Central Portal user tokens](https://central.sonatype.com/usertoken). Save both generated fields in a secret manager: the token username and token password are distinct from your login credentials. The portal shows the token only once. Configure Maven server ID `central` in a private settings file; the following template contains environment references only:
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <servers>
+    <server>
+      <id>central</id>
+      <username>${env.CENSUS_CENTRAL_USERNAME}</username>
+      <password>${env.CENSUS_CENTRAL_PASSWORD}</password>
+    </server>
+  </servers>
+</settings>
+```
+
+Merge the server entry into existing `~/.m2/settings.xml`, or save a separate file and pass `-s /private/path/central-settings.xml` to Maven. On POSIX systems, set its permissions to `0600`. Inject both variables from your secret manager in the publishing process; do not paste credentials into chat, source files, command arguments or shell history. A token stored only as a GitHub Actions secret is available only to an authorized workflow, not a local Maven invocation. See [token generation](https://central.sonatype.org/publish/generate-portal-token/) and [Maven publishing configuration](https://central.sonatype.org/publish/publish-portal-maven/#credentials).
+
+Use an existing organization-approved signing key, or create one interactively with `gpg --full-generate-key`. Choose a public signing identity and protect the private key with a passphrase. Record the full public fingerprint, retain the revocation certificate securely, and publish only the public key to a Central-supported keyserver:
+
+```sh
+gpg --keyserver keyserver.ubuntu.com --send-keys YOUR_PUBLIC_KEY_FINGERPRINT
+```
+
+Verify that the public key can be retrieved independently before signing. Select the intended key explicitly with `-Dgpg.keyname=YOUR_PUBLIC_KEY_FINGERPRINT` on signing commands. Prefer a locally unlocked GPG agent; unattended builds can obtain `MAVEN_GPG_PASSPHRASE` from a secret manager. Enable `-Dgpg.bestPractices=true` to reject unsafe passphrase configuration. Never export a private signing key into the repository or supply the passphrase as a Maven argument. See [Central signing requirements](https://central.sonatype.org/publish/requirements/gpg/) and [Maven GPG usage](https://maven.apache.org/plugins/maven-gpg-plugin/usage.html).
+
+Namespace verification, token access, and signing-key access are separate prerequisites. Confirm all three before upload; none is established by a successful unsigned build.
+
+## Stage a release with GitHub Actions
+
+The **Stage Maven Central release** workflow automates signing and staging an accepted candidate. It runs only when manually dispatched against `main` or a single-level `release/*` branch in the original repository. It never publishes to Maven Central, creates a tag, promotes a branch or creates a GitHub release.
+
+```mermaid
+flowchart TD
+  A[Select accepted branch and full commit SHA] --> B[Verify full CI and dependency scan for that SHA]
+  B --> C[Maintainer approves maven-central environment]
+  C --> D[Recheck evidence and import signing key]
+  D --> E[Build and sign local bundle without uploading]
+  E --> F[Check coordinates, private tracker paths and all signatures]
+  F --> G[Upload exact inspected bytes as USER_MANAGED]
+  G --> H[Wait for VALIDATED and save hashes and provenance]
+  H --> I[Maintainer tests signed deployment]
+  I --> J[Separate manual Publish in Central Portal]
+```
+
+Configure the `maven-central` GitHub environment with a required maintainer reviewer and deployment branch rules allowing only `main` and `release/*`. Allow the maintainer to approve their own dispatch if they are the only reviewer. Store these values as **environment secrets**, not repository variables:
+
+| Secret | Value |
+|---|---|
+| `CENTRAL_USERNAME` | Central Portal token username |
+| `CENTRAL_PASSWORD` | Central Portal token password |
+| `GPG_PRIVATE_KEY` | Passphrase-protected, ASCII-armored organization signing private key |
+| `GPG_PASSPHRASE` | Signing-key passphrase |
+
+Set the environment **variable** `GPG_FINGERPRINT` to the full uppercase public fingerprint. The workflow requires exactly one primary signing key, with no extra keys or subkeys. The current organization identity is `Development Sprint, LLC <security@developmentsprint.com>`, fingerprint `D4F121738B460C6ACD58AD90E67411F625D5227F`, expiring October 16, 2028. Its public key is available from `keyserver.ubuntu.com`. Keep the private backup, passphrase and revocation certificate in organization-controlled secure storage; temporary files and GitHub secrets are not a recovery plan. Renew before expiry and update the keyserver and environment credentials together.
+
+After the workflow is merged into the default branch and the accepted source is on the selected release branch:
+
+1. Complete the [release-source freeze](#freeze-the-release-source), artifact inspection and fresh-consumer tests below. Refresh any old local release branch from the accepted integration state; do not release the obsolete candidate retained before later security and tracker-boundary changes.
+2. Run **CI** and **Dependency check** on that exact branch. Manual CI dispatch forces the full matrix even when the last change was documentation-only:
+
+   ```sh
+   gh workflow run ci.yml --ref release/0.1.0
+   gh workflow run dependency-check.yml --ref release/0.1.0
+   ```
+
+3. Wait for both runs to succeed and record their numeric run IDs. Every supported JDK job, dogfood job and app-server job must execute successfully; skipped jobs, PR runs, different commits or branches, and stale attempts do not qualify. The early-access JDK remains advisory.
+4. Open **Actions → Stage Maven Central release → Run workflow**, select the same branch, and provide `expected_sha` (the full accepted commit SHA), `ci_run` and `dependency_run`. Review the source and evidence before approving the `maven-central` environment job.
+5. Download the `central-release-evidence-<SHA>-<attempt>` artifact. It contains only `release-evidence.json` and `SHA256SUMS`: source commit/tree, input run IDs and attempts, signing fingerprint, bundle/artifact hashes and the deployment ID/state. Confirm the final state is `VALIDATED`, then perform the [signed-deployment consumer tests](#test-the-signed-unpublished-deployment). Publication remains a separate Portal action.
+
+The signing job uses an isolated GPG home and no shared Maven cache. The Central token is available only to the upload step. Central plugin 0.12.0 fixes Maven 3.10.0 staging metadata and supports `-DskipUpload=true`; the workflow uses this mode to inspect the signed bundle **before** transmitting it. The upload helper rechecks its hash and always requests `USER_MANAGED`. No workflow input enables automatic publication. See the [Central plugin configuration](https://central.sonatype.org/publish/publish-portal-maven/) and [Publisher API](https://central.sonatype.org/publish/publish-portal-api/).
+
+### Recover a failed staging run
+
+- **Preflight rejects a SHA or skipped job:** select the accepted branch head and run full CI and the dependency scan for that exact commit. Moving a branch does not update an already dispatched run.
+- **Signing import or verification fails:** check the environment fingerprint, protected primary-key export, passphrase and expiry. Do not log secret values or enable shell tracing.
+- **Bundle inspection fails:** fix the packaging or signature problem and prepare a new accepted candidate. Unexpected coordinates, missing artifacts/signatures, checksum errors and known private tracker paths block upload. This path check cannot detect arbitrarily renamed sensitive data; inspect source and artifact contents as part of release review.
+- **Upload fails or the response is lost:** inspect Central Portal before rerunning. The helper deliberately does not retry uploads because the server may already have accepted the first request.
+- **Validation fails, times out or is interrupted:** use the recorded deployment ID and Portal status. Evidence is retained when inspection succeeded and the job was not cancelled; cancellation may prevent artifact upload. The upload step also writes the ID to the job log and summary as soon as it is known. Do not publish a failed or untested deployment. A fresh workflow run can create another deployment; it does not resume the old one.
 
 ## Freeze the release source
 
@@ -47,9 +141,11 @@ Require supported-platform CI and the dependency scan for the exact candidate co
 | `census-annotations` | Passive API JAR, source JAR, Javadoc JAR, POM; no runtime dependencies. |
 | `census-assessment` | Main JAR including offline HTML resources, source JAR, Javadoc JAR, POM. |
 | `census-agent` | Shaded main JAR, source JAR, Javadoc JAR, POM. |
+| `census-delivery` | Main JAR, source JAR, Javadoc JAR, test-fixture JAR (`tests` classifier), POM. |
+| `census-cli` | Executable shaded main JAR, source JAR, Javadoc JAR, POM. |
 | `census-maven-plugin` | Main JAR with plugin descriptor, source JAR, Javadoc JAR, POM. |
 
-All use group `com.developmentsprint` and version `0.1.0`. The demo and app-server test modules are excluded from deployment. Do not publish an `original-*` agent JAR. Inspect the agent manifest and relocated classes, and verify the content of `META-INF/LICENSE` (Apache 2.0), `META-INF/NOTICE` (Development Sprint copyright plus the retained Byte Buddy/Rafael Winterhalter notice), and `META-INF/licenses/ASM` (ASM copyright and BSD terms). Each published main JAR must carry the project license and notice; checking only that a file with the right name exists is insufficient. Confirm license/SCM/developer metadata in POMs, usable Javadocs and correct source contents. Signing adds detached signatures for published artifacts/POMs; record checksums for the exact signed bundle contents.
+All use group `com.developmentsprint` and version `0.1.0`. The demo and app-server test modules are excluded from deployment. Do not publish an `original-*` agent or CLI JAR. The delivery test-fixture JAR contains only shared test support, with no static private keys or runtime dependency on the agent. Verify the CLI main class and that neither Byte Buddy nor agent instrumentation is included in the CLI. Inspect the agent manifest and relocated classes, and verify the content of `META-INF/LICENSE` (Apache 2.0), `META-INF/NOTICE` (Development Sprint copyright plus the retained Byte Buddy/Rafael Winterhalter notice), and `META-INF/licenses/ASM` (ASM copyright and BSD terms). Each published main JAR must carry the project license and notice; checking only that a file with the right name exists is insufficient. Confirm license/SCM/developer metadata in POMs, usable Javadocs and correct source contents. Signing adds detached signatures for published artifacts/POMs; record checksums for the exact signed bundle contents.
 
 ## Test a locally staged candidate
 
@@ -57,7 +153,7 @@ Central cannot supply an unpublished first release. Stage the candidate in a ded
 
 ```sh
 CENSUS_STAGE_REPO=$(mktemp -d /tmp/census-stage.XXXXXX)
-./mvnw -B -ntp -P release -pl census-core,census-annotations,census-assessment,census-agent,census-maven-plugin -am install \
+./mvnw -B -ntp -P release -pl census-core,census-annotations,census-assessment,census-agent,census-delivery,census-cli,census-maven-plugin -am install \
   -Dgpg.skip=true -Dmaven.repo.local="$CENSUS_STAGE_REPO"
 export CENSUS_CANDIDATE_REPOSITORY="file://$CENSUS_STAGE_REPO"
 CENSUS_CONSUMER_REPO=$(mktemp -d /tmp/census-consumer-cache.XXXXXX)
@@ -95,7 +191,7 @@ mvn -s candidate-settings.xml -P candidate -Dmaven.repo.local="$CENSUS_CONSUMER_
   verify -Dcensus.failOn=quantum-vulnerable
 ```
 
-Use a SHA-256/RSA-2048 workload: the first run must pass and the stricter run must fail for the expected policy reason. Inspect a new current-run CBOM, policy version, counts and health in each run. Also exercise [JaCoCo/Failsafe and multimodule recipes](RECIPES.md).
+Use a SHA-256/RSA-2048 workload: the first run must pass and the stricter run must fail for the expected policy reason. Inspect a new current-run CBOM, policy version, counts and health in each run. Also exercise [JaCoCo/Failsafe and multimodule recipes](RECIPES.md). Verify the packaged CLI and actual Maven `publish` goal against a local HTTPS receiver using the same report and expected digest; require byte equality, equivalent delivery identities, private receipts, and no credential leakage. Follow [delivery limitations](DELIVERY.md) when testing policy-failed builds; the generic receiver does not establish vendor ingestion or current-run provenance.
 
 With another fresh consumer cache and external directory, run the [agent acquisition command](INSTALLATION.md#after-010-is-published) using the same candidate settings. Run a standalone cryptographic workload, stop it gracefully and validate its CBOM. Check the acquired agent's SHA-256 against the staged artifact. Archive the exact consumer POM/source and logs as smoke-test evidence.
 
@@ -104,7 +200,8 @@ With another fresh consumer cache and external directory, run the [agent acquisi
 The maintainer returns to the frozen candidate checkout, confirms a clean worktree and the recorded commit/tree, and runs:
 
 ```sh
-./mvnw -B -ntp -P release deploy
+./mvnw -B -ntp -P release deploy -Dgpg.bestPractices=true \
+  -Dgpg.keyname=YOUR_PUBLIC_KEY_FINGERPRINT
 ```
 
 The profile has `autoPublish=false` and waits until validation. Confirm the deployment reaches **VALIDATED**, record its deployment ID, and inspect the uploaded artifact list. This step rebuilds/signs, so compare its artifact contents with the accepted source and record the uploaded checksums; unsigned-package testing alone does not prove the signed bundle's identity. Do not use `-Dgpg.skip` for this step.
@@ -123,13 +220,15 @@ Repeat the external Maven and standalone smoke tests with new empty caches. Down
 
 ## Publish and verify public resolution
 
-The maintainer explicitly publishes the accepted deployment in Central Portal. Wait for status **PUBLISHED**, then remove the candidate settings/repository and all authentication from the consumer test. Use new empty local caches and ordinary Central resolution to repeat the quickstart and standalone download/signature verification. Confirm parent/core/agent/plugin coordinates, classifiers and POMs resolve from `repo.maven.apache.org`.
+The maintainer explicitly publishes the accepted deployment in Central Portal. Wait for status **PUBLISHED**, then remove the candidate settings/repository and all authentication from the consumer test. Use new empty local caches and ordinary Central resolution to repeat the quickstart and standalone download/signature verification. Confirm parent/core/agent/delivery/CLI/plugin coordinates, classifiers and POMs resolve from `repo.maven.apache.org`.
 
 Complete the accepted gitflow release: merge the release into `main`, create the release tag identifying the verified source, merge back to `develop`, and advance development to `0.1.1-SNAPSHOT` with development SCM metadata reset to `HEAD`. Review and authorize remote pushes and the GitHub release separately. Publish the signing-key fingerprint and artifact SHA-256 values with the release record, then update installation text to reflect verified public availability. Never reuse an already published version for different bytes.
 
 ## Public repository settings
 
-Before announcing availability, enable GitHub private vulnerability reporting and verify the private reporting path from a separate account. Replace SECURITY.md's pending-channel wording only after it is usable. Apply branch protections/rulesets to `develop` and `main`, requiring the exact gate job names in [CONFORMANCE.md](CONFORMANCE.md); verify the settings through the API/UI and check that an unreviewed or failing change cannot merge. If the hosting plan prevents protection while private, perform and verify this step as part of the visibility change before accepting outside contributions.
+The repository is public, and GitHub private vulnerability reporting is enabled. Before announcing an artifact release, verify that a separate signed-in account can open the [private reporting form](https://github.com/DevelopmentSprint/crypto-census/security/advisories/new), without submitting a test vulnerability. Keep the email fallback in [SECURITY.md](../SECURITY.md).
+
+Protections on `develop` and `main` require pull requests, the 13 mandatory jobs named in [CONFORMANCE.md](CONFORMANCE.md), and an up-to-date branch; they apply to administrators and block force pushes and deletion. Recheck these settings through the API/UI before release. The configured approving-review count is zero, so an independent review remains a release-process gate rather than a GitHub-enforced approval. Record that review and verify all required jobs for the exact candidate; the advisory early-access failure is not a required-job failure.
 
 Keep the release checklist, security-channel check, dependency-scan record, history-scan scope, CI results and artifact evidence together. Source changes remain reviewable even when operator credentials or hosting settings are still pending; record those gates as pending rather than claiming publication readiness.
 
