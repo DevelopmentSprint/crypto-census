@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.demo;
 
+import com.developmentsprint.cryptocensus.annotations.CryptoFlow;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -9,7 +10,9 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
-/** Encrypts card numbers at rest with AES-256-GCM: already quantum-safe. */
+/**
+ * Demonstrates AES-256-GCM with identity-only context; this does not establish system readiness.
+ */
 public final class CardVault {
 
   private static final int IV_BYTES = 12;
@@ -34,6 +37,7 @@ public final class CardVault {
    * @return IV followed by AES-256-GCM ciphertext
    * @throws GeneralSecurityException on encryption failure
    */
+  @CryptoFlow("card-vault")
   public byte[] seal(String pan) throws GeneralSecurityException {
     byte[] iv = new byte[IV_BYTES];
     random.nextBytes(iv);

@@ -13,7 +13,7 @@ cd crypto-census
 ./mvnw -B -ntp clean install
 ```
 
-The current candidate version is `0.1.0`. `install` includes the complete verification lifecycle and puts the parent POM, core, agent and plugin in your local Maven repository. Use that version in the [quickstart](../README.md#quick-start) in your application; installing in one user account does not install into another account or CI runner's repository. On Windows, use `mvnw.cmd`.
+The current candidate version is `0.1.0`. `install` includes the complete verification lifecycle and puts the parent POM, core, annotations, assessment, agent and plugin in your local Maven repository. Use that version in the [quickstart](../README.md#quick-start) in your application; installing in one user account does not install into another account or CI runner's repository. On Windows, use `mvnw.cmd`.
 
 ## Standalone agent
 
@@ -33,7 +33,7 @@ The destination directory must allow the JVM user to create and rename files. Th
 
 ## After 0.1.0 is published
 
-Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-agent`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
+Before switching from a source-installed candidate to the public release, remove the `0.1.0` directory for **each** of `census-parent`, `census-core`, `census-annotations`, `census-assessment`, `census-agent`, and `census-maven-plugin` under your configured local repository (normally `~/.m2/repository/com/developmentsprint/`). Maven otherwise keeps using locally installed candidate bytes under those release coordinates; `-U` is not a substitute for clearing them. For an isolated comparison, pass `-Dmaven.repo.local=/path/to/a/new-empty-directory` on every verification command instead of changing your existing cache.
 
 Use `<version>0.1.0</version>` in the plugin snippet. To acquire the standalone artifact through Maven from an empty working directory:
 
@@ -53,3 +53,10 @@ gpg --verify census-agent-0.1.0.jar.asc census-agent-0.1.0.jar
 ```
 
 A matching checksum detects corruption; a signature proves identity only when you trust the signing key. The release record must provide artifact SHA-256 values and the signing-key fingerprint before these instructions are advertised as a verified public installation.
+
+## Optional business context
+
+The passive `census-annotations` dependency is needed only in applications using Java annotations;
+no agent or framework dependency is added to it. The Maven plugin brings `census-assessment` for
+offline report generation. Follow the [guided workflow](ADVISORY-WORKFLOW.md) for configuration and
+private context storage. Publishing these additional artifacts remains a separate release action.

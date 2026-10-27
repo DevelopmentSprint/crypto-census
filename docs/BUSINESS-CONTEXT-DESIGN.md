@@ -1,8 +1,8 @@
 # Business context, annotations, and migration assessment
 
-Status: reviewed proposal; three completed Claude Opus 5.5 high-effort review rounds,
-with final documentation consistency edits applied. Ready for user acceptance; not implemented.
-Date: 2026-10-26. This document describes future behavior, not released capabilities.
+Status: accepted design under implementation and integration review. Three completed Claude
+Opus 5.5 high-effort design review rounds; final documentation consistency edits applied.
+Date: 2026-10-26. This remains the implementation contract; artifacts are not publicly released.
 
 ## Product outcome and boundaries
 

@@ -25,3 +25,21 @@ absolute path. `JAVA_HOME` selects the Java executable; otherwise the tests use 
 Temporary fixture directories live under the module's ignored `target/` and are removed after
 each test. They contain no application or private tracker data. Do not substitute production
 reports in this fixture suite or upload enriched reports through broad artifact globs.
+
+## Actual demo Maven round trip
+
+The separate demo test requires the locally installed candidate and a freshly enriched demo:
+
+```sh
+./mvnw -B -ntp -pl census-demo -am install -Dcensus.enrichment=true -Dcensus.assessment=true -Dcensus.applicationId=demo-payments -Dgitbuildhook.gitconfig.skip=true
+python3 scripts/check-advisory-demo.py census-demo/target/cryptocensus/assessment
+npm run test:demo --prefix census-assessment/src/test/browser
+```
+
+It opens the actual demo HTML, exports a context change, invokes `census:context-apply` and
+`census:assess`, then opens the regenerated report. Exact input hashes and Surefire report
+hashes must stay unchanged. Synthetic context and copied evidence are temporary test fixtures
+under the ignored demo target directory, not a recommended location for durable user context.
+The advisory-demo CI job runs this path and the passive `-Dcensus.skip=true` demo. The ordinary
+browser suite also exercises application-default create/export/import/reassessment, asserting
+that defaults remain broad assumptions rather than automatically establishing urgent planning.

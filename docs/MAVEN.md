@@ -2,7 +2,7 @@
 
 Configure `com.developmentsprint:census-maven-plugin` under `<build><plugins>`. The [README quickstart](../README.md#quick-start) uses defaults so command-line properties work. An explicit XML value such as `<failOn>broken</failOn>` takes precedence over `-Dcensus.failOn=...`; use defaults or a POM property when you need command-line overrides.
 
-Both goals are thread-safe and operate per Maven project. `prepare-agent` defaults to `initialize`; `check` defaults to `verify`. Run the lifecycle through `verify` so preparation, forked tests and checking share the same Maven session. Directly invoking `check` in a later Maven process cannot authenticate the previous run directory.
+The lifecycle goals are thread-safe and operate per Maven project. `prepare-agent` defaults to `initialize`; `check` defaults to `verify`. Run the lifecycle through `verify` so preparation, forked tests and checking share the same Maven session. Directly invoking `check` in a later Maven process cannot authenticate the previous run directory.
 
 ## prepare-agent
 
@@ -103,3 +103,16 @@ Not detected (by design or not yet):
 - tests run with reporting disabled *and* an explicit skip property set;
 - code paths your tests never exercise;
 - hostile code inside the observed JVM (see [safety and limitations](SAFETY.md)).
+
+## Optional assessment and managed context
+
+`prepare-agent` accepts `census.enrichment`, `census.tlsCorrelation`, `census.applicationId` and
+`census.sourcesFile`. `check` optionally generates advisory output with `census.assessment=true`.
+`assess` reads explicitly selected saved runs/files without invoking a test lifecycle;
+`context-apply` applies exported proposals to an explicitly selected durable context destination.
+Neither goal weakens existing `check` policy or collection-health failures.
+
+The [plugin parameter reference](../census-maven-plugin/README.md#assess-saved-evidence)
+contains the executable configuration, multiple-input options and source-catalog rules. The
+[guided workflow](ADVISORY-WORKFLOW.md) explains the reviewer steps. Migration enforcement gates
+are future work; the current report is advisory.
