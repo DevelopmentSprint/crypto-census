@@ -94,6 +94,24 @@ class EvidenceContractTest {
   }
 
   @Test
+  void optionalAnnotationHealthPreservesLegacyBytesAndIndependentTlsCounters() {
+    var health = new EnumMap<>(EvidenceDocument.zeroHealth());
+    byte[] legacy = EvidenceCodec.encode(document(HASH, List.of(), List.of(), health));
+    assertThat(new String(legacy, StandardCharsets.UTF_8)).doesNotContain("ANNOTATION_ERRORS");
+    assertThat(EvidenceCodec.parse(legacy).health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS))
+        .isZero();
+    assertThat(EvidenceCodec.encode(EvidenceCodec.parse(legacy))).isEqualTo(legacy);
+    health.put(EvidenceDocument.Counter.ANNOTATION_ERRORS, 3L);
+    var parsed =
+        EvidenceCodec.parse(EvidenceCodec.encode(document(HASH, List.of(), List.of(), health)));
+    assertThat(parsed.health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS)).isEqualTo(3);
+    assertThat(parsed.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isZero();
+    health.put(EvidenceDocument.Counter.ANNOTATION_ERRORS, -1L);
+    assertThatThrownBy(() -> document(HASH, List.of(), List.of(), health))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
   void declarationOnlyFixtureDoesNotInventExecution() throws Exception {
     try (java.io.InputStream input =
         getClass().getResourceAsStream("/context/unobserved-evidence-v1.json")) {

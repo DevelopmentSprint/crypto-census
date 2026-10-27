@@ -91,7 +91,7 @@ final class AgentEnrichment {
       AnnotationDiagnostics.Reason reason, String className, String method, String descriptor) {
     Run run = current;
     if (run != null) {
-      run.health.increment(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+      run.health.increment(EvidenceDocument.Counter.ANNOTATION_ERRORS);
       run.annotationDiagnostics.report(reason, className, method, descriptor);
     }
   }
@@ -321,7 +321,7 @@ final class AgentEnrichment {
       var annotationStatus =
           !installed
               ? EvidenceDocument.CapabilityStatus.UNAVAILABLE
-              : counts.get(EvidenceDocument.Counter.TRANSFORM_ERRORS) > 0
+              : counts.get(EvidenceDocument.Counter.ANNOTATION_ERRORS) > 0
                       || counts.get(EvidenceDocument.Counter.SCOPE_INTEGRITY) > 0
                   ? EvidenceDocument.CapabilityStatus.PARTIAL
                   : EvidenceDocument.CapabilityStatus.SUPPORTED;

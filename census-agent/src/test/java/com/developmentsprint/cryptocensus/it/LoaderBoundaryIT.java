@@ -75,13 +75,13 @@ class LoaderBoundaryIT {
                 assertThat(scope.subject().applicationId()).isEqualTo(identity.applicationId());
               });
     }
-    assertThat(evidence.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isZero();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS)).isZero();
   }
 
   @Test
   void loaderThatCannotSeeBridgePreservesApplicationAndReportsEnrichmentGap() throws Exception {
     var evidence = run("hidden");
-    assertThat(evidence.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isPositive();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS)).isPositive();
     assertThat(evidence.capabilities())
         .anySatisfy(
             capability -> {

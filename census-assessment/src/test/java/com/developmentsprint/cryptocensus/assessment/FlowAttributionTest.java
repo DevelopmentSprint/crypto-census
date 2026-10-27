@@ -150,7 +150,11 @@ class FlowAttributionTest {
                 revised(
                     value,
                     value.observations(),
-                    value.flows(),
+                    List.of(
+                        new EvidenceDocument.DiscoveredFlow(
+                            "other",
+                            new ContextModel.FlowDefinition(
+                                OUTER, "Archive", List.of(), List.of(FRAME)))),
                     List.of(
                         value.identities().get(0),
                         new EvidenceDocument.IdentityMapping(

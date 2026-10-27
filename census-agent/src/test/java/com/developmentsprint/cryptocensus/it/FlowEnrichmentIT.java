@@ -78,7 +78,7 @@ class FlowEnrichmentIT {
     Path cbom = run("missing-api", true, false, "", List.of());
     var evidence = EvidenceCodec.read(sidecar("missing-api"));
     EvidenceCodec.validatePair(evidence, Cbom.readBytes(cbom));
-    assertThat(evidence.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isPositive();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS)).isPositive();
     assertThat(evidence.observations())
         .anySatisfy(
             observation ->
@@ -92,7 +92,7 @@ class FlowEnrichmentIT {
     Path cbom = run("invalid", true, true, "", List.of("invalid"));
     var evidence = EvidenceCodec.read(sidecar("invalid"));
     EvidenceCodec.validatePair(evidence, Cbom.readBytes(cbom));
-    assertThat(evidence.health().get(EvidenceDocument.Counter.TRANSFORM_ERRORS)).isPositive();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.ANNOTATION_ERRORS)).isPositive();
     assertThat(evidence.flows()).isEmpty();
     assertThat(evidence.observations())
         .allSatisfy(

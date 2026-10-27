@@ -32,6 +32,11 @@
     <dependencies>
         <dependency>
             <groupId>com.developmentsprint</groupId>
+            <artifactId>census-assessment</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
             <artifactId>census-core</artifactId>
         </dependency>
         <dependency>

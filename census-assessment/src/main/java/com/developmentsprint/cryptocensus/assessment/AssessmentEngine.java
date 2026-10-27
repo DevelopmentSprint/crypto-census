@@ -184,7 +184,14 @@ public final class AssessmentEngine {
     EvidenceDocument evidence = run.evidence();
     Map<String, Long> health = new TreeMap<>();
     if (evidence != null) {
-      evidence.health().forEach((counter, count) -> health.put(counter.name(), count));
+      evidence
+          .health()
+          .forEach(
+              (counter, count) -> {
+                if (counter != EvidenceDocument.Counter.ANNOTATION_ERRORS || count != 0) {
+                  health.put(counter.name(), count);
+                }
+              });
     }
     result.put("enrichmentHealth", health);
     result.put(
