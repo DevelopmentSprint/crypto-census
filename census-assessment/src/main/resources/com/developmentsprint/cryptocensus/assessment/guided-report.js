@@ -165,12 +165,22 @@
     const panel = el('section', undefined, 'panel'); append(panel, el('h3', subject.flowId ? 'Business context' : 'Application defaults'));
     panel.append(el('p', subject.flowId ? 'Answers are declared requirements, not detected data content. Saved assessment values and your pending answers appear below; imported source changes remain in the proposed-edits review until Java reassessment. Existing sources stay preserved.' : 'These broad assumptions fill undeclared fields; they do not establish flow-specific business requirements.', 'muted'));
     const values = currentFields(flow), grid = el('div', undefined, 'grid');
-    const controls = new Map();
+    const controls = new Map(), customControls = new Map();
+    const answer = control => customControls.has(control.id) && control.value === '__custom'
+      ? customControls.get(control.id).value.trim() : control.value.trim();
+    const restore = (control, value) => {
+      const custom = customControls.get(control.id);
+      if (!custom) { control.value = value; return; }
+      control.value = !value || ['public', 'internal', 'sensitive', 'restricted'].includes(value) ? value : '__custom';
+      custom.value = control.value === '__custom' ? value : '';
+      custom.parentElement.hidden = control.value !== '__custom'; custom.required = !custom.parentElement.hidden; custom.disabled = custom.parentElement.hidden;
+    };
     for (const [field, title, hint] of fields) {
       const existing = values.find(value => value.field === field);
       const pending = drafts.get(key('DECLARATIONS', {subject, field, source: {kind: 'USER', id: 'guided-review'}}));
       const displayed = pending && pending.proposed ? pending.proposed.value : existing ? existing.value : '';
       const options = {
+        CLASSIFICATION: ['public', 'internal', 'sensitive', 'restricted', '__custom'],
         EXPOSURE: ['unknown', 'public-network', 'external-network', 'internal-network', 'local'],
         IMPACT: ['unknown', 'low', 'medium', 'high'],
         PURPOSE: ['UNSPECIFIED', 'TRANSPORT', 'STORAGE', 'KEY_PROTECTION', 'SIGNING', 'VERIFICATION']
@@ -179,7 +189,7 @@
       if (options) {
         const wrapper = el('div'), label = el('label', title);
         control = el('select'); control.id = prefix + '-' + field; label.htmlFor = control.id;
-        option(control, '', 'Not declared'); options.forEach(value => option(control, value, value));
+        option(control, '', field === 'CLASSIFICATION' ? 'Not yet known (no declaration)' : 'Not declared'); options.forEach(value => option(control, value, value === '__custom' ? 'Custom classification identifier' : value));
         control.value = displayed;
         control.addEventListener('change', () => { dirtyControls.add(control.id); status(); });
         append(wrapper, label, control, el('small', hint, 'muted')); grid.append(wrapper);
@@ -187,34 +197,43 @@
         control = input(grid, prefix + '-' + field, title, displayed, hint);
         control.maxLength = 256;
         if (field.endsWith('_YEARS')) { control.type = 'number'; control.min = '1'; control.max = '1000'; control.step = '1'; }
-        if (field === 'CLASSIFICATION') control.pattern = '[a-z0-9][a-z0-9._-]{0,63}';
+      }
+      if (field === 'CLASSIFICATION') {
+        const custom = input(grid, control.id + '-custom', 'Custom classification identifier', '',
+          'Organization identifiers remain unmapped until your policy defines them. The literal identifier unknown is a custom value, not an unanswered question.');
+        custom.pattern = '[a-z0-9][a-z0-9._-]{0,63}'; custom.maxLength = 64;
+        customControls.set(control.id, custom); restore(control, displayed);
+        control.addEventListener('change', () => {
+          custom.parentElement.hidden = control.value !== '__custom'; custom.required = !custom.parentElement.hidden; custom.disabled = custom.parentElement.hidden;
+        });
+        custom.addEventListener('input', () => dirtyControls.add(control.id));
       }
       controls.set(field, control);
       if (existing && existing.status === 'APPLICATION_DEFAULT' && subject.flowId) {
         control.parentElement.append(button('Confirm for this flow', () => {
-          if (!control.value.trim() || !control.reportValidity()) return;
-          propose('DECLARATIONS', {subject: clone(subject), field, value: control.value.trim(), source: source('guided-review')});
-          clearControls([control.id]); status();
+          if (!answer(control) || !control.reportValidity() || (customControls.has(control.id) && !customControls.get(control.id).reportValidity())) return;
+          propose('DECLARATIONS', {subject: clone(subject), field, value: answer(control), source: source('guided-review')});
+          clearControls([control.id, control.id + '-custom']); status();
         }, true));
       }
     }
     panel.append(grid);
     panel.append(button('Add answers to draft', () => {
-      if (Array.from(controls.values()).some(control => !control.reportValidity())) return;
+      if ([...controls.values(), ...customControls.values()].some(control => !control.reportValidity())) return;
       let count = 0;
       for (const [field, control] of controls) {
         if (!dirtyControls.has(control.id)) continue;
-        const value = control.value.trim();
+        const value = answer(control);
         const previous = values.find(item => item.field === field);
         const draftKey = key('DECLARATIONS', {subject, field, source: {kind: 'USER', id: 'guided-review'}});
         if (!value || value === (previous ? previous.value : '')) {
           if (drafts.delete(draftKey)) count++;
-          control.value = previous ? previous.value : '';
+          restore(control, previous ? previous.value : '');
         } else {
           propose('DECLARATIONS', {subject: clone(subject), field, value, source: source('guided-review')}); count++;
         }
       }
-      clearControls(Array.from(controls.values()).map(control => control.id)); status(count ? '' : 'No changed answers. Blank fields stay unknown; use explicit removal below to delete a saved declaration.');
+      clearControls([...controls.values(), ...customControls.values()].map(control => control.id)); status(count ? '' : 'No changed answers. Blank fields stay unknown; use explicit removal below to delete a saved declaration.');
     }));
     const conflicts = values.filter(value => ['CONFLICT', 'STALE_RESOLUTION'].includes(value.status));
     for (const conflict of conflicts) {
@@ -337,18 +356,33 @@
     const label = input(box, 'new-label', 'Display name');
     const bindingLabel = el('label', 'Optional exact project call site'); bindingLabel.htmlFor = 'new-binding';
     const binding = el('select'); binding.id = 'new-binding'; option(binding, '', 'No binding — declared but unobserved flow');
-    const candidates = report.findings.filter(value => !value.subject && value.projectFrame && ['MAIN', 'TEST'].includes(value.projectFrame.origin));
-    candidates.forEach((value, index) => option(binding, String(index), `${value.projectFrame.className}.${value.projectFrame.method} (${value.projectFrame.origin})`));
-    binding.addEventListener('change', () => { dirtyControls.add(binding.id); status(); });
+    const projectFindings = report.findings.filter(value => !value.subject && value.projectFrame && ['MAIN', 'TEST'].includes(value.projectFrame.origin));
+    const candidates = projectFindings.map(finding => ({finding, identity: report.runs.find(run => run.id === finding.runId)?.identities.find(identity => identity.id === finding.identityId)}))
+      .filter(({finding, identity}) => finding.association === 'NO_SCOPE' && identity && identity.status === 'RESOLVED' && identity.applicationId
+        && identity.sourceArtifact === finding.projectFrame.sourceArtifact && finding.projectFrame.sourceArtifact && finding.projectFrame.descriptor
+        && !report.baseContext.flows.some(flow => flow.subject.applicationId === identity.applicationId && flow.bindings.some(saved => equal(saved, finding.projectFrame))));
+    candidates.forEach(({finding, identity}, index) => option(binding, String(index), `${identity.applicationId}: ${finding.projectFrame.className}.${finding.projectFrame.method}${finding.projectFrame.descriptor} (${finding.projectFrame.origin}, ${identity.sourceArtifact}, ${identity.deploymentId})`));
+    binding.addEventListener('change', () => {
+      dirtyControls.add(binding.id); app.readOnly = binding.value !== '';
+      if (app.readOnly) { app.value = candidates[Number(binding.value)].identity.applicationId; dirtyControls.add(app.id); }
+      status();
+    });
     append(box, bindingLabel, binding);
     box.append(el('p', 'Bindings apply only to an exact artifact, method descriptor and project origin under resolved application identity. Unresolved or ambiguous evidence remains unassigned.', 'muted'));
+    if (candidates.length < projectFindings.length) box.append(el('p', 'Some project call sites cannot be bound because their declaring application or exact method is unresolved, their scope evidence is lost or unverified, or saved bindings conflict. Review the recorded gaps and regenerate after correcting the cause; these observations remain unassigned.', 'notice'));
     box.append(button('Start context draft', () => {
+      const candidate = binding.value === '' ? null : candidates[Number(binding.value)];
+      if (binding.value !== '' && (!candidate || candidate.identity.applicationId !== app.value.trim())) { status('The selected call site belongs to a different application. Select its resolved application identity before creating a binding.'); return; }
+      if (candidate && Array.from(drafts.values()).some(edit => edit.section === 'FLOWS' && edit.proposed
+        && edit.proposed.subject.applicationId === candidate.identity.applicationId && edit.proposed.subject.flowId !== id.value
+        && edit.proposed.bindings.some(saved => equal(saved, candidate.finding.projectFrame)))) { status('This call site is already bound to another flow in your draft. Review that binding before creating a competing flow.'); return; }
+      if (candidate && !id.value) { status('An exact call-site binding requires a flow ID; application defaults cannot own a binding.'); return; }
       if (!app.value.trim() || (id.value && !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(id.value))) { status('Provide an application ID and a valid stable flow ID, or leave flow ID empty for defaults.'); return; }
       const subject = {applicationId: app.value.trim(), flowId: id.value};
       if (id.value && report.flows.some(flow => sameSubject(flow.subject, subject))) { status('That flow already exists. Select its existing review area to change metadata; creation will not replace its lifecycle or bindings.'); return; }
       const target = document.getElementById('draft-context');
       if (target.childNodes.length && Array.from(dirtyControls).some(key => key.startsWith('draft-field-'))) { status('Add the current business answers to the draft before starting another context editor.'); return; }
-      if (id.value && !drafts.has(key('FLOWS', {subject}))) propose('FLOWS', {subject, label: label.value.trim() || id.value, state: 'ACTIVE', bindings: binding.value === '' ? [] : [clone(candidates[Number(binding.value)].projectFrame)]});
+      if (id.value && !drafts.has(key('FLOWS', {subject}))) propose('FLOWS', {subject, label: label.value.trim() || id.value, state: 'ACTIVE', bindings: binding.value === '' ? [] : [clone(candidate.finding.projectFrame)]});
       target.replaceChildren(); contextEditor(target, subject, null, 'draft-field');
       clearControls([app.id, id.id, label.id, binding.id]); status('Add business answers below. New bindings take effect only after apply and reassessment.');
       target.scrollIntoView();

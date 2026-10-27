@@ -51,8 +51,20 @@ class AssessmentInputsTest {
     AssessmentInputs.Run run = AssessmentInputs.load(List.of(unreadable, absent)).get(0);
     assertThat(run.evidenceHash()).isEmpty();
     assertThat(run.evidence()).isNull();
-    assertThat(run.gaps()).contains("SIDECAR_UNREADABLE", "NO_FLOW_OR_CORRELATION_EVIDENCE");
+    assertThat(run.gaps()).contains("SIDECAR_UNREADABLE", "EXPECTED_SIDECAR_MISSING");
     assertThat(run).isEqualTo(AssessmentInputs.load(List.of(absent, unreadable)).get(0));
+  }
+
+  @Test
+  void requestedEnrichmentWithoutSidecarIsDistinctFromLegacyInventory() {
+    AssessmentInputs.Run run =
+        AssessmentInputs.load(
+                List.of(new AssessmentInputs.Input(cbom(NONCE, true), null, "test", "test")))
+            .get(0);
+    assertThat(run.gaps()).containsExactly("EXPECTED_SIDECAR_MISSING");
+    assertThat(run.nonce()).isEqualTo(NONCE);
+    assertThat(run.evidence()).isNull();
+    assertThat(run.incomplete()).isTrue();
   }
 
   @Test
