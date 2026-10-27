@@ -44,3 +44,15 @@ Managed apply requires a destination explicitly selected by the caller. It uses 
 `.census.lock` beside the destination, reloads under that lock, collects all conflicting edits,
 and writes only a conflict-free result by atomic replacement. Symlink targets are rejected.
 Manual writers outside this locking protocol are not covered by its concurrency guarantee.
+
+Assessment input loading preserves ordinary CBOMs when sidecars are missing or invalid and marks
+the associated evidence gap. Reused run identities with different CBOM or sidecar hashes are
+rejected. Duplicate exact pairs merge workload/environment labels without duplicating counts.
+
+Attribution rows retain the run, applicable source identity and an event-bucket hash. Equivalent
+observation buckets are summed before path expansion. Recursive references to the same source
+identity and subject produce one inclusive row; a distinct deployment identity remains a separate
+row. Business-flow totals must deduplicate by event bucket and subject, while deployment views
+retain the source identity. Only the active scope reference receives direct attribution. Scope
+integrity or restoration failures invalidate all scoped associations, including earlier snapshots.
+Unreconciled counts produce an unknown-count diagnostic bucket, never an invented missing delta.
