@@ -10,6 +10,10 @@ The source of truth is the `build` job's matrix in
 [Compatibility](COMPATIBILITY.md) guide mirror it. If they ever disagree,
 the workflow is right and the documents are a bug.
 
+Annotation scope boundaries, deployment identity and bootstrap-bridge visibility have
+separate [context conformance fixtures](CONTEXT-CONFORMANCE.md). Their runtime gates
+validate the paired evidence sidecar in addition to the core inventory.
+
 ## The matrix
 
 ### JDKs
