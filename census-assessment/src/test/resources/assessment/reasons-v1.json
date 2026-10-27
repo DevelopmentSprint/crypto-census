@@ -128,39 +128,6 @@
       "displayPriority": "URGENT_PLANNING",
       "incomplete": false,
       "missingFields": [],
-      "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
-      "reasons": [
-        "CLASSICAL_QUANTUM_EXPOSURE",
-        "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
-      ],
-      "ruleId": "authenticity-urgency",
-      "technicalRemediation": false
-    },
-    "handshakeRef": {
-      "attempt": 1,
-      "connectionId": "resumed"
-    },
-    "kind": "TLS_PEER_AUTHENTICATION",
-    "subject": {
-      "applicationId": "example:records",
-      "flowId": "archive"
-    },
-    "technical": {
-      "cnsa2": false,
-      "nistQuantumSecurityLevel": -1,
-      "quantumExposure": "VULNERABLE",
-      "reason": "Observed peer TLS authentication signature; VULNERABLE",
-      "risk": "QUANTUM_VULNERABLE",
-      "role": "AUTHENTICITY",
-      "version": "cryptocensus-default/6/facts-1"
-    }
-  },
-  {
-    "decision": {
-      "businessPriority": "URGENT_PLANNING",
-      "displayPriority": "URGENT_PLANNING",
-      "incomplete": false,
-      "missingFields": [],
       "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
       "reasons": [
         "CLASSICAL_QUANTUM_EXPOSURE",
@@ -924,6 +891,38 @@
       "nistQuantumSecurityLevel": -1,
       "quantumExposure": "NOT_ESTABLISHED",
       "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+      "risk": "UNKNOWN",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "TECHNICAL_VERDICT_UNKNOWN"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "resumed"
+    },
+    "kind": "TLS_PEER_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "NOT_ESTABLISHED",
+      "reason": "Observed peer TLS authentication signature; NOT_ESTABLISHED",
       "risk": "UNKNOWN",
       "role": "AUTHENTICITY",
       "version": "cryptocensus-default/6/facts-1"

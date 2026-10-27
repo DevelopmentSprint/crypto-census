@@ -427,9 +427,7 @@
         "selectedGroupName": "x25519"
       },
       "outcome": "COMPLETED",
-      "relatedAssetRefs": [
-        "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
-      ],
+      "relatedAssetRefs": [],
       "resumption": {
         "freshKeyExchange": "YES",
         "pskOrigin": null,
@@ -465,9 +463,7 @@
         "selectedGroupName": "X25519MLKEM768"
       },
       "outcome": "COMPLETED",
-      "relatedAssetRefs": [
-        "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
-      ],
+      "relatedAssetRefs": [],
       "resumption": {
         "freshKeyExchange": "YES",
         "pskOrigin": null,
@@ -497,15 +493,13 @@
       "negotiation": {
         "cipherSuite": "TLS_AES_256_GCM_SHA384",
         "localSignatureScheme": "",
-        "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+        "peerSignatureScheme": "",
         "protocol": "TLSv1.3",
         "selectedGroupId": 4588,
         "selectedGroupName": "X25519MLKEM768"
       },
       "outcome": "COMPLETED",
-      "relatedAssetRefs": [
-        "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
-      ],
+      "relatedAssetRefs": [],
       "resumption": {
         "freshKeyExchange": "YES",
         "pskOrigin": {

@@ -294,6 +294,14 @@ class AssessmentContractTest {
                   .containsEntry("connectionId", "resumed");
               assertThat(CanonicalJson.object(row.get("technical")))
                   .containsEntry("quantumExposure", "NOT_ESTABLISHED");
+            })
+        .anySatisfy(
+            row -> {
+              assertThat(row).containsEntry("kind", "TLS_PEER_AUTHENTICATION");
+              assertThat(CanonicalJson.object(row.get("handshakeRef")))
+                  .containsEntry("connectionId", "resumed");
+              assertThat(CanonicalJson.object(row.get("technical")))
+                  .containsEntry("quantumExposure", "NOT_ESTABLISHED");
             });
   }
 
@@ -443,12 +451,12 @@ class AssessmentContractTest {
             group,
             group == 4588 ? "X25519MLKEM768" : "x25519",
             "",
-            "ecdsa_secp256r1_sha256"),
+            resumed ? "" : "ecdsa_secp256r1_sha256"),
         new EvidenceDocument.Resumption(
             resumed ? EvidenceDocument.Flag.YES : EvidenceDocument.Flag.NO,
             EvidenceDocument.Flag.YES,
             origin),
-        List.of(RSA_2048.ref()),
+        List.of(),
         "synthetic-adapter",
         List.of(),
         scope("archive"));

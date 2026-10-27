@@ -406,58 +406,6 @@
     {
       "association": "HANDSHAKE_INITIATION_SCOPE",
       "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
-      "bucketId": "8e21c8a03086e1f4f44142f705372a5bb14e58d55f5889fc71916587eae7d9bb",
-      "decision": {
-        "businessPriority": "URGENT_PLANNING",
-        "displayPriority": "URGENT_PLANNING",
-        "incomplete": false,
-        "missingFields": [],
-        "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
-        "reasons": [
-          "CLASSICAL_QUANTUM_EXPOSURE",
-          "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
-        ],
-        "ruleId": "authenticity-urgency",
-        "technicalRemediation": false
-      },
-      "direct": true,
-      "entryPointCount": null,
-      "gaps": [
-        "CORE_HEALTH:cryptocensus:overflowedSites"
-      ],
-      "handshakeRef": {
-        "attempt": 1,
-        "connectionId": "resumed"
-      },
-      "id": "c176c0636d393c42a08184418c1d724abe8cf11e64d9854b064313e6cf3d98cd",
-      "identityId": "synthetic-deployment",
-      "kind": "TLS_PEER_AUTHENTICATION",
-      "limitations": [
-        "mixed-or-unknown-psk-protection"
-      ],
-      "lineage": "VERIFIED",
-      "pskOriginExposure": "VULNERABLE",
-      "qualified": true,
-      "runId": "run:12345678-1234-1234-1234-123456789abc",
-      "selectedKeyExchangeExposure": "RESISTANT",
-      "subject": {
-        "applicationId": "example:records",
-        "flowId": "archive"
-      },
-      "technical": {
-        "cnsa2": false,
-        "nistQuantumSecurityLevel": -1,
-        "quantumExposure": "VULNERABLE",
-        "reason": "Observed peer TLS authentication signature; VULNERABLE",
-        "risk": "QUANTUM_VULNERABLE",
-        "role": "AUTHENTICITY",
-        "version": "cryptocensus-default/6/facts-1"
-      },
-      "tlsFactsVersion": "tls-facts-v1"
-    },
-    {
-      "association": "HANDSHAKE_INITIATION_SCOPE",
-      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
       "bucketId": "9d4a40a8846ed885781f44d829521be178596315a5e6e7c2d08af61be79f1ad5",
       "decision": {
         "businessPriority": "URGENT_PLANNING",
@@ -1506,6 +1454,58 @@
         "nistQuantumSecurityLevel": -1,
         "quantumExposure": "NOT_ESTABLISHED",
         "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+        "risk": "UNKNOWN",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "8e21c8a03086e1f4f44142f705372a5bb14e58d55f5889fc71916587eae7d9bb",
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "TECHNICAL_VERDICT_UNKNOWN"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "TLS_PEER_AUTHENTICATION_NOT_ESTABLISHED"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "resumed"
+      },
+      "id": "c176c0636d393c42a08184418c1d724abe8cf11e64d9854b064313e6cf3d98cd",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_PEER_AUTHENTICATION",
+      "limitations": [
+        "mixed-or-unknown-psk-protection"
+      ],
+      "lineage": "VERIFIED",
+      "pskOriginExposure": "VULNERABLE",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "NOT_ESTABLISHED",
+        "reason": "Observed peer TLS authentication signature; NOT_ESTABLISHED",
         "risk": "UNKNOWN",
         "role": "AUTHENTICITY",
         "version": "cryptocensus-default/6/facts-1"
@@ -4686,7 +4686,7 @@
         "fixture"
       ],
       "evidenceAccepted": true,
-      "evidenceHash": "2c52ff882bf6398a3835998e79551d6ebb66083e390e6bd09d9eaa6b3df81c74",
+      "evidenceHash": "1b0a8bfd6e1cd1ca05666e78638a9922b3159509414c005eac5e10746b7e2251",
       "flows": [
         {
           "definition": {
@@ -5102,9 +5102,7 @@
             "selectedGroupName": "x25519"
           },
           "outcome": "COMPLETED",
-          "relatedAssetRefs": [
-            "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
-          ],
+          "relatedAssetRefs": [],
           "resumption": {
             "freshKeyExchange": "YES",
             "pskOrigin": null,
@@ -5140,9 +5138,7 @@
             "selectedGroupName": "X25519MLKEM768"
           },
           "outcome": "COMPLETED",
-          "relatedAssetRefs": [
-            "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
-          ],
+          "relatedAssetRefs": [],
           "resumption": {
             "freshKeyExchange": "YES",
             "pskOrigin": null,
@@ -5172,15 +5168,13 @@
           "negotiation": {
             "cipherSuite": "TLS_AES_256_GCM_SHA384",
             "localSignatureScheme": "",
-            "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+            "peerSignatureScheme": "",
             "protocol": "TLSv1.3",
             "selectedGroupId": 4588,
             "selectedGroupName": "X25519MLKEM768"
           },
           "outcome": "COMPLETED",
-          "relatedAssetRefs": [
-            "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
-          ],
+          "relatedAssetRefs": [],
           "resumption": {
             "freshKeyExchange": "YES",
             "pskOrigin": {

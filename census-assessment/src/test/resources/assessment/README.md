@@ -27,6 +27,8 @@ signatures and unknown local signatures. A resumed hybrid attempt with a known
 classical PSK origin retains the resistant selected exchange and vulnerable
 origin while leaving composite confidentiality unestablished. TLS attempt
 counts do not become JCA entry-point counts or proof of data-flow causality.
+The resumed attempt has no current peer signature and does not inherit the
+origin attempt's authentication evidence.
 
 `AssessmentContractTest` rebuilds the scenario, verifies independent policy
 expectations, compares all golden artifacts, and replays the saved exact-byte
