@@ -44,6 +44,18 @@ class AssessmentInputsTest {
   }
 
   @Test
+  void unreadableSidecarHasNoInventedHashAndDuplicateOrderPreservesGap() {
+    byte[] cbom = cbom(NONCE, true);
+    AssessmentInputs.Input unreadable = AssessmentInputs.unreadableEvidence(cbom, "test", "test");
+    AssessmentInputs.Input absent = new AssessmentInputs.Input(cbom, null, "test", "test");
+    AssessmentInputs.Run run = AssessmentInputs.load(List.of(unreadable, absent)).get(0);
+    assertThat(run.evidenceHash()).isEmpty();
+    assertThat(run.evidence()).isNull();
+    assertThat(run.gaps()).contains("SIDECAR_UNREADABLE", "NO_FLOW_OR_CORRELATION_EVIDENCE");
+    assertThat(run).isEqualTo(AssessmentInputs.load(List.of(absent, unreadable)).get(0));
+  }
+
+  @Test
   void pairedRunPreservesHealthAndDuplicateInputsDoNotDuplicateCounts() {
     byte[] cbom = cbom(NONCE, true);
     byte[] evidence = evidence(cbom);
