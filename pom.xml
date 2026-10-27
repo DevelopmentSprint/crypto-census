@@ -55,6 +55,7 @@
     <modules>
         <module>census-annotations</module>
         <module>census-core</module>
+        <module>census-assessment</module>
         <module>census-agent</module>
         <module>census-maven-plugin</module>
         <module>census-demo</module>
@@ -94,6 +95,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.developmentsprint</groupId>
+                <artifactId>census-assessment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.developmentsprint</groupId>
                 <artifactId>census-annotations</artifactId>

@@ -26,3 +26,21 @@ fixture. Its hash is illustrative and deliberately does not claim to pair with a
 The executable contract tests cover valid pairing, swapped occurrence counts, saturation, stale
 nonce/hash, missing counters, malformed UTF-8, dangling references, cyclic PSK lineage, immutable
 snapshots, bounded input, and atomic file IO.
+
+Durable context and change-set schemas live in `census-assessment`. A change set carries its
+complete base context, canonical context hash, and base values/hashes for individual edit keys.
+Java recomputes these values before applying any edit. Declarations are addressed separately by
+subject, protection field, source kind and source ID; source revision and value changes preserve
+that address. Flow metadata, reviewed resolutions and readiness assertions use atomic record
+edits, so concurrent edits to the same record require review rather than losing either change.
+
+Reviewed resolutions preserve both the asserted source revision and a Java-computed hash of each
+complete declaration. A replacement that reuses an asserted revision still invalidates the old
+resolution. The browser copies these hashes from report data instead of computing authoritative
+revisions. An asserted validated-readiness state does not establish effective readiness; linked
+validation evidence must be checked independently by the assessment engine.
+
+Managed apply requires a destination explicitly selected by the caller. It uses a persistent
+`.census.lock` beside the destination, reloads under that lock, collects all conflicting edits,
+and writes only a conflict-free result by atomic replacement. Symlink targets are rejected.
+Manual writers outside this locking protocol are not covered by its concurrency guarantee.

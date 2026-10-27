@@ -1,0 +1,552 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "base",
+    "baseContextHash",
+    "edits"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "base": {
+      "$ref": "#/$defs/context"
+    },
+    "baseContextHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "section",
+              "id",
+              "base",
+              "baseHash",
+              "proposed"
+            ],
+            "properties": {
+              "section": {
+                "const": "FLOWS"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 2048,
+                "minLength": 1
+              },
+              "base": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/flow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "baseHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "proposed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/flow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "section",
+              "id",
+              "base",
+              "baseHash",
+              "proposed"
+            ],
+            "properties": {
+              "section": {
+                "const": "DECLARATIONS"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 2048,
+                "minLength": 1
+              },
+              "base": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/declaration"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "baseHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "proposed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/declaration"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "section",
+              "id",
+              "base",
+              "baseHash",
+              "proposed"
+            ],
+            "properties": {
+              "section": {
+                "const": "RESOLUTIONS"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 2048,
+                "minLength": 1
+              },
+              "base": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/resolution"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "baseHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "proposed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/resolution"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "section",
+              "id",
+              "base",
+              "baseHash",
+              "proposed"
+            ],
+            "properties": {
+              "section": {
+                "const": "READINESS"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 2048,
+                "minLength": 1
+              },
+              "base": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/readiness"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "baseHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "proposed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/readiness"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "maxItems": 16384
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crypto Census context change set v1",
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationId",
+        "flowId"
+      ],
+      "properties": {
+        "applicationId": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "flowId": {
+          "type": "string",
+          "pattern": "^([a-z0-9][a-z0-9._-]{0,63})?$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "revision",
+        "reviewer",
+        "reviewedAt"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ANNOTATION",
+            "USER",
+            "CATALOG",
+            "APPLICATION_DEFAULT"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reviewer": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "reviewedAt": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 0
+        }
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "field",
+        "value",
+        "source"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "field": {
+          "enum": [
+            "CLASSIFICATION",
+            "CONFIDENTIALITY_YEARS",
+            "AUTHENTICITY_YEARS",
+            "OWNER",
+            "EXPOSURE",
+            "IMPACT",
+            "PURPOSE"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "className",
+        "method",
+        "descriptor",
+        "sourceArtifact",
+        "origin"
+      ],
+      "properties": {
+        "className": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "descriptor": {
+          "type": "string",
+          "maxLength": 1024,
+          "minLength": 0
+        },
+        "sourceArtifact": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "origin": {
+          "enum": [
+            "MAIN",
+            "TEST",
+            "LIBRARY",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "label",
+        "state",
+        "bindings"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "state": {
+          "enum": [
+            "ACTIVE",
+            "RETIRED"
+          ]
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "maxItems": 256
+        }
+      }
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "revision",
+        "declarationHash"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ANNOTATION",
+            "USER",
+            "CATALOG",
+            "APPLICATION_DEFAULT"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "declarationHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "field",
+        "value",
+        "sources",
+        "reviewer",
+        "reviewedAt"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "field": {
+          "enum": [
+            "CLASSIFICATION",
+            "CONFIDENTIALITY_YEARS",
+            "AUTHENTICITY_YEARS",
+            "OWNER",
+            "EXPOSURE",
+            "IMPACT",
+            "PURPOSE"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceRef"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reviewer": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "reviewedAt": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "state",
+        "note",
+        "source",
+        "validationRefs"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "state": {
+          "enum": [
+            "UNASSESSED",
+            "BLOCKED",
+            "CANDIDATE",
+            "VALIDATED_IN_TESTED_SCOPE"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 2048,
+          "minLength": 0
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "validationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1
+          },
+          "maxItems": 64
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "flows",
+        "declarations",
+        "resolutions",
+        "readiness"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "flows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/flow"
+          },
+          "maxItems": 4096
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/declaration"
+          },
+          "maxItems": 16384
+        },
+        "resolutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resolution"
+          },
+          "maxItems": 16384
+        },
+        "readiness": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/readiness"
+          },
+          "maxItems": 4096
+        }
+      }
+    }
+  },
+  "description": "Java also verifies canonical base hashes, edit identity, duplicate edits and base field correspondence before a locked three-way merge."
+}
