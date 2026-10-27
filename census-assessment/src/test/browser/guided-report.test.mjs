@@ -316,3 +316,82 @@ test('ambiguous saved bindings are not offered as another recoverable call site'
   assert.equal(await page.locator('#new-binding option').count(), 1);
   assert.match(await page.locator('#selection').textContent(), /saved bindings conflict/);
 });
+
+test('application defaults create, export, import and reassess as broad assumptions', async t => {
+  const {page, directory} = await fixture(t);
+  const before = JSON.parse(await readFile(resolve(directory, 'assessment.json'), 'utf8'));
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  await page.locator('#new-application').fill('demo');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  assert.match(await page.locator('#draft-context').textContent(), /broad assumptions/);
+  await page.locator('#draft-field-CLASSIFICATION').selectOption('sensitive');
+  await page.locator('#draft-field-CONFIDENTIALITY_YEARS').fill('20');
+  await page.getByRole('button', {name:'Add answers to draft', exact:true}).click();
+  await page.locator('#new-flow').fill('defaulted-flow');
+  await page.locator('#new-binding').selectOption('0');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  const {path, value} = await exportChanges(page, directory);
+  assert.equal(value.edits.filter(edit => edit.section === 'DECLARATIONS').length, 2);
+  assert.ok(value.edits.filter(edit => edit.section === 'DECLARATIONS').every(edit => edit.proposed.subject.flowId === ''));
+  page.on('dialog', dialog => dialog.accept());
+  await page.reload();
+  await page.locator('#import-context').setInputFiles(path);
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('Imported 3'));
+  const imported = await exportChanges(page, directory);
+  assert.deepEqual(imported.value, value);
+  generate(resolve(directory, 'defaulted'), imported.path);
+  const after = JSON.parse(await readFile(resolve(directory, 'defaulted/assessment.json'), 'utf8'));
+  const flow = after.flows.find(flow => flow.subject.flowId === 'defaulted-flow');
+  assert.equal(flow.directCount, 3);
+  assert.equal(flow.priority, 'NEEDS_CONTEXT');
+  for (const field of ['CLASSIFICATION', 'CONFIDENTIALITY_YEARS']) {
+    assert.equal(flow.savedContextFields.find(item => item.field === field).status, 'APPLICATION_DEFAULT');
+  }
+  assert.ok(after.findings.filter(item => item.subject?.flowId === 'defaulted-flow')
+    .some(item => item.decision.reasons.includes('APPLICABLE_CONTEXT_MISSING_OR_BROAD')));
+  assert.deepEqual(after.runs.map(run => [run.cbomHash, run.evidenceHash]), before.runs.map(run => [run.cbomHash, run.evidenceHash]));
+  await page.goto(pathToFileURL(resolve(directory, 'defaulted/assessment.html')).href);
+  await page.locator('#flow-navigation').selectOption(JSON.stringify(['demo', 'defaulted-flow']));
+  assert.ok(await page.getByRole('button', {name:'Confirm for this flow', exact:true}).count() >= 2);
+});
+
+
+test('ambiguous generated deployment ownership is not offered despite resolved raw identities', async t => {
+  const {page, directory} = await fixture(t, 'ambiguous-deployment');
+  const report = JSON.parse(await readFile(resolve(directory, 'assessment.json'), 'utf8'));
+  assert.equal(report.runs[0].identities.length, 2);
+  assert.ok(report.runs[0].identities.every(identity => identity.status === 'RESOLVED'));
+  const unscoped = report.findings.filter(finding => finding.association === 'NO_SCOPE');
+  assert.equal(unscoped.length, 2);
+  assert.equal(unscoped.reduce((sum, finding) => sum + finding.count, 0), 3);
+  assert.ok(unscoped.every(finding => finding.gaps.includes('AMBIGUOUS_DEPLOYMENT_OWNERSHIP')));
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  assert.equal(await page.locator('#new-binding option').count(), 1);
+  assert.match(await page.locator('#selection').textContent(), /deployment ownership is ambiguous/);
+});
+
+
+test('an explicitly mapped peer remains bindable beside ambiguous deployment ownership', async t => {
+  const {page, directory} = await fixture(t, 'mixed-deployment');
+  const report = JSON.parse(await readFile(resolve(directory, 'assessment.json'), 'utf8'));
+  assert.ok(report.gaps.includes('AMBIGUOUS_DEPLOYMENT_OWNERSHIP'));
+  const peer = report.findings.find(finding => finding.identityId === 'second' && finding.association === 'NO_SCOPE');
+  assert.ok(peer); assert.equal(peer.count, 2);
+  assert.ok(!peer.gaps.includes('AMBIGUOUS_DEPLOYMENT_OWNERSHIP'));
+  await page.locator('#flow-navigation').selectOption('');
+  await page.getByText('Name a business flow or add application defaults', {exact:true}).click();
+  assert.equal(await page.locator('#new-binding option').count(), 2);
+  await page.locator('#new-flow').fill('explicit-peer');
+  await page.locator('#new-binding').selectOption('0');
+  await page.getByRole('button', {name:'Start context draft', exact:true}).click();
+  const {path} = await exportChanges(page, directory);
+  generate(resolve(directory, 'explicit-peer'), path, 'mixed-deployment');
+  const after = JSON.parse(await readFile(resolve(directory, 'explicit-peer/assessment.json'), 'utf8'));
+  assert.equal(after.flows.find(flow => flow.subject.flowId === 'explicit-peer').directCount, 2);
+  const unresolved = after.findings.filter(finding => finding.identityId === 'identity' && finding.subject === null);
+  assert.equal(unresolved.reduce((sum, finding) => sum + finding.count, 0), 1);
+  assert.ok(unresolved.every(finding => finding.gaps.includes('AMBIGUOUS_DEPLOYMENT_OWNERSHIP')));
+  assert.deepEqual(after.runs.map(run => [run.cbomHash, run.evidenceHash]), report.runs.map(run => [run.cbomHash, run.evidenceHash]));
+});

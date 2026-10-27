@@ -8,6 +8,15 @@ All notable changes to Crypto Census. The format follows
 
 ### Added
 
+- Optional `census-annotations` Java API and bounded synchronous flow evidence with explicit
+  deployment identity, provenance and independent enrichment health.
+- Offline `census-assessment` advisory reports, preserved context sources, reviewed resolutions,
+  managed context change sets and a self-contained guided HTML workflow.
+- Maven `assess` and `context-apply` goals, opt-in enrichment/reporting, explicit source catalogs
+  and saved-input reassessment without rerunning application tests.
+- Optional capability-qualified TLS attempt correlation with separate confidentiality and
+  authentication findings and conservative PSK lineage handling.
+
 - Project license/notice resources in each published main JAR, with project and Byte Buddy notices merged in the shaded agent. Release-profile checks reject snapshot project/dependency versions, and candidate SCM metadata identifies the intended `v0.1.0` tag.
 
 - Validated `prepare-agent` parameters `maxAssets` (1–2000), `maxSites` (1–100), and `debug`, with collection limits recorded in agent CBOM metadata.

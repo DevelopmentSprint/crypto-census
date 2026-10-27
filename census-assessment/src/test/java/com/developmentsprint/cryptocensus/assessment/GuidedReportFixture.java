@@ -44,7 +44,11 @@ public final class GuidedReportFixture {
             List.of(
                 input(
                     args.length > 2 && args[2].equals("unresolved"),
-                    args.length > 2 && args[2].equals("lost"))),
+                    args.length > 2 && args[2].equals("lost"),
+                    args.length > 2
+                        && (args[2].equals("ambiguous-deployment")
+                            || args[2].equals("mixed-deployment")),
+                    args.length > 2 && args[2].equals("mixed-deployment"))),
             context,
             PolicyProfile.defaults());
     report.write(directory.resolve("assessment.json"));
@@ -68,10 +72,11 @@ public final class GuidedReportFixture {
   }
 
   static AssessmentInputs.Input input() {
-    return input(false, false);
+    return input(false, false, false, false);
   }
 
-  private static AssessmentInputs.Input input(boolean unresolved, boolean lost) {
+  private static AssessmentInputs.Input input(
+      boolean unresolved, boolean lost, boolean ambiguous, boolean explicitPeer) {
     CryptoAsset asset =
         CryptoAsset.cipher(
             "RSA/ECB/OAEPWithSHA-256AndMGF1Padding", 2048, "SunJCE", Operation.ENCRYPT);
@@ -109,36 +114,65 @@ public final class GuidedReportFixture {
                 new ContextModel.Declaration(
                     SUBJECT, ContextModel.Field.CLASSIFICATION, "sensitive", source)),
             List.of());
+    EvidenceDocument.Observation first =
+        new EvidenceDocument.Observation(
+            asset.ref(),
+            site,
+            new EvidenceDocument.ScopeContext(
+                "identity",
+                List.of(),
+                lost
+                    ? EvidenceDocument.Association.SCOPE_LOST
+                    : EvidenceDocument.Association.NO_SCOPE),
+            ambiguous ? 1 : 3,
+            binding);
+    EvidenceDocument.IdentityMapping identity =
+        new EvidenceDocument.IdentityMapping(
+            "identity",
+            "deployment",
+            "loader",
+            "example:archive",
+            unresolved ? "" : "demo",
+            unresolved
+                ? EvidenceDocument.IdentityStatus.UNRESOLVED
+                : EvidenceDocument.IdentityStatus.RESOLVED,
+            "source-catalog:GENERATED_BUILD");
+    List<EvidenceDocument.Observation> observations =
+        ambiguous
+            ? List.of(
+                first,
+                new EvidenceDocument.Observation(
+                    asset.ref(),
+                    site,
+                    new EvidenceDocument.ScopeContext(
+                        "second", List.of(), EvidenceDocument.Association.NO_SCOPE),
+                    2,
+                    binding))
+            : List.of(first);
+    List<EvidenceDocument.IdentityMapping> identities =
+        ambiguous
+            ? List.of(
+                identity,
+                new EvidenceDocument.IdentityMapping(
+                    "second",
+                    "second-deployment",
+                    "second-loader",
+                    "example:archive",
+                    "demo",
+                    EvidenceDocument.IdentityStatus.RESOLVED,
+                    explicitPeer
+                        ? "source-catalog:EXPLICIT_DEPLOYMENT"
+                        : "source-catalog:GENERATED_BUILD"))
+            : List.of(identity);
     EvidenceDocument evidence =
         new EvidenceDocument(
             1,
             NONCE,
             CanonicalJson.hash(cbom),
             unresolved ? List.of() : List.of(new EvidenceDocument.DiscoveredFlow("identity", flow)),
-            List.of(
-                new EvidenceDocument.Observation(
-                    asset.ref(),
-                    site,
-                    new EvidenceDocument.ScopeContext(
-                        "identity",
-                        List.of(),
-                        lost
-                            ? EvidenceDocument.Association.SCOPE_LOST
-                            : EvidenceDocument.Association.NO_SCOPE),
-                    3,
-                    binding)),
+            observations,
             List.of(),
-            List.of(
-                new EvidenceDocument.IdentityMapping(
-                    "identity",
-                    "deployment",
-                    "loader",
-                    "example:archive",
-                    unresolved ? "" : "demo",
-                    unresolved
-                        ? EvidenceDocument.IdentityStatus.UNRESOLVED
-                        : EvidenceDocument.IdentityStatus.RESOLVED,
-                    "source-catalog")),
+            identities,
             List.of(
                 new EvidenceDocument.Capability(
                     "annotation-scopes",

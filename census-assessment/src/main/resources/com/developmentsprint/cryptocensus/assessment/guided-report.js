@@ -358,7 +358,7 @@
     const binding = el('select'); binding.id = 'new-binding'; option(binding, '', 'No binding — declared but unobserved flow');
     const projectFindings = report.findings.filter(value => !value.subject && value.projectFrame && ['MAIN', 'TEST'].includes(value.projectFrame.origin));
     const candidates = projectFindings.map(finding => ({finding, identity: report.runs.find(run => run.id === finding.runId)?.identities.find(identity => identity.id === finding.identityId)}))
-      .filter(({finding, identity}) => finding.association === 'NO_SCOPE' && identity && identity.status === 'RESOLVED' && identity.applicationId
+      .filter(({finding, identity}) => finding.association === 'NO_SCOPE' && !finding.gaps.includes('AMBIGUOUS_DEPLOYMENT_OWNERSHIP') && identity && identity.status === 'RESOLVED' && identity.applicationId
         && identity.sourceArtifact === finding.projectFrame.sourceArtifact && finding.projectFrame.sourceArtifact && finding.projectFrame.descriptor
         && !report.baseContext.flows.some(flow => flow.subject.applicationId === identity.applicationId && flow.bindings.some(saved => equal(saved, finding.projectFrame))));
     candidates.forEach(({finding, identity}, index) => option(binding, String(index), `${identity.applicationId}: ${finding.projectFrame.className}.${finding.projectFrame.method}${finding.projectFrame.descriptor} (${finding.projectFrame.origin}, ${identity.sourceArtifact}, ${identity.deploymentId})`));
@@ -369,7 +369,7 @@
     });
     append(box, bindingLabel, binding);
     box.append(el('p', 'Bindings apply only to an exact artifact, method descriptor and project origin under resolved application identity. Unresolved or ambiguous evidence remains unassigned.', 'muted'));
-    if (candidates.length < projectFindings.length) box.append(el('p', 'Some project call sites cannot be bound because their declaring application or exact method is unresolved, their scope evidence is lost or unverified, or saved bindings conflict. Review the recorded gaps and regenerate after correcting the cause; these observations remain unassigned.', 'notice'));
+    if (candidates.length < projectFindings.length) box.append(el('p', 'Some project call sites cannot be bound because their declaring application or exact method is unresolved, their deployment ownership is ambiguous, their scope evidence is lost or unverified, or saved bindings conflict. Review the recorded gaps and regenerate after correcting the cause; these observations remain unassigned.', 'notice'));
     box.append(button('Start context draft', () => {
       const candidate = binding.value === '' ? null : candidates[Number(binding.value)];
       if (binding.value !== '' && (!candidate || candidate.identity.applicationId !== app.value.trim())) { status('The selected call site belongs to a different application. Select its resolved application identity before creating a binding.'); return; }

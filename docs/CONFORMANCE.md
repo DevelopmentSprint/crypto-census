@@ -54,6 +54,18 @@ with the Docker socket mounted, is pinned by digest in
 `census-app-servers/src/test/resources/testcontainers.properties`; when `testcontainers.version`
 moves, move it to the Ryuk version that release asks for.
 
+### Advisory-feature acceptance gates
+
+These jobs test advisory product behavior; their CI failures are blocking, not the advisory tier below.
+
+| CI job | Evidence |
+| --- | --- |
+| `Offline guided report browser workflow` | Synthetic offline browser editing, application defaults, export/import, Java apply/reassessment, identity gaps and CSP/no-network assertions. |
+| `Advisory demo outcomes` | Real enriched demo priorities/counts/async gaps; actual browser export through Maven context apply and saved-input reassessment; passive annotations with the agent skipped. |
+
+Neither job uploads enriched reports. The configured jobs are acceptance gates, not evidence that
+hosted CI has already run for an unpublished local branch.
+
 ### Tiers
 
 - **gate**: a failure fails the CI run and is a bug to fix. Make these jobs required status checks
@@ -85,8 +97,9 @@ the container gracefully so shutdown hooks run, and asserts on the CBOM copied o
 container: zero health counters, no instrumentation gaps, servlet call-site attribution. Without
 Docker the test class is skipped locally, and without `-P app-servers` the module is not built at
 all, so local builds never need Docker. CI passes `-Dcensus.requireDocker=true`, which turns missing
-Docker into a failure, and then checks the Failsafe report: the gate fails unless both app-server
-tests ran and none was skipped.
+Docker into a failure, and then checks the Failsafe report: the gate fails unless the baseline and annotated tests ran for both servers (four cases total)
+and none was skipped. The annotated cases additionally verify per-deployment flow ownership,
+nested paths and post-exit unscoped counts.
 
 The early-access job runs `./mvnw -B -ntp verify -P '!quality'`: the static analyzers lag behind
 new JDKs and say nothing about whether the agent works.

@@ -16,6 +16,12 @@ Pass comma-separated options after `-javaagent:/path/census-agent.jar=`. Percent
 | `maxAssets` | `500` | Distinct assets retained; integer 1–2000. Further observations of new assets are dropped and counted. |
 | `maxSites` | `50` | Sites retained per asset; integer 1–100. Excess attribution folds into `<overflow>`. |
 | `debug` | `false` | Log instrumentation errors. |
+| `enrichment` | `false` | Collect annotation scopes, source identity and evidence sidecars. |
+| `applicationId` | Unset | Explicit stable product identity for standalone use or mapped main/test code; does not take over library or unresolved catalog ownership. |
+| `sourcesFile` | Unset | Local explicit source/artifact/deployment catalog. |
+| `evidenceOutput` | Derived from CBOM name | Optional private sidecar destination; must not alias the CBOM. |
+| `tlsCorrelation` | `false` | Optional qualified handshake attempts; requires enrichment. |
+| `maxScopeDepth` | `32` | Bounded synchronous annotation depth, 1–32; excess nesting loses attribution rather than claiming a parent scope. |
 | `experimental` | `false` | Best-effort Byte Buddy parsing for newer class files; also enabled by `-Dnet.bytebuddy.experimental=true`. This does not make an unlisted JDK supported. |
 
 Unknown keys, duplicate keys and invalid values generate warnings. Duplicates keep the first value; invalid values fall back to defaults. Read startup warnings, especially for a misspelled output path or limit. Maven validates its supported collection parameters before launching tests.
@@ -55,3 +61,27 @@ Store reports in access-controlled build artifacts or a private inventory store.
 Choose a retention period with your security/data owners. Keep the merged report, original inputs, source revision, policy/agent versions, and relevant verification logs together when audit evidence is needed; merged reports record input SHA-256 values, not an external signature. A trusted pipeline can sign evidence outside the observed JVM.
 
 Maven creates a separate run directory for each build and does not delete earlier evidence. Archive required records before `mvn clean`, which deletes the default `target` directory. Configure CI artifact expiration and storage cleanup explicitly; for custom/shared destinations, delete only completed runs after checking that no JVM or build still uses them.
+
+## Enriched artifacts
+
+Evidence sidecars and assessment JSON/HTML contain declared classification, lifetimes, owners,
+application/flow identities and provenance. Generated artifacts use the shared private atomic-write
+path. Choose a trusted private output directory (`census.assessmentOutputDirectory` in Maven),
+set retention deliberately, and keep authoritative context outside ephemeral build output.
+`census.contextFile` must be selected explicitly for managed apply.
+
+Avoid `target/**` and `cbom-*.json` upload patterns without exclusions: the latter also matches
+`cbom-*.evidence.json`. This repository's ordinary CBOM upload excludes sidecars. Share only reviewed,
+sanitized examples; public support requests should describe versions/capabilities and minimal
+synthetic reproductions rather than raw enriched artifacts. No enriched report is uploaded by the
+agent or the offline page.
+
+Keep original paired run files for reassessment. The report records input hashes, policy and
+context revisions, and capabilities. Missing/unreadable/mismatched sidecars preserve technical
+inventory with gaps. Incomplete scope, unsupported TLS adapters or unknown PSK lineage are not
+proof of safe operation. See [guided workflow](ADVISORY-WORKFLOW.md),
+[source catalogs](SOURCE-CATALOG.md) and [TLS correlation](TLS-CORRELATION.md).
+
+Invalid or unsupported annotation warnings identify bounded structural locations and reasons.
+See [annotation diagnostics](ANNOTATION-DIAGNOSTICS.md); retain the test log alongside the
+sidecar health counters. Diagnostic limits or logger failure can omit later locations.

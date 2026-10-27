@@ -1,9 +1,10 @@
 # Business-context implementation plan
 
-Status: reviewed implementation plan; ready for user acceptance. Three completed Claude Opus 5.5
-high-effort review rounds; final confirmation reported no High or Medium issues.
+Status: accepted implementation plan; implementation and final integration verification in progress.
+Three completed Claude Opus 5.5 high-effort design review rounds reported no remaining High or Medium issues.
 Design: [Business context, annotations, and migration assessment](BUSINESS-CONTEXT-DESIGN.md).
-Scope: future implementation; no feature code has been implemented by this planning task.
+Scope: the original approved work packages below remain the acceptance contract. Delivery status
+is tracked locally; integration does not imply publication or user acceptance of a release.
 
 ## Delivery strategy
 

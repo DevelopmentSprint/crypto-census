@@ -44,6 +44,8 @@ Require supported-platform CI and the dependency scan for the exact candidate co
 |---|---|
 | `census-parent` | POM only; no main, source or Javadoc JAR. |
 | `census-core` | Main JAR, source JAR, Javadoc JAR, POM. |
+| `census-annotations` | Passive API JAR, source JAR, Javadoc JAR, POM; no runtime dependencies. |
+| `census-assessment` | Main JAR including offline HTML resources, source JAR, Javadoc JAR, POM. |
 | `census-agent` | Shaded main JAR, source JAR, Javadoc JAR, POM. |
 | `census-maven-plugin` | Main JAR with plugin descriptor, source JAR, Javadoc JAR, POM. |
 
@@ -55,7 +57,7 @@ Central cannot supply an unpublished first release. Stage the candidate in a ded
 
 ```sh
 CENSUS_STAGE_REPO=$(mktemp -d /tmp/census-stage.XXXXXX)
-./mvnw -B -ntp -P release -pl census-core,census-agent,census-maven-plugin -am install \
+./mvnw -B -ntp -P release -pl census-core,census-annotations,census-assessment,census-agent,census-maven-plugin -am install \
   -Dgpg.skip=true -Dmaven.repo.local="$CENSUS_STAGE_REPO"
 export CENSUS_CANDIDATE_REPOSITORY="file://$CENSUS_STAGE_REPO"
 CENSUS_CONSUMER_REPO=$(mktemp -d /tmp/census-consumer-cache.XXXXXX)
@@ -130,3 +132,13 @@ Complete the accepted gitflow release: merge the release into `main`, create the
 Before announcing availability, enable GitHub private vulnerability reporting and verify the private reporting path from a separate account. Replace SECURITY.md's pending-channel wording only after it is usable. Apply branch protections/rulesets to `develop` and `main`, requiring the exact gate job names in [CONFORMANCE.md](CONFORMANCE.md); verify the settings through the API/UI and check that an unreviewed or failing change cannot merge. If the hosting plan prevents protection while private, perform and verify this step as part of the visibility change before accepting outside contributions.
 
 Keep the release checklist, security-channel check, dependency-scan record, history-scan scope, CI results and artifact evidence together. Source changes remain reviewable even when operator credentials or hosting settings are still pending; record those gates as pending rather than claiming publication readiness.
+
+## Advisory workflow release evidence
+
+Verify the annotation dependency in a consumer without an agent. Exercise the annotated and
+unannotated [guided demo](ADVISORY-WORKFLOW.md), exported context apply, and assessment-only
+regeneration with unchanged input hashes. Run the [real-browser checks](../census-assessment/src/test/browser/README.md)
+and the strict application-server profile; preserve the measured runtime/correlation capability
+limits. Inspect the assessment JAR for its bundled script and stylesheet and check HTML generation
+from the staged plugin. Do not upload enriched reports through generic release artifact patterns.
+The advisory workflow does not authorize signing, Central publication or a release tag.
