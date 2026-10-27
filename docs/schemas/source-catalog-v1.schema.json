@@ -49,6 +49,10 @@
             "type": "string",
             "maxLength": 128,
             "minLength": 1
+          },
+          "loaderName": {
+            "type": "string",
+            "maxLength": 256
           }
         }
       },
