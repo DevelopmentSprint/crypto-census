@@ -39,7 +39,7 @@
               "id": {
                 "type": "string",
                 "maxLength": 2048,
-                "minLength": 1
+                "minLength": 0
               },
               "base": {
                 "anyOf": [
@@ -65,7 +65,28 @@
                   }
                 ]
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "const": ""
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "base": {
+                      "type": "null"
+                    },
+                    "proposed": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            ]
           },
           {
             "type": "object",
@@ -84,7 +105,7 @@
               "id": {
                 "type": "string",
                 "maxLength": 2048,
-                "minLength": 1
+                "minLength": 0
               },
               "base": {
                 "anyOf": [
@@ -103,14 +124,35 @@
               "proposed": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/declaration"
+                    "$ref": "#/$defs/proposedDeclaration"
                   },
                   {
                     "type": "null"
                   }
                 ]
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "const": ""
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "base": {
+                      "type": "null"
+                    },
+                    "proposed": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            ]
           },
           {
             "type": "object",
@@ -129,7 +171,7 @@
               "id": {
                 "type": "string",
                 "maxLength": 2048,
-                "minLength": 1
+                "minLength": 0
               },
               "base": {
                 "anyOf": [
@@ -155,7 +197,28 @@
                   }
                 ]
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "const": ""
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "base": {
+                      "type": "null"
+                    },
+                    "proposed": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            ]
           },
           {
             "type": "object",
@@ -174,7 +237,7 @@
               "id": {
                 "type": "string",
                 "maxLength": 2048,
-                "minLength": 1
+                "minLength": 0
               },
               "base": {
                 "anyOf": [
@@ -193,14 +256,35 @@
               "proposed": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/readiness"
+                    "$ref": "#/$defs/proposedReadiness"
                   },
                   {
                     "type": "null"
                   }
                 ]
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "const": ""
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "base": {
+                      "type": "null"
+                    },
+                    "proposed": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            ]
           }
         ]
       },
@@ -544,6 +628,139 @@
             "$ref": "#/$defs/readiness"
           },
           "maxItems": 4096
+        }
+      }
+    },
+    "proposedSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "revision",
+        "reviewer",
+        "reviewedAt"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ANNOTATION",
+            "USER",
+            "CATALOG",
+            "APPLICATION_DEFAULT"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^([a-f0-9]{64})?$"
+        },
+        "reviewer": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "reviewedAt": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "revision": {
+                "const": ""
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "USER"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "proposedDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "field",
+        "value",
+        "source"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "field": {
+          "enum": [
+            "CLASSIFICATION",
+            "CONFIDENTIALITY_YEARS",
+            "AUTHENTICITY_YEARS",
+            "OWNER",
+            "EXPOSURE",
+            "IMPACT",
+            "PURPOSE"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/proposedSource"
+        }
+      }
+    },
+    "proposedReadiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "state",
+        "note",
+        "source",
+        "validationRefs"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "state": {
+          "enum": [
+            "UNASSESSED",
+            "BLOCKED",
+            "CANDIDATE",
+            "VALIDATED_IN_TESTED_SCOPE"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 2048,
+          "minLength": 0
+        },
+        "source": {
+          "$ref": "#/$defs/proposedSource"
+        },
+        "validationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1
+          },
+          "maxItems": 64
         }
       }
     }

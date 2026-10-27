@@ -49,7 +49,7 @@ public final class ContextChanges {
     public Edit {
       Objects.requireNonNull(key, "key");
       base = canonical(key, base);
-      proposed = canonical(key, proposed);
+      proposed = canonical(key, proposal(key.section(), proposed));
       baseHash = ContextModel.hash(baseHash, "base field hash");
       if (!baseHash.equals(CanonicalJson.revision(base))) {
         throw new IllegalArgumentException("Base field hash mismatch");
@@ -97,7 +97,7 @@ public final class ContextChanges {
       Objects.requireNonNull(key, "key");
       base = canonical(key, base);
       current = canonical(key, current);
-      proposed = canonical(key, proposed);
+      proposed = canonical(key, proposal(key.section(), proposed));
     }
   }
 
@@ -223,16 +223,7 @@ public final class ContextChanges {
       return null;
     }
     Object snapshot = CanonicalJson.decode(CanonicalJson.encode(value));
-    String identity =
-        switch (key.section()) {
-          case FLOWS -> ContextCodec.flow(snapshot).subject().ref();
-          case DECLARATIONS -> ContextDocument.declarationId(ContextJson.declaration(snapshot));
-          case RESOLUTIONS -> {
-            ContextDocument.Resolution resolution = ContextCodec.resolution(snapshot);
-            yield ContextDocument.fieldId(resolution.subject(), resolution.field());
-          }
-          case READINESS -> ContextCodec.readiness(snapshot).subject().ref();
-        };
+    String identity = identity(key.section(), snapshot);
     if (!key.id().equals(identity)) {
       throw new IllegalArgumentException("Edit identity differs from value identity");
     }
@@ -244,6 +235,47 @@ public final class ContextChanges {
           case READINESS -> ContextCodec.readiness(ContextCodec.readiness(snapshot));
         };
     return CanonicalJson.decode(CanonicalJson.encode(wire));
+  }
+
+  private static String identity(Section section, Object snapshot) {
+    return switch (section) {
+      case FLOWS -> ContextCodec.flow(snapshot).subject().ref();
+      case DECLARATIONS -> ContextDocument.declarationId(ContextJson.declaration(snapshot));
+      case RESOLUTIONS -> {
+        ContextDocument.Resolution resolution = ContextCodec.resolution(snapshot);
+        yield ContextDocument.fieldId(resolution.subject(), resolution.field());
+      }
+      case READINESS -> ContextCodec.readiness(snapshot).subject().ref();
+    };
+  }
+
+  // Guided editors copy Java-provided base hashes and request USER source revisions here.
+  private static Object proposal(Section section, Object value) {
+    if (value == null || (section != Section.DECLARATIONS && section != Section.READINESS)) {
+      return value;
+    }
+    Map<String, Object> snapshot =
+        new TreeMap<>(CanonicalJson.object(CanonicalJson.decode(CanonicalJson.encode(value))));
+    Map<String, Object> source = new TreeMap<>(CanonicalJson.object(snapshot.get("source")));
+    if (!CanonicalJson.text(source, "revision").isEmpty()) {
+      return snapshot;
+    }
+    if (!"USER".equals(CanonicalJson.text(source, "kind"))) {
+      throw new IllegalArgumentException(
+          "Only guided USER proposals may request a source revision");
+    }
+    source.put("revision", "0".repeat(64));
+    snapshot.put("source", source);
+    snapshot =
+        new TreeMap<>(
+            CanonicalJson.object(
+                canonical(new Key(section, identity(section, snapshot)), snapshot)));
+    source = new TreeMap<>(CanonicalJson.object(snapshot.get("source")));
+    source.remove("revision");
+    snapshot.put("source", source);
+    String revision = CanonicalJson.revision(snapshot);
+    source.put("revision", revision);
+    return snapshot;
   }
 
   private static ContextDocument document(Map<Key, Object> fields) {
@@ -278,12 +310,17 @@ public final class ContextChanges {
   private static Edit edit(Object value) {
     Map<String, Object> object = CanonicalJson.object(value);
     CanonicalJson.requireKeys(object, "section", "id", "base", "baseHash", "proposed");
+    Section section = Section.valueOf(CanonicalJson.text(object, "section"));
+    Object proposed = proposal(section, object.get("proposed"));
+    String id = CanonicalJson.text(object, "id");
+    if (id.isEmpty()) {
+      if (object.get("base") != null || proposed == null) {
+        throw new IllegalArgumentException(
+            "Automatic edit identity requires creation with a null base");
+      }
+      id = identity(section, proposed);
+    }
     return new Edit(
-        new Key(
-            Section.valueOf(CanonicalJson.text(object, "section")),
-            CanonicalJson.text(object, "id")),
-        object.get("base"),
-        CanonicalJson.text(object, "baseHash"),
-        object.get("proposed"));
+        new Key(section, id), object.get("base"), CanonicalJson.text(object, "baseHash"), proposed);
   }
 }

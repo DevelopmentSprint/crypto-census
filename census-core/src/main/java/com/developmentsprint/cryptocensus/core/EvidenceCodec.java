@@ -148,7 +148,8 @@ public final class EvidenceCodec {
     return cbom;
   }
 
-  private static Map<String, Object> identity(EvidenceDocument.IdentityMapping value) {
+  /** Builds the shared v1 identity fragment for evidence and assessment output. */
+  public static Map<String, Object> identity(EvidenceDocument.IdentityMapping value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("id", value.id());
     result.put("deploymentId", value.deploymentId());
@@ -181,7 +182,8 @@ public final class EvidenceCodec {
         CanonicalJson.text(object, "provenance"));
   }
 
-  private static Map<String, Object> discoveredFlow(EvidenceDocument.DiscoveredFlow value) {
+  /** Builds the shared v1 discovered-flow fragment for evidence and assessment output. */
+  public static Map<String, Object> discoveredFlow(EvidenceDocument.DiscoveredFlow value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("identityId", value.identityId());
     result.put("definition", ContextJson.flow(value.definition()));
@@ -195,7 +197,8 @@ public final class EvidenceCodec {
         CanonicalJson.text(object, "identityId"), ContextJson.flow(object.get("definition")));
   }
 
-  private static Map<String, Object> scopeRef(EvidenceDocument.ScopeRef value) {
+  /** Builds the shared v1 scopeRef fragment for evidence and assessment output. */
+  public static Map<String, Object> scopeRef(EvidenceDocument.ScopeRef value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("identityId", value.identityId());
     result.put("subject", ContextJson.subject(value.subject()));
@@ -209,7 +212,8 @@ public final class EvidenceCodec {
         CanonicalJson.text(object, "identityId"), ContextJson.subject(object.get("subject")));
   }
 
-  private static Map<String, Object> scope(EvidenceDocument.ScopeContext value) {
+  /** Builds the shared v1 scope fragment for evidence and assessment output. */
+  public static Map<String, Object> scope(EvidenceDocument.ScopeContext value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("identityId", value.identityId());
     result.put("path", value.path().stream().map(EvidenceCodec::scopeRef).toList());
@@ -247,7 +251,8 @@ public final class EvidenceCodec {
         ContextJson.binding(object.get("projectFrame")));
   }
 
-  private static Map<String, Object> capability(EvidenceDocument.Capability value) {
+  /** Builds the shared v1 capability fragment for evidence and assessment output. */
+  public static Map<String, Object> capability(EvidenceDocument.Capability value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("feature", value.feature());
     result.put("status", value.status().name());
@@ -325,7 +330,8 @@ public final class EvidenceCodec {
         object.get("pskOrigin") == null ? null : attempt(object.get("pskOrigin")));
   }
 
-  private static Map<String, Object> handshake(EvidenceDocument.Handshake value) {
+  /** Builds the shared v1 handshake fragment for evidence and assessment output. */
+  public static Map<String, Object> handshake(EvidenceDocument.Handshake value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("connectionId", value.connectionId());
     result.put("attempt", value.attempt());
@@ -370,7 +376,8 @@ public final class EvidenceCodec {
         scope(object.get("initiation")));
   }
 
-  private static Map<String, Object> occurrence(Occurrence value) {
+  /** Builds the shared v1 occurrence fragment for evidence and assessment output. */
+  public static Map<String, Object> occurrence(Occurrence value) {
     Map<String, Object> result = new TreeMap<>();
     result.put("location", value.location());
     result.put("symbol", value.symbol());

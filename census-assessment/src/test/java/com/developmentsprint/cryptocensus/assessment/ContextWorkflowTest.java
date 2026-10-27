@@ -38,6 +38,54 @@ class ContextWorkflowTest {
   }
 
   @Test
+  void identicalSavedAndObservedDeclarationsConsumeOneCombinedBudget() {
+    List<ContextModel.Declaration> declarations =
+        java.util.stream.IntStream.range(0, ContextModel.MAX_DECLARATIONS / 2 + 1)
+            .mapToObj(
+                index ->
+                    new ContextModel.Declaration(
+                        SUBJECT,
+                        ContextModel.Field.CLASSIFICATION,
+                        "sensitive",
+                        source(ContextModel.SourceKind.ANNOTATION, "source-" + index, "a")))
+            .toList();
+    ContextDocument context = new ContextDocument(1, List.of(), declarations, List.of(), List.of());
+    Reconciliation.Result result =
+        Reconciliation.resolve(SUBJECT, ContextModel.Field.CLASSIFICATION, declarations, context);
+    assertThat(result.status()).isEqualTo(Reconciliation.Status.AGREED);
+    assertThat(result.sources()).hasSize(declarations.size());
+  }
+
+  @Test
+  void guidedUserReadinessRevisionUsesCanonicalReferences() {
+    ContextDocument.Readiness readiness =
+        new ContextDocument.Readiness(
+            SUBJECT,
+            ContextDocument.ReadinessState.CANDIDATE,
+            "Reviewed prerequisite",
+            source(ContextModel.SourceKind.USER, "guided", "a"),
+            List.of("a", "z"));
+    Map<String, Object> proposed = new java.util.TreeMap<>(ContextCodec.readiness(readiness));
+    Map<String, Object> pending =
+        new java.util.TreeMap<>(CanonicalJson.object(proposed.get("source")));
+    pending.put("revision", "");
+    proposed.put("source", pending);
+    ContextChanges.Key key =
+        new ContextChanges.Key(ContextChanges.Section.READINESS, SUBJECT.ref());
+    ContextChanges.Edit first =
+        new ContextChanges.Edit(key, null, CanonicalJson.revision(null), proposed);
+    proposed.put("validationRefs", List.of("z", "a"));
+    ContextChanges.Edit second =
+        new ContextChanges.Edit(key, null, CanonicalJson.revision(null), proposed);
+    assertThat(first).isEqualTo(second);
+    assertThat(ContextCodec.readiness(first.proposed()).source().revision()).hasSize(64);
+    pending.put("kind", "ANNOTATION");
+    assertThatThrownBy(
+            () -> new ContextChanges.Edit(key, null, CanonicalJson.revision(null), proposed))
+        .hasMessageContaining("Only guided USER");
+  }
+
+  @Test
   void replacementWithUnchangedAssertedRevisionInvalidatesReviewedResolution() {
     ContextModel.Declaration original =
         declaration(SUBJECT, ContextModel.Field.CONFIDENTIALITY_YEARS, "5", "a");

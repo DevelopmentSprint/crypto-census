@@ -2,7 +2,6 @@ package com.developmentsprint.cryptocensus.assessment;
 
 import com.developmentsprint.cryptocensus.core.ContextModel;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -69,8 +68,8 @@ public final class Reconciliation {
       ContextDocument context) {
     Objects.requireNonNull(subject, "subject");
     Objects.requireNonNull(field, "field");
-    List<ContextModel.Declaration> all =
-        new ArrayList<>(
+    Set<ContextModel.Declaration> all =
+        new java.util.LinkedHashSet<>(
             ContextModel.bounded(observed, ContextModel.MAX_DECLARATIONS, "observed declarations"));
     all.addAll(context.declarations());
     if (all.size() > ContextModel.MAX_DECLARATIONS) {
