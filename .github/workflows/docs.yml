@@ -67,7 +67,7 @@ jobs:
         run: python3 scripts/docs/evidence_source.py select
       - name: Download verified producer coverage
         if: github.event_name == 'workflow_run' && steps.source.outputs.current == 'true'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           artifact-ids: ${{ steps.evidence.outputs.coverage_id }}
           merge-multiple: true
@@ -76,7 +76,7 @@ jobs:
           run-id: ${{ steps.evidence.outputs.run_id }}
       - name: Download verified producer example CBOM
         if: github.event_name == 'workflow_run' && steps.source.outputs.current == 'true'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           artifact-ids: ${{ steps.evidence.outputs.cbom_id }}
           merge-multiple: true
