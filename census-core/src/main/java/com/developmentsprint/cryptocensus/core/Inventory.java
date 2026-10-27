@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -84,6 +85,46 @@ public final class Inventory {
    * @throws IllegalArgumentException if {@code count} is negative
    */
   public void add(CryptoAsset asset, Occurrence occurrence, long count) {
+    addEffective(asset, occurrence, count);
+  }
+
+  /** Records one event and exposes the inventory's effective retention decision. */
+  public RecordOutcome recordWithOutcome(CryptoAsset asset, Occurrence occurrence) {
+    return addWithOutcome(asset, occurrence, 1);
+  }
+
+  /** Adds events, preserving the legacy counts while exposing folding or dropping to enrichment. */
+  public RecordOutcome addWithOutcome(CryptoAsset asset, Occurrence occurrence, long count) {
+    Occurrence effective = addEffective(asset, occurrence, count);
+    return effective == null
+        ? new RecordOutcome(Disposition.DROPPED, null)
+        : new RecordOutcome(
+            Occurrence.OVERFLOW.equals(effective) ? Disposition.FOLDED : Disposition.KEPT,
+            effective);
+  }
+
+  /** The effective decision made by the canonical inventory. */
+  public enum Disposition {
+    KEPT,
+    FOLDED,
+    DROPPED
+  }
+
+  /** Dropped events have no retained occurrence; folded events use the overflow occurrence. */
+  public record RecordOutcome(Disposition disposition, Occurrence occurrence) {
+    /** Validates the relationship between retention disposition and effective occurrence. */
+    public RecordOutcome {
+      Objects.requireNonNull(disposition, "disposition");
+      if ((disposition == Disposition.DROPPED) != (occurrence == null)
+          || (disposition == Disposition.FOLDED && !Occurrence.OVERFLOW.equals(occurrence))
+          || (disposition == Disposition.KEPT && Occurrence.OVERFLOW.equals(occurrence))) {
+        throw new IllegalArgumentException("Inconsistent inventory outcome");
+      }
+    }
+  }
+
+  // The unchanged legacy API does not allocate outcome records on the hot path.
+  private Occurrence addEffective(CryptoAsset asset, Occurrence occurrence, long count) {
     if (count < 0) {
       throw new IllegalArgumentException("negative count " + count);
     }
@@ -93,7 +134,7 @@ public final class Inventory {
       // for a safety cap.
       if (data.size() >= maxAssets) {
         addSaturating(dropped, count);
-        return;
+        return null;
       }
       sites = data.computeIfAbsent(asset, k -> new ConcurrentHashMap<>());
     }
@@ -105,6 +146,7 @@ public final class Inventory {
       addSaturating(overflowedSites, count);
     }
     addSaturating(sites.computeIfAbsent(site, k -> new AtomicLong()), count);
+    return site;
   }
 
   static long saturatingAdd(long a, long b) {

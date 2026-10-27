@@ -1,0 +1,718 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "cbomHash",
+    "flows",
+    "observations",
+    "handshakes",
+    "identities",
+    "capabilities",
+    "health"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+    },
+    "cbomHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/discoveredFlow"
+      },
+      "maxItems": 4096
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/observation"
+      },
+      "maxItems": 16384
+    },
+    "handshakes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/handshake"
+      },
+      "maxItems": 4096
+    },
+    "identities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/identity"
+      },
+      "maxItems": 4096
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/capability"
+      },
+      "maxItems": 256
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "TRANSFORM_ERRORS",
+        "RECORDING_FAILURES",
+        "DROPPED_FLOWS",
+        "DROPPED_BINDINGS",
+        "LOST_ATTRIBUTION",
+        "DROPPED_HANDSHAKES",
+        "SCOPE_INTEGRITY",
+        "SCOPE_RESTORE_FAILURES",
+        "DRAIN_TIMEOUT",
+        "CONSERVATION_UNVERIFIED",
+        "SATURATED_COUNTS",
+        "OUTPUT_FAILURES"
+      ],
+      "properties": {
+        "TRANSFORM_ERRORS": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "RECORDING_FAILURES": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "DROPPED_FLOWS": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "DROPPED_BINDINGS": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "LOST_ATTRIBUTION": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "DROPPED_HANDSHAKES": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "SCOPE_INTEGRITY": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "SCOPE_RESTORE_FAILURES": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "DRAIN_TIMEOUT": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "CONSERVATION_UNVERIFIED": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "SATURATED_COUNTS": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "OUTPUT_FAILURES": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crypto Census evidence v1",
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationId",
+        "flowId"
+      ],
+      "properties": {
+        "applicationId": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "flowId": {
+          "type": "string",
+          "pattern": "^([a-z0-9][a-z0-9._-]{0,63})?$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "revision",
+        "reviewer",
+        "reviewedAt"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ANNOTATION",
+            "USER",
+            "CATALOG",
+            "APPLICATION_DEFAULT"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reviewer": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "reviewedAt": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 0
+        }
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "field",
+        "value",
+        "source"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "field": {
+          "enum": [
+            "CLASSIFICATION",
+            "CONFIDENTIALITY_YEARS",
+            "AUTHENTICITY_YEARS",
+            "OWNER",
+            "EXPOSURE",
+            "IMPACT",
+            "PURPOSE"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "className",
+        "method",
+        "descriptor",
+        "sourceArtifact",
+        "origin"
+      ],
+      "properties": {
+        "className": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "descriptor": {
+          "type": "string",
+          "maxLength": 1024,
+          "minLength": 0
+        },
+        "sourceArtifact": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "origin": {
+          "enum": [
+            "MAIN",
+            "TEST",
+            "LIBRARY",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "label",
+        "declarations",
+        "bindings"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/declaration"
+          },
+          "maxItems": 16384
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "maxItems": 256
+        }
+      }
+    },
+    "discoveredFlow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identityId",
+        "definition"
+      ],
+      "properties": {
+        "identityId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "definition": {
+          "$ref": "#/$defs/flow"
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "deploymentId",
+        "loaderId",
+        "sourceArtifact",
+        "applicationId",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "deploymentId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "loaderId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "sourceArtifact": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "applicationId": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "status": {
+          "enum": [
+            "RESOLVED",
+            "UNRESOLVED"
+          ]
+        },
+        "provenance": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        }
+      }
+    },
+    "scopeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identityId",
+        "subject"
+      ],
+      "properties": {
+        "identityId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identityId",
+        "path",
+        "association"
+      ],
+      "properties": {
+        "identityId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scopeRef"
+          },
+          "maxItems": 32
+        },
+        "association": {
+          "enum": [
+            "SYNCHRONOUS_SCOPE",
+            "NO_SCOPE",
+            "SCOPE_LOST"
+          ]
+        }
+      }
+    },
+    "occurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "symbol",
+        "line",
+        "via"
+      ],
+      "properties": {
+        "location": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "symbol": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 2147483647
+        },
+        "via": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetRef",
+        "occurrence",
+        "context",
+        "count",
+        "projectFrame"
+      ],
+      "properties": {
+        "assetRef": {
+          "type": "string",
+          "maxLength": 4096,
+          "minLength": 1
+        },
+        "occurrence": {
+          "$ref": "#/$defs/occurrence"
+        },
+        "context": {
+          "$ref": "#/$defs/scope"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "projectFrame": {
+          "$ref": "#/$defs/binding"
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feature",
+        "status",
+        "detail"
+      ],
+      "properties": {
+        "feature": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "PARTIAL",
+            "UNAVAILABLE"
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "maxLength": 1024,
+          "minLength": 0
+        }
+      }
+    },
+    "negotiation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "cipherSuite",
+        "selectedGroupId",
+        "selectedGroupName",
+        "localSignatureScheme",
+        "peerSignatureScheme"
+      ],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 0
+        },
+        "cipherSuite": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "selectedGroupId": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 65535
+        },
+        "selectedGroupName": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 0
+        },
+        "localSignatureScheme": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 0
+        },
+        "peerSignatureScheme": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 0
+        }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectionId",
+        "attempt"
+      ],
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        }
+      }
+    },
+    "resumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resumed",
+        "freshKeyExchange",
+        "pskOrigin"
+      ],
+      "properties": {
+        "resumed": {
+          "enum": [
+            "YES",
+            "NO",
+            "UNKNOWN"
+          ]
+        },
+        "freshKeyExchange": {
+          "enum": [
+            "YES",
+            "NO",
+            "UNKNOWN"
+          ]
+        },
+        "pskOrigin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/attempt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "handshake": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectionId",
+        "attempt",
+        "transport",
+        "role",
+        "outcome",
+        "negotiation",
+        "resumption",
+        "relatedAssetRefs",
+        "adapter",
+        "diagnostics",
+        "initiation"
+      ],
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "transport": {
+          "enum": [
+            "SOCKET",
+            "ENGINE"
+          ]
+        },
+        "role": {
+          "enum": [
+            "CLIENT",
+            "SERVER"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "COMPLETED",
+            "FAILED",
+            "UNKNOWN"
+          ]
+        },
+        "negotiation": {
+          "$ref": "#/$defs/negotiation"
+        },
+        "resumption": {
+          "$ref": "#/$defs/resumption"
+        },
+        "relatedAssetRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 1
+          },
+          "maxItems": 64
+        },
+        "adapter": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          },
+          "maxItems": 32
+        },
+        "initiation": {
+          "$ref": "#/$defs/scope"
+        }
+      }
+    }
+  },
+  "description": "Structural wire schema. EvidenceCodec additionally enforces references, count conservation, canonical scalar semantics, aggregate budgets and exact CBOM pairing."
+}
