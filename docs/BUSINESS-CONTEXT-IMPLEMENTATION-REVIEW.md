@@ -1,11 +1,11 @@
 # Business-context implementation review
 
-Status: corrections in progress; not final acceptance.
+Status: implemented, corrected and verified on the local pre-develop integration branch; ready for human review. No release acceptance implied.
 
 Claude Code reviewed commit `78ddf1e` using `claude-opus-5-5` with high effort.
 The review received the accepted design and implementation through read-only tools.
-It did not execute tests. Findings below require regressions and a follow-up review
-before integration is considered complete.
+It did not execute tests. The first-review findings and subsequent checkpoints are retained below as historical evidence.
+The final delivery disposition appears at the end of this document.
 
 | Finding | Disposition and implementation boundary |
 | --- | --- |
@@ -89,6 +89,68 @@ issues, so the candidate is not yet ready for final acceptance.
 | R10: Assessment input budget is undocumented | Accepted documentation correction. |
 | R11: Failed generation leaves previous report files | Retaining prior files on preflight failure is intentional. Deleting or marking them before validation can destroy prior valid output or an aliased input. Separate atomic writes are not a multi-file transaction. Document that failed generation does not make the previous report current; do not introduce destructive cleanup. |
 
-The third review will check the corrections and the R3/R11 dispositions. The selected-group
+A third broad review was not run: after raising review cost, the user authorized targeted
+verification and handoff of the two final correction branches. The selected-group
 HelloRetryRequest test-coverage concern and Maven session-clone concern are hypotheses,
 not demonstrated defects; their validation status must remain explicit.
+
+### Hypothesis checks
+
+Installed JDK 17.0.18, 21.0.10 and 25.0.2 sources store the completed server share in
+`SH_KEY_SHARE.serverShare`; retry requests use `HRR_KEY_SHARE`. The adapter reads the
+former's `namedGroupId`, not the client's offered groups. No selected-versus-offered defect
+was found in that path. A dedicated forced-HelloRetryRequest end-to-end scenario remains
+untested; ordinary client/server and hybrid fixtures do not establish that coverage.
+
+The installed Maven 3.9.5, 3.9.6, 3.9.10, 3.9.12 and 3.9.16 bytecode creates a separate
+current-project `ThreadLocal` during session cloning. In the older supported minimum,
+[Maven 3.6.3 source](https://raw.githubusercontent.com/apache/maven/maven-3.6.3/maven-core/src/main/java/org/apache/maven/execution/MavenSession.java)
+uses a plain instance field and `super.clone()`, so assigning the clone's current project does
+not replace the original session's field. This checks the proposed mutation mechanism;
+it is not a claim of running the complete plugin suite on every Maven release.
+
+## Final correction disposition
+
+All corrections are merged into local candidate `adbd41a` on
+`integration/census-dlz_business-context`. This is a pre-develop review branch, not a release.
+The pending entries above describe earlier checkpoints; they are superseded as follows:
+
+- F1–F10 have implemented corrections and regressions, including deployment qualification (F5).
+- R1 and R4: commit `655d352` restricts deployment ambiguity to declaring-flow and project-frame
+  identities, and separates optional annotation diagnostics from TLS transform health. Real
+  shaded-agent tests exercise one versus two declaring loaders through assessment, and an
+  invalid annotation beside two completed, qualified TLS confidentiality findings. These new
+  runtime cases passed on JDK 17, 21 and 25; the complete JDK 25 reactor and normal commit
+  gates passed. Existing sidecars without the optional counter remain readable.
+- R2 and R3: commit `dcb84a8` keeps compatible-purpose conflicts visible without suppressing
+  urgency and retains independently sufficient positive reasons as unresolved. The business
+  result still requires review when an applicable declaration conflicts. Core and assessment
+  verification and the normal commit gates passed.
+- R5–R10: commit `4297e65` adds multi-instance source review, deciding-source freshness,
+  controlled timestamp validation, order-independent paired/unpaired deduplication, and
+  catalog/input-budget documentation. The full plugin reactor, all 24 consumer builds,
+  19 browser tests and normal commit gates passed.
+- R11: prior-output preservation remains intentional; the operator workflow now explains
+  that a failed generation leaves the last successful report, not a newly successful assessment.
+
+The drift guard reviewed the correction slices with no remaining source-review blockers.
+Claude completed two read-only implementation reviews; **Claude has not re-reviewed these
+last corrections**. The final result therefore claims verified corrections and documented
+review dispositions, not a clean third Claude review. The R3/R11 interpretations and the
+coverage limitations above remain visible for human review.
+
+### Combined delivery verification
+
+On `adbd41a`, the final clean seven-module Maven `install` passed with enrichment and
+assessment enabled on JDK 25, including static analysis, coverage and consumer integration
+fixtures. The 19 real Chrome guided-report tests and the actual demo browser-export →
+Maven apply → reassess workflow passed with no skips. The demo assertion script confirmed
+its five priorities, shared-helper counts, async gap and paired outputs. Two existing
+agent integration tests remain environment-dependent skips; they are not claimed as passed.
+
+The final private-tracker index check and whitespace check passed. Inspection of all five
+production JARs found no known tracker paths or generated assessment artifacts; the agent
+contains no Bouncy Castle implementation classes. No thresholds or hooks were bypassed.
+Documentation-only closeout follows this tested product snapshot. Nothing was pushed,
+merged into develop, or released. The retained integration checkout supplies the reviewable
+code, workflow documentation and generated demo report.
