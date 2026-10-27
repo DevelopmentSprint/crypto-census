@@ -31,7 +31,7 @@ public final class GuidedReportFixture {
     Path directory = Path.of(args[0]);
     Files.createDirectories(directory);
     ContextDocument context = context();
-    if (args.length > 1) {
+    if (args.length > 1 && !args[1].equals("-")) {
       ContextChanges.ChangeSet changes = ContextChanges.parse(DocumentFiles.read(Path.of(args[1])));
       ContextChanges.Merge merged = ContextChanges.merge(context, changes);
       if (!merged.conflicts().isEmpty()) {
@@ -40,7 +40,13 @@ public final class GuidedReportFixture {
       context = merged.document();
     }
     AssessmentReport report =
-        AssessmentEngine.assess(List.of(input()), context, PolicyProfile.defaults());
+        AssessmentEngine.assess(
+            List.of(
+                input(
+                    args.length > 2 && args[2].equals("unresolved"),
+                    args.length > 2 && args[2].equals("lost"))),
+            context,
+            PolicyProfile.defaults());
     report.write(directory.resolve("assessment.json"));
     GuidedReport.write(report, directory.resolve("assessment.html"));
     DocumentFiles.write(directory.resolve("context.json"), ContextCodec.encode(context));
@@ -62,6 +68,10 @@ public final class GuidedReportFixture {
   }
 
   static AssessmentInputs.Input input() {
+    return input(false, false);
+  }
+
+  private static AssessmentInputs.Input input(boolean unresolved, boolean lost) {
     CryptoAsset asset =
         CryptoAsset.cipher(
             "RSA/ECB/OAEPWithSHA-256AndMGF1Padding", 2048, "SunJCE", Operation.ENCRYPT);
@@ -104,13 +114,17 @@ public final class GuidedReportFixture {
             1,
             NONCE,
             CanonicalJson.hash(cbom),
-            List.of(new EvidenceDocument.DiscoveredFlow("identity", flow)),
+            unresolved ? List.of() : List.of(new EvidenceDocument.DiscoveredFlow("identity", flow)),
             List.of(
                 new EvidenceDocument.Observation(
                     asset.ref(),
                     site,
                     new EvidenceDocument.ScopeContext(
-                        "identity", List.of(), EvidenceDocument.Association.NO_SCOPE),
+                        "identity",
+                        List.of(),
+                        lost
+                            ? EvidenceDocument.Association.SCOPE_LOST
+                            : EvidenceDocument.Association.NO_SCOPE),
                     3,
                     binding)),
             List.of(),
@@ -120,8 +134,10 @@ public final class GuidedReportFixture {
                     "deployment",
                     "loader",
                     "example:archive",
-                    "demo",
-                    EvidenceDocument.IdentityStatus.RESOLVED,
+                    unresolved ? "" : "demo",
+                    unresolved
+                        ? EvidenceDocument.IdentityStatus.UNRESOLVED
+                        : EvidenceDocument.IdentityStatus.RESOLVED,
                     "source-catalog")),
             List.of(
                 new EvidenceDocument.Capability(

@@ -113,6 +113,39 @@ class AssessMojoTest {
   }
 
   @Test
+  void oversizedEscapedHtmlLeavesBothPreviousOutputsUntouched() throws Exception {
+    Path cbom = temporary.resolve("cbom-one.json");
+    Files.writeString(cbom, Cbom.toJson(new Inventory(), new Cbom.Metadata("test", Map.of())));
+    var flows =
+        java.util.stream.IntStream.range(0, 800)
+            .mapToObj(
+                index ->
+                    new ContextDocument.Flow(
+                        new com.developmentsprint.cryptocensus.core.ContextModel.Subject(
+                            "<".repeat(256), "flow-" + index),
+                        "<".repeat(256),
+                        ContextDocument.State.ACTIVE,
+                        List.of()))
+            .toList();
+    Path context = temporary.resolve("context.json");
+    Files.write(
+        context,
+        ContextCodec.encode(new ContextDocument(1, flows, List.of(), List.of(), List.of())));
+    Path output = Files.createDirectory(temporary.resolve("report"));
+    Path json = output.resolve("assessment.json");
+    Path html = output.resolve("assessment.html");
+    Files.writeString(json, "previous JSON");
+    Files.writeString(html, "previous HTML");
+    assertThatThrownBy(
+            () ->
+                ReportWorkflow.write(
+                    List.of(), List.of(cbom), context.toFile(), null, output, "tests", "local"))
+        .hasMessageContaining("HTML report exceeds output budget");
+    assertThat(Files.readString(json)).isEqualTo("previous JSON");
+    assertThat(Files.readString(html)).isEqualTo("previous HTML");
+  }
+
+  @Test
   void validatesExplicitPolicyAndProtectsContextFromOutputCollision() throws Exception {
     Files.writeString(
         temporary.resolve("cbom-one.json"),

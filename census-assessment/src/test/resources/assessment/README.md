@@ -6,8 +6,10 @@ runtime. Actual runtime conformance is tested separately by the agent fixtures.
 
 - `sample-cbom.json` and `sample-evidence.json` are an exact-byte pair. The fixed
   UUID and timestamp make their hashes reproducible.
-- `legacy-cbom.json` has no sidecar. Its observed AES primitive remains visible,
-  while flow association and evidence completeness remain unknown.
+- `legacy-cbom.json` has no sidecar but carries a run nonce, so the report diagnoses
+  `EXPECTED_SIDECAR_MISSING`. Its observed AES primitive remains visible, while
+  flow association and evidence completeness remain unknown. True legacy input
+  without a nonce retains `NO_FLOW_OR_CORRELATION_EVIDENCE` in the input unit tests.
 - `context.json` supplies conflicting user metadata, imported flow metadata,
   application defaults and a retired flow with a stale saved method binding.
 - `assessment-v1.json` is the canonical report for those inputs with the default

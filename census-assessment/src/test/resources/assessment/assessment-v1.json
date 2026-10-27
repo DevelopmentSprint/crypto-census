@@ -1100,8 +1100,8 @@
       },
       "direct": true,
       "gaps": [
-        "FLOW_ASSOCIATION_NOT_ESTABLISHED",
-        "NO_FLOW_OR_CORRELATION_EVIDENCE"
+        "EXPECTED_SIDECAR_MISSING",
+        "FLOW_ASSOCIATION_NOT_ESTABLISHED"
       ],
       "id": "0fefb3ed1fbc2085659b177cf5250d01ff6aabd8c0fe8f544def55e3414f705d",
       "identityId": "",
@@ -4565,7 +4565,7 @@
   ],
   "gaps": [
     "CORE_HEALTH:cryptocensus:overflowedSites",
-    "NO_FLOW_OR_CORRELATION_EVIDENCE",
+    "EXPECTED_SIDECAR_MISSING",
     "NO_TRUSTED_FLOW_EVIDENCE"
   ],
   "incomplete": true,
@@ -4606,7 +4606,7 @@
       "capabilities": [],
       "cbomHash": "608f57c28decb0abe89e8265e3cebae0ac3af067ee8439d1c96218921c00e5ee",
       "collectionGaps": [
-        "NO_FLOW_OR_CORRELATION_EVIDENCE"
+        "EXPECTED_SIDECAR_MISSING"
       ],
       "coreHealth": {
         "cryptocensus:drainTimedOut": 0,

@@ -281,7 +281,10 @@ final class AgentEnrichment {
       }
       identities =
           new FlowIdentities(
-              sources, config.applicationId, health::increment, ContextModel.MAX_FLOWS);
+              sources,
+              config.sourcesFile == null ? config.applicationId : null,
+              health::increment,
+              ContextModel.MAX_FLOWS);
     }
 
     void publish(List<Inventory.Entry> written, long deadline) throws IOException {
@@ -292,7 +295,8 @@ final class AgentEnrichment {
       }
       health.add(EvidenceDocument.Counter.SCOPE_INTEGRITY, scopes.integrityFailures());
       health.add(EvidenceDocument.Counter.SCOPE_INTEGRITY, scopes.entryFailures());
-      health.add(EvidenceDocument.Counter.SCOPE_INTEGRITY, scopes.overflowed());
+      // Depth overflow marks only the affected path lost; independent scopes remain attributable.
+      health.add(EvidenceDocument.Counter.LOST_ATTRIBUTION, scopes.overflowed());
       health.add(EvidenceDocument.Counter.SCOPE_RESTORE_FAILURES, scopes.restoreFailures());
       var observations = evidence.snapshot(written, scopes.unverified());
       final byte[] cbom = Cbom.readBytes(config.output);

@@ -68,6 +68,40 @@ class AgentEnrichmentTest {
   }
 
   @Test
+  void depthOverflowDoesNotInvalidateIndependentScopes() throws Exception {
+    final Path output = configure("local-overflow", true, ",maxScopeDepth=1");
+    AgentEnrichment.installed();
+    int binding = binding();
+    Inventory inventory = new Inventory();
+    final long outer = FlowAdvice.enter(binding);
+    AgentEnrichment.record(ASSET, inventory.recordWithOutcome(ASSET, SITE));
+    long inner = FlowAdvice.enter(binding);
+    AgentEnrichment.record(ASSET, inventory.recordWithOutcome(ASSET, SITE));
+    FlowAdvice.exit(inner);
+    FlowAdvice.exit(outer);
+    long independent = FlowAdvice.enter(binding);
+    AgentEnrichment.record(ASSET, inventory.recordWithOutcome(ASSET, SITE));
+    FlowAdvice.exit(independent);
+    write(output, inventory);
+    AgentEnrichment.stop(0);
+    assertThat(AgentEnrichment.publish(inventory.entries(), 5000)).isTrue();
+    var evidence = EvidenceCodec.read(tmp.resolve("local-overflow.evidence.json"));
+    EvidenceCodec.validatePair(evidence, Cbom.readBytes(output));
+    assertThat(evidence.health().get(EvidenceDocument.Counter.SCOPE_INTEGRITY)).isZero();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.LOST_ATTRIBUTION)).isPositive();
+    assertThat(evidence.observations())
+        .filteredOn(
+            value -> value.context().association() == EvidenceDocument.Association.SCOPE_LOST)
+        .hasSize(1);
+    assertThat(evidence.observations())
+        .filteredOn(
+            value ->
+                value.context().association() == EvidenceDocument.Association.SYNCHRONOUS_SCOPE)
+        .singleElement()
+        .satisfies(value -> assertThat(value.count()).isEqualTo(2));
+  }
+
+  @Test
   void attributionFailureAndDrainTimeoutNeverChangeCoreCounts() throws Exception {
     final Path output = configure("partial", false, "");
     var inventory = new Inventory();
@@ -90,7 +124,10 @@ class AgentEnrichmentTest {
   @Test
   void unresolvedIdentityMissingCatalogAndCoreDropsRemainExplicit() throws Exception {
     final Path output =
-        configure("unresolved", false, ",sourcesFile=" + tmp.resolve("missing.json"));
+        configure(
+            "unresolved",
+            false,
+            ",applicationId=consumer,sourcesFile=" + tmp.resolve("missing.json"));
     AgentEnrichment.installed();
     assertThat(binding()).isZero();
     final long previous = FlowBridge.enter(0);

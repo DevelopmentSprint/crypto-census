@@ -104,17 +104,23 @@ public final class PriorityRules {
           List.of(),
           "Collect supported execution evidence and review its association and technical gaps.");
     }
-    boolean conflict = fields.values().stream().anyMatch(Reconciliation.Result::conflict);
+    boolean reviewRequired = fields.values().stream().anyMatch(Reconciliation.Result::conflict);
+    boolean conflict =
+        fields.entrySet().stream()
+            .anyMatch(
+                entry -> applicable(entry.getKey(), facts.role()) && entry.getValue().conflict());
     String classification = value(fields, ContextModel.Field.CLASSIFICATION);
     Integer sensitivity = profile.sensitivity().get(classification);
     if (!classification.isEmpty() && sensitivity == null) {
       reasons.add("CLASSIFICATION_UNMAPPED");
-      conflict = true;
+      reviewRequired = true;
+      conflict |= applicable(ContextModel.Field.CLASSIFICATION, facts.role());
     }
     String declaredImpact = value(fields, ContextModel.Field.IMPACT);
     if (!declaredImpact.isEmpty() && !profile.impact().containsKey(declaredImpact)) {
       reasons.add("IMPACT_UNMAPPED");
-      conflict = true;
+      reviewRequired = true;
+      conflict |= applicable(ContextModel.Field.IMPACT, facts.role());
     }
     if (contradictoryPurpose(facts.role(), value(fields, ContextModel.Field.PURPOSE))) {
       reasons.add("PURPOSE_CONTRADICTS_OBSERVED_ROLE");
@@ -131,6 +137,9 @@ public final class PriorityRules {
           List.of(),
           "Review conflicting, stale or unmapped declarations while retaining technical findings.");
     }
+    if (reviewRequired) {
+      reasons.add("NON_APPLICABLE_DECLARATION_REVIEW_REQUIRED");
+    }
     List<String> missing = missing(fields, facts.role(), profile);
     String urgency = urgency(facts, fields, profile);
     if (!urgency.isEmpty()) {
@@ -142,7 +151,7 @@ public final class PriorityRules {
           "technical-remediation",
           Priority.TECHNICAL_REMEDIATION_FIRST,
           true,
-          !missing.isEmpty(),
+          reviewRequired || !missing.isEmpty(),
           reasons,
           missing,
           "Remediate the current technical finding and assess its quantum-exposed dependencies.");
@@ -154,7 +163,7 @@ public final class PriorityRules {
             confidentiality ? "long-confidentiality" : "authenticity-urgency",
             Priority.URGENT_PLANNING,
             false,
-            !missing.isEmpty(),
+            reviewRequired || !missing.isEmpty(),
             reasons,
             missing,
             confidentiality
@@ -169,7 +178,7 @@ public final class PriorityRules {
             "planned-classical-migration",
             Priority.PLANNED_MIGRATION,
             false,
-            false,
+            reviewRequired,
             reasons,
             missing,
             "Plan replacement of this classical dependency; shorter lifetimes do not establish"
@@ -195,7 +204,7 @@ public final class PriorityRules {
           "observed-resistant-primitive",
           Priority.NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE,
           false,
-          false,
+          reviewRequired,
           reasons,
           List.of(),
           "Review unobserved paths and key-establishment, key-protection and protocol dependencies"
@@ -211,6 +220,16 @@ public final class PriorityRules {
         missing,
         "Collect the missing technical or relationship evidence; algorithm presence alone does not"
             + " establish readiness.");
+  }
+
+  private static boolean applicable(ContextModel.Field field, TechnicalFacts.ObservedRole role) {
+    return switch (field) {
+      case PURPOSE -> true;
+      case CLASSIFICATION, CONFIDENTIALITY_YEARS ->
+          role == TechnicalFacts.ObservedRole.CONFIDENTIALITY;
+      case AUTHENTICITY_YEARS, IMPACT -> role == TechnicalFacts.ObservedRole.AUTHENTICITY;
+      case OWNER, EXPOSURE -> false;
+    };
   }
 
   private static String urgency(

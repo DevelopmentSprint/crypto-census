@@ -56,6 +56,66 @@ class SourceCatalogsTest {
   }
 
   @Test
+  void configuredApplicationOwnsOnlyItsKnownArtifactAndExplicitMappingsWin() {
+    var application = project("application", temporary.resolve("app"));
+    var library = project("library", temporary.resolve("lib"));
+    var vendor =
+        SourceCatalogs.entry(
+            temporary.resolve("vendor.jar").toString(),
+            "vendor:api",
+            "vendor:api",
+            ContextModel.Origin.LIBRARY,
+            false);
+    var generated =
+        SourceCatalogs.generate(
+            List.of(application, library),
+            List.of(vendor),
+            new SourceCatalog(1, List.of()),
+            java.util.Map.of("acme:application", "product"));
+    assertThat(generated.entries())
+        .filteredOn(entry -> "acme:application".equals(entry.artifactId()))
+        .isNotEmpty()
+        .allMatch(entry -> "product".equals(entry.applicationId()));
+    assertThat(generated.entries())
+        .filteredOn(entry -> "acme:library".equals(entry.artifactId()))
+        .isNotEmpty()
+        .allMatch(entry -> "acme:library".equals(entry.applicationId()));
+    assertThat(generated.resolve(vendor.locationUri()).orElseThrow()).isEqualTo(vendor);
+    var global =
+        SourceCatalogs.generate(
+            List.of(application, library),
+            List.of(vendor),
+            new SourceCatalog(1, List.of()),
+            java.util.Map.of(
+                "acme:application", "shared-product", "acme:library", "shared-product"));
+    assertThat(global.entries())
+        .filteredOn(entry -> entry.origin() != ContextModel.Origin.LIBRARY)
+        .isNotEmpty()
+        .allMatch(entry -> "shared-product".equals(entry.applicationId()));
+    assertThat(global.resolve(vendor.locationUri()).orElseThrow()).isEqualTo(vendor);
+    var main =
+        generated.entries().stream()
+            .filter(entry -> entry.artifactId().equals("acme:application"))
+            .findFirst()
+            .orElseThrow();
+    var explicit =
+        new SourceCatalog.Entry(
+            main.locationUri(),
+            main.artifactId(),
+            "explicit-product",
+            main.origin(),
+            "deployment",
+            main.loaderName());
+    var overridden =
+        SourceCatalogs.generate(
+            List.of(application, library),
+            List.of(vendor),
+            new SourceCatalog(1, List.of(explicit)),
+            java.util.Map.of("acme:application", "product"));
+    assertThat(overridden.resolve(main.locationUri()).orElseThrow()).isEqualTo(explicit);
+  }
+
+  @Test
   void rejectsAmbiguousBuildOwnershipInsteadOfGuessing() {
     var first = project("first", temporary);
     var second = project("second", temporary);

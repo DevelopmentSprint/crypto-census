@@ -3,6 +3,9 @@
 These tests run the packaged Java renderer in Chromium using only synthetic inventory/context.
 They exercise browser navigation, hostile text under the actual CSP, keyboard controls, draft
 state, bounded imports, export downloads, and Java apply/reassessment with unchanged input hashes.
+Binding choices require resolved declaring ownership and usable unscoped evidence; lost scope
+is not repaired by naming a flow. The classification editor separates unanswered questions
+from deliberate custom identifiers, including an organization-defined identifier `unknown`.
 The browser must issue no HTTP requests and no CSP violations. Tool installation itself needs
 network access; the resulting report does not.
 

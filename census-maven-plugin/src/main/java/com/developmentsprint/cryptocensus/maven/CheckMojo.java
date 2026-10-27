@@ -218,21 +218,6 @@ public class CheckMojo extends AbstractMojo {
       throw new MojoExecutionException("Could not write " + output, e);
     }
 
-    if (assessment) {
-      try {
-        ReportWorkflow.write(
-            List.of(Path.of(runDir)),
-            contextFile,
-            policyFile,
-            assessmentOutputDirectory.toPath(),
-            workload,
-            environment);
-      } catch (IOException | IllegalArgumentException e) {
-        throw new MojoExecutionException(
-            "Could not generate the requested business-context assessment", e);
-      }
-    }
-
     for (String line : Report.text(snapshot, dropped).lines().toList()) {
       getLog().info(line);
     }
@@ -324,8 +309,34 @@ public class CheckMojo extends AbstractMojo {
       }
     }
 
+    MojoExecutionException assessmentFailure = null;
+    if (assessment) {
+      try {
+        ReportWorkflow.write(
+            List.of(Path.of(runDir)),
+            contextFile,
+            policyFile,
+            assessmentOutputDirectory.toPath(),
+            workload,
+            environment);
+      } catch (IOException | IllegalArgumentException e) {
+        assessmentFailure =
+            new MojoExecutionException(
+                "Could not generate the requested business-context assessment", e);
+      }
+    }
     if (!problems.isEmpty()) {
-      throw new MojoFailureException(String.join("\n\n", problems));
+      if (assessmentFailure != null) {
+        problems.add(assessmentFailure.getMessage());
+      }
+      MojoFailureException failure = new MojoFailureException(String.join("\n\n", problems));
+      if (assessmentFailure != null) {
+        failure.addSuppressed(assessmentFailure);
+      }
+      throw failure;
+    }
+    if (assessmentFailure != null) {
+      throw assessmentFailure;
     }
   }
 

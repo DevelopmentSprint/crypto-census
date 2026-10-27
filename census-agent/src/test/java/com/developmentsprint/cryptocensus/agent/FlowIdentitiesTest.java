@@ -27,7 +27,7 @@ class FlowIdentitiesTest {
                     "acme:billing",
                     ContextModel.Origin.LIBRARY,
                     "deployment-a")));
-    var identities = new FlowIdentities(catalog, null, ignored -> {}, 8);
+    var identities = new FlowIdentities(catalog, "consumer-application", ignored -> {}, 8);
     var domain = domain("file:/build/library.jar");
     var firstLoader = new ClassLoader() {};
     var first = identities.resolve(domain, firstLoader);
@@ -39,6 +39,10 @@ class FlowIdentitiesTest {
     assertThat(identities.resolve(domain, firstLoader)).isEqualTo(first);
     assertThat(identities.resolve(domain, new ClassLoader() {}).id()).isNotEqualTo(first.id());
     assertThat(identities.snapshot()).hasSize(3);
+    var unknown = identities.resolve(domain("file:/build/unknown.jar"), firstLoader);
+    assertThat(unknown.status()).isEqualTo(EvidenceDocument.IdentityStatus.UNRESOLVED);
+    assertThat(unknown.applicationId()).isEmpty();
+    assertThat(unknown.provenance()).isEqualTo("unmapped-code-source");
   }
 
   @Test

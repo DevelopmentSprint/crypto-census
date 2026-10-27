@@ -156,7 +156,10 @@ public final class AssessmentInputs {
     }
     EvidenceDocument evidence = null;
     if (input.evidence == null) {
-      gaps.add(input.evidenceUnreadable ? "SIDECAR_UNREADABLE" : "NO_FLOW_OR_CORRELATION_EVIDENCE");
+      gaps.add(
+          input.evidenceUnreadable
+              ? "SIDECAR_UNREADABLE"
+              : nonce.isEmpty() ? "NO_FLOW_OR_CORRELATION_EVIDENCE" : "EXPECTED_SIDECAR_MISSING");
     } else {
       try {
         EvidenceDocument candidate = EvidenceCodec.parse(input.evidence);
