@@ -59,6 +59,10 @@ while read -r local_ref local_oid remote_ref remote_oid extra; do
     exit 1
   fi
   [ "$local_oid" = "$zero" ] && continue
+  if [ "$remote_oid" != "$zero" ] && ! git cat-file -e "$remote_oid^{commit}" 2>/dev/null; then
+    echo 'Unknown destination commit; fetch the named remote before publishing.' >&2
+    exit 1
+  fi
   if ! tip=$(git rev-parse --verify "$local_oid^{commit}" 2>/dev/null); then
     echo 'private-tracker: outgoing refs must point to commits (possibly through annotated tags).' >&2
     exit 1

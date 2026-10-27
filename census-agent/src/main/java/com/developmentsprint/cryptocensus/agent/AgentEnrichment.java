@@ -174,6 +174,11 @@ final class AgentEnrichment {
     if (run == null) {
       return true;
     }
+    if (Thread.currentThread().isInterrupted()) {
+      run.health.increment(EvidenceDocument.Counter.OUTPUT_FAILURES);
+      LOG.log(System.Logger.Level.WARNING, "Enrichment publication interrupted before start");
+      return false;
+    }
     final List<Inventory.Entry> snapshot = List.copyOf(written);
     final long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(budgetMillis);
     FutureTask<Void> task =

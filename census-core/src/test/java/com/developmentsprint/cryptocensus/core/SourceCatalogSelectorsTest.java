@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -100,7 +101,8 @@ class SourceCatalogSelectorsTest {
     var vfs = entry("vfs:/content/unused/../one.war/WEB-INF/classes", "");
     assertThat(vfs.locationUri()).isEqualTo("vfs:/content/one.war/WEB-INF/classes");
     var archive = entry("wsjar:file:/unavailable/../app.war!/WEB-INF/classes/", "");
-    assertThat(archive.locationUri()).isEqualTo("wsjar:file:///app.war!/WEB-INF/classes/");
+    assertThat(archive.locationUri())
+        .isEqualTo("wsjar:" + Path.of("/app.war").toUri() + "!/WEB-INF/classes/");
     assertThat(
             new SourceCatalog(1, List.of(archive))
                 .resolve("wsjar:file:/app.war!/WEB-INF/classes/A.class"))

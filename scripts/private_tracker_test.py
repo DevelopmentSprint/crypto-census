@@ -22,7 +22,8 @@ class PrivateTrackerTest(unittest.TestCase):
         self.git("config", "user.name", "Synthetic Guard Test")
         self.git("config", "user.email", "guard@example.invalid")
         self.git("config", "commit.gpgsign", "false")
-        self.git("remote", "add", "origin", "https://example.invalid/never-contacted.git")
+        self.git("init", "--bare", str(self.root / "remote.git"))
+        self.git("remote", "add", "origin", str(self.root / "remote.git"))
         (self.root / "scripts").mkdir()
         shutil.copy(ROOT / "scripts/check-private-tracker.sh", self.root / "scripts")
         shutil.copy(ROOT / ".gitignore", self.root)
@@ -77,7 +78,8 @@ class PrivateTrackerTest(unittest.TestCase):
     def test_outgoing_history_blocks_removed_private_data_on_branch_or_tag(self):
         self.stage("README.md")
         public = self.commit()
-        self.git("update-ref", "refs/remotes/origin/develop", public)
+        self.git("push", "origin", public + ":refs/heads/develop")
+        self.git("fetch", "origin")
         self.stage(".beads/synthetic.jsonl")
         self.commit()
         self.git("rm", "--cached", "--", ".beads/synthetic.jsonl")
@@ -94,7 +96,8 @@ class PrivateTrackerTest(unittest.TestCase):
     def test_existing_public_metadata_does_not_require_history_rewrite(self):
         self.stage(".beads/config.yaml")
         public = self.commit()
-        self.git("update-ref", "refs/remotes/origin/develop", public)
+        self.git("push", "origin", public + ":refs/heads/develop")
+        self.git("fetch", "origin")
         self.git("rm", "--cached", "--", ".beads/config.yaml")
         clean = self.commit()
         self.assertEqual(self.push_guard(clean, public).returncode, 0)
@@ -115,10 +118,10 @@ class PrivateTrackerTest(unittest.TestCase):
         self.stage("README.md")
         for hook in ("pre-commit", "pre-push"):
             with self.subTest(hook=hook):
-                result = subprocess.run(["bash", str(ROOT / ".githooks" / hook)],
+                result = subprocess.run(["bash", str(ROOT / ".githooks" / hook), "origin"],
                                         cwd=self.root, env=self.env, capture_output=True)
                 self.assertNotEqual(result.returncode, 0)
-                self.assertIn(b"Private tracker state", result.stderr)
+                self.assertIn(b"forbidden path", result.stderr)
                 self.assertNotIn(b"static analysis", result.stdout)
                 self.assertNotIn(b"full build", result.stdout)
 

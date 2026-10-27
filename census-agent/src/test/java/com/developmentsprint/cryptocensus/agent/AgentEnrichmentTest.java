@@ -184,6 +184,9 @@ class AgentEnrichmentTest {
     try {
       assertThat(AgentEnrichment.publish(inventory.entries(), 5000)).isFalse();
       assertThat(Thread.currentThread().isInterrupted()).isTrue();
+      assertThat(Files.exists(tmp.resolve("interrupted.evidence.json"))).isFalse();
+      assertThat(AgentEnrichment.health().get(EvidenceDocument.Counter.OUTPUT_FAILURES))
+          .isEqualTo(1);
     } finally {
       Thread.interrupted();
     }
