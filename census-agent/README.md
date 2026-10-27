@@ -23,10 +23,15 @@ annotation dependency cannot silently erase discovery.
 | `tlsCorrelation` | Opt in to object-owned TLS attempt evidence; requires `enrichment=true`. |
 
 Option values use the same percent escaping as existing agent options. A source catalog is
-local configuration, not a network lookup. Unmapped sources remain unresolved unless an
-explicit application identity is supplied. An application override establishes product identity;
+local configuration, not a network lookup. With a source catalog, unmapped sources remain
+unresolved. Without one, an explicit application identity supplies standalone product identity;
 it does not invent a declaring artifact, project origin, or deployment name. Separate classloaders
 retain distinct run-local identities. Neither source paths nor classloader objects are exported.
+
+Source mappings distinguish `EXPLICIT_DEPLOYMENT`, `GENERATED_BUILD` and `UNSPECIFIED` ownership.
+Old serialized catalogs without qualification are conservative (`UNSPECIFIED`). Multiple loaders
+sharing a product identity need explicit deployment mappings before their business context can
+be trusted. Generated Maven artifact labels alone do not establish separate runtime deployments.
 
 ## What a scope establishes
 

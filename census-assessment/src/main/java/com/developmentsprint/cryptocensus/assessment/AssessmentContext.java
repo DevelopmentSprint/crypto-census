@@ -18,6 +18,7 @@ final class AssessmentContext {
   private record ResolutionKey(Deployment deployment, ContextModel.Subject subject) {}
 
   private final ContextDocument context;
+  private final Set<Deployment> ambiguous = new HashSet<>();
   private final Map<Deployment, Map<ContextModel.Subject, List<ContextModel.Declaration>>>
       observed = new HashMap<>();
   private final Map<ContextModel.Subject, List<ContextModel.Declaration>> saved = new HashMap<>();
@@ -44,6 +45,8 @@ final class AssessmentContext {
     }
     context.resolutions().forEach(value -> known(value.subject()));
     for (AssessmentInputs.Run run : runs) {
+      DeploymentOwnership.ambiguous(run.evidence())
+          .forEach(identity -> ambiguous.add(new Deployment(run.id(), identity)));
       if (run.evidence() != null) {
         for (EvidenceDocument.DiscoveredFlow flow : run.evidence().flows()) {
           addLabel(flow.definition().subject(), flow.definition().label());
@@ -111,7 +114,14 @@ final class AssessmentContext {
         new ResolutionKey(new Deployment(runId, identityId), subject), this::resolve);
   }
 
+  boolean ambiguous(String runId, String identityId) {
+    return ambiguous.contains(new Deployment(runId, identityId));
+  }
+
   private Map<ContextModel.Field, Reconciliation.Result> resolve(ResolutionKey key) {
+    if (ambiguous.contains(key.deployment())) {
+      return Map.of();
+    }
     ContextModel.Subject subject = key.subject();
     ContextModel.Subject application = new ContextModel.Subject(subject.applicationId(), "");
     List<ContextModel.Declaration> input =

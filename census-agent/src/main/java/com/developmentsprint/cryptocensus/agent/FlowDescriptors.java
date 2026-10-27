@@ -1,7 +1,6 @@
 package com.developmentsprint.cryptocensus.agent;
 
 import com.developmentsprint.cryptocensus.core.CanonicalJson;
-import com.developmentsprint.cryptocensus.core.EvidenceDocument;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.LinkedHashSet;
@@ -62,7 +61,8 @@ final class FlowDescriptors {
         Set<String> previous = ACTIVE.get();
         try {
           if (bytes.length > CanonicalJson.MAX_BYTES) {
-            AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+            AgentEnrichment.annotationDiagnostic(
+                AnnotationDiagnostics.Reason.CLASS_BUDGET_EXCEEDED, name, "", "");
             return null;
           }
           Set<String> methods = scan(bytes);
@@ -74,7 +74,8 @@ final class FlowDescriptors {
               ? delegate.transform(loader, name, redefined, domain, bytes)
               : delegate.transform(module, loader, name, redefined, domain, bytes);
         } catch (Throwable failed) {
-          AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+          AgentEnrichment.annotationDiagnostic(
+              AnnotationDiagnostics.Reason.CLASS_READ_FAILED, name, "", "");
           return null;
         } finally {
           if (previous == null) {
@@ -89,40 +90,39 @@ final class FlowDescriptors {
 
   static Set<String> scan(byte[] bytes) {
     Set<String> methods = new LinkedHashSet<>();
-    new ClassReader(bytes)
-        .accept(
-            new ClassVisitor(Opcodes.ASM9) {
+    ClassReader reader = new ClassReader(bytes);
+    reader.accept(
+        new ClassVisitor(Opcodes.ASM9) {
+          @Override
+          public MethodVisitor visitMethod(
+              int access, String name, String descriptor, String signature, String[] exceptions) {
+            if ((access & (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC)) != 0) {
+              return null;
+            }
+            boolean unsupported =
+                (access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) != 0 || name.startsWith("<");
+            return new MethodVisitor(Opcodes.ASM9) {
               @Override
-              public MethodVisitor visitMethod(
-                  int access,
-                  String name,
-                  String descriptor,
-                  String signature,
-                  String[] exceptions) {
-                if ((access & (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC)) != 0) {
-                  return null;
-                }
-                boolean unsupported =
-                    (access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) != 0
-                        || name.startsWith("<");
-                return new MethodVisitor(Opcodes.ASM9) {
-                  @Override
-                  public AnnotationVisitor visitAnnotation(String annotation, boolean visible) {
-                    if (annotation.equals("L" + FlowDeclarations.FLOW.replace('.', '/') + ";")
-                        || annotation.equals(
-                            "L" + FlowDeclarations.PROTECTION.replace('.', '/') + ";")) {
-                      if (unsupported) {
-                        AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
-                      } else {
-                        methods.add(name + descriptor);
-                      }
-                    }
-                    return null;
+              public AnnotationVisitor visitAnnotation(String annotation, boolean visible) {
+                if (annotation.equals("L" + FlowDeclarations.FLOW.replace('.', '/') + ";")
+                    || annotation.equals(
+                        "L" + FlowDeclarations.PROTECTION.replace('.', '/') + ";")) {
+                  if (unsupported) {
+                    AgentEnrichment.annotationDiagnostic(
+                        AnnotationDiagnostics.Reason.UNSUPPORTED_METHOD,
+                        reader.getClassName(),
+                        name,
+                        descriptor);
+                  } else {
+                    methods.add(name + descriptor);
                   }
-                };
+                }
+                return null;
               }
-            },
-            ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+            };
+          }
+        },
+        ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
     return Set.copyOf(methods);
   }
 }

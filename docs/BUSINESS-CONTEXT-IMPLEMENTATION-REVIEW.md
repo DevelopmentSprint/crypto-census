@@ -16,9 +16,9 @@ before integration is considered complete.
 | F5: Missing qualification for unmapped multiple deployments | Accepted with a narrower trigger. Explicitly mapped deployments may share a business subject and retain different declarations. Detect missing deployment ownership; do not combine declarations across deployment instances. Pending. |
 | F6: Local scope overflow invalidates unrelated scopes | Accepted. Depth overflow now contributes a local attribution-loss diagnostic. A regression preserves earlier and subsequent independent scopes while retaining the lost observation; actual integrity/restoration failures retain global invalidation. |
 | F7: Disappearing sources incorrectly make resolutions stale | Accepted with qualifications. Unchanged subsets of reviewed revisions must not appear changed. New or changed declaration hashes must still invalidate resolutions. Saved-only assertions remain in durable context; without any current sources the effective result is unknown. Corrected with subset, absent-source and changed-revision regressions. |
-| F8: Invalid annotations lack actionable bounded diagnostics | Requires implementation triage. Preserve limits and avoid exporting annotation payloads or sensitive runtime data. Pending. |
+| F8: Invalid annotations lack actionable bounded diagnostics | Accepted. Bounded structural warnings identify class, method descriptor and reason through the JVM logger, without annotation values or exception text. Existing health counters retain loss; sink failures cannot escape. See [annotation diagnostics](ANNOTATION-DIAGNOSTICS.md). |
 | F9: Missing destination silently loses unedited base answers | Accepted. Reject an absent destination when the change set has a nonempty base; instruct the user to select or restore the original context. Regression verifies no output and successful apply after restoration. |
-| F10: Missing-sidecar and guided identity usability | Requires implementation triage. Distinguish requested-but-missing evidence, validate guided bindings against application ownership, and clarify unknown classification entry. Pending. |
+| F10: Missing-sidecar and guided identity usability | Accepted and corrected in the guided workflow: expected missing sidecars have a distinct gap, only usable evidence offers exact owning-application bindings, and unknown answers are separate from explicit custom IDs. |
 
 The independent drift review confirmed the F5 and F7 design boundaries above.
 The Maven plugin reactor `verify` passed after the F2, F3, F4, F6 and F9
@@ -28,5 +28,6 @@ follow-up Claude review remain outstanding.
 
 The subsequent F1/F7 plugin reactor `verify` passed, including the XML-only
 identity configuration exercised in producer, consumer and resolved-copy tests.
-The source review found no blocking regression. F5, F8, F10 and the follow-up
-Claude review remain open.
+The source review found no blocking regression. F5 and the follow-up Claude
+review remain open. F8 core/agent verification includes real invalid and missing-API
+annotation diagnostics, payload exclusion and unchanged failure boundaries.

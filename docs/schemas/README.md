@@ -68,3 +68,22 @@ Saved business declarations remain keyed by stable application and flow. Busines
 `savedContextFields`; each deployment instance shows its own reconciled `fields`. Priority aggregates
 existing findings without borrowing a different deployment's requirements. Readiness gaps contribute
 to `readinessIncomplete` and overall incompleteness independently of cryptographic priority.
+
+Source catalog entries include optional `qualification`: `GENERATED_BUILD` describes build-derived
+artifact ownership; `EXPLICIT_DEPLOYMENT` asserts an operator-selected deployment mapping;
+`UNSPECIFIED` carries no deployment assertion. Old serialized entries without this field decode
+as `UNSPECIFIED`. The five- and six-argument Java constructors retain explicitly supplied mappings;
+callers generating build catalogs must use `GENERATED_BUILD`. Maven marks generated entries as
+build-derived and explicitly supplied override entries as deployment assertions. Paths, loader
+selectors and deployment labels never implicitly establish this qualification.
+
+Agent identity provenance records `source-catalog:<qualification>`. Legacy `source-catalog` and
+standalone `explicit-application-id` provenance do not establish deployment ownership. When a run
+contains distinct loaders or multiple explicitly asserted deployments for one application identity,
+unqualified identities
+receive `AMBIGUOUS_DEPLOYMENT_OWNERSHIP`. Explicitly qualified peers keep their own identity.
+The assessment retains original evidence and separate instance rows, but ambiguous instances
+cannot consume saved declarations or receive business prioritization beyond needs-context.
+Generated build labels for several artifacts in a single loader do not establish distinct
+deployments. Subject totals remain navigation aggregates with an explicit ambiguity gap; they do not resolve
+ownership. Different runs are never treated as competing deployment ownership.

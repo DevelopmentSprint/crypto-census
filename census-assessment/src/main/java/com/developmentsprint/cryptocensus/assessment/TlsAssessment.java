@@ -130,9 +130,12 @@ final class TlsAssessment {
             technical,
             context.fields(run.id(), scope == null ? "" : scope.identityId(), subject),
             true,
-            scope != null,
+            scope != null && !context.ambiguous(run.id(), scope.identityId()),
             profile);
     List<String> gaps = new ArrayList<>(collectionGaps);
+    if (scope != null && context.ambiguous(run.id(), scope.identityId())) {
+      gaps.add(DeploymentOwnership.GAP);
+    }
     if (exposure == TechnicalFacts.QuantumExposure.NOT_ESTABLISHED) {
       gaps.add("TLS_" + axis.name() + "_NOT_ESTABLISHED");
     }

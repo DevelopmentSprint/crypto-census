@@ -107,6 +107,10 @@ final class FlowSummaries {
             instance.put("runId", key.runId());
             instance.put("identityId", key.identityId());
             instance.put("identity", identity(runs, key));
+            if (context.ambiguous(key.runId(), key.identityId())) {
+              addGap(instance, DeploymentOwnership.GAP);
+              instance.put("assessmentIncomplete", true);
+            }
             instance.put(
                 "fields",
                 context.fields(key.runId(), key.identityId(), subject).values().stream()
@@ -118,6 +122,11 @@ final class FlowSummaries {
             instanceValues.add(instance);
           });
       summary.put("instances", ContextJson.ordered(instanceValues));
+      if (instances.keySet().stream()
+          .anyMatch(key -> context.ambiguous(key.runId(), key.identityId()))) {
+        addGap(summary, DeploymentOwnership.GAP);
+        summary.put("incomplete", true);
+      }
       summaries.add(summary);
     }
     summaries.sort(
@@ -126,6 +135,14 @@ final class FlowSummaries {
                     PriorityRules.Priority.valueOf((String) value.get("priority")).rank())
             .thenComparing(value -> ContextJson.subject(value.get("subject")).ref()));
     return List.copyOf(summaries);
+  }
+
+  private static void addGap(Map<String, Object> target, String gap) {
+    java.util.Set<String> gaps = new TreeSet<>();
+    com.developmentsprint.cryptocensus.core.CanonicalJson.array(target, "gaps")
+        .forEach(value -> gaps.add((String) value));
+    gaps.add(gap);
+    target.put("gaps", List.copyOf(gaps));
   }
 
   private static Object identity(List<AssessmentInputs.Run> runs, Instance instance) {
