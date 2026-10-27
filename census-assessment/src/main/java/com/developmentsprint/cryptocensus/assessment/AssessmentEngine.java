@@ -69,14 +69,18 @@ public final class AssessmentEngine {
           throw new IllegalArgumentException("Attribution references an absent asset");
         }
         TechnicalFacts technical = facts.get(use.assetRef());
-        PriorityRules.Decision decision =
+        final PriorityRules.Decision decision =
             PriorityRules.evaluate(
                 technical,
                 declarations.fields(run.id(), use.identityId(), use.subject()),
                 use.count() == null ? asset.total() > 0 : use.count() > 0,
-                use.subject() != null,
+                use.subject() != null && !declarations.ambiguous(run.id(), use.identityId()),
                 profile);
         List<String> findingGaps = new ArrayList<>(collectionGaps);
+        if (declarations.ambiguous(run.id(), use.identityId())) {
+          findingGaps.add(DeploymentOwnership.GAP);
+          gaps.add(DeploymentOwnership.GAP);
+        }
         if (use.subject() == null) {
           findingGaps.add("FLOW_ASSOCIATION_NOT_ESTABLISHED");
         }

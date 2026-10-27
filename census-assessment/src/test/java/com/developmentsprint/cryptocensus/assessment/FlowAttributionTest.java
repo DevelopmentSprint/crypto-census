@@ -138,6 +138,45 @@ class FlowAttributionTest {
   }
 
   @Test
+  void ambiguousDeploymentCannotAcquireSavedBindingBySharedApplicationId() {
+    var run =
+        run(
+            List.of(),
+            EvidenceDocument.Association.NO_SCOPE,
+            true,
+            false,
+            false,
+            value ->
+                revised(
+                    value,
+                    value.observations(),
+                    value.flows(),
+                    List.of(
+                        value.identities().get(0),
+                        new EvidenceDocument.IdentityMapping(
+                            "other",
+                            "other-deployment",
+                            "other-loader",
+                            "example:archive",
+                            "app",
+                            EvidenceDocument.IdentityStatus.RESOLVED,
+                            "source-catalog:GENERATED_BUILD")),
+                    value.health()));
+    var attributed = FlowAttribution.attribute(run, saved(OUTER));
+    assertThat(attributed.gaps()).contains(DeploymentOwnership.GAP);
+    assertThat(attributed.uses())
+        .allSatisfy(
+            use -> {
+              assertThat(use.subject()).isNull();
+              assertThat(use.association()).isEqualTo(FlowAttribution.Association.NO_SCOPE);
+            });
+    assertThat(attributed.bindings())
+        .allSatisfy(
+            binding ->
+                assertThat(binding.status()).isEqualTo(FlowAttribution.BindingStatus.AMBIGUOUS));
+  }
+
+  @Test
   void zeroCountInventoryRemainsVisibleAsUnobservedTechnicalEvidence() {
     Inventory inventory = new Inventory();
     inventory.add(ASSET, SITE, 0);

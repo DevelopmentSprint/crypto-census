@@ -84,7 +84,7 @@ final class FlowIdentities {
                   ? EvidenceDocument.IdentityStatus.UNRESOLVED
                   : EvidenceDocument.IdentityStatus.RESOLVED,
               source.isPresent()
-                  ? "source-catalog"
+                  ? "source-catalog:" + source.orElseThrow().qualification().name()
                   : !application.isEmpty() ? "explicit-application-id" : "unmapped-code-source");
       identities.put(key, mapping);
       return mapping;

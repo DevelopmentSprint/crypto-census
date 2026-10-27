@@ -34,7 +34,7 @@ class FlowIdentitiesTest {
     assertThat(first.applicationId()).isEqualTo("acme:billing");
     assertThat(first.sourceArtifact()).isEqualTo("acme:library");
     assertThat(first.deploymentId()).isEqualTo("deployment-a");
-    assertThat(first.provenance()).isEqualTo("source-catalog");
+    assertThat(first.provenance()).isEqualTo("source-catalog:EXPLICIT_DEPLOYMENT");
     assertThat(identities.origin(domain, firstLoader)).isEqualTo(ContextModel.Origin.LIBRARY);
     assertThat(identities.resolve(domain, firstLoader)).isEqualTo(first);
     assertThat(identities.resolve(domain, new ClassLoader() {}).id()).isNotEqualTo(first.id());

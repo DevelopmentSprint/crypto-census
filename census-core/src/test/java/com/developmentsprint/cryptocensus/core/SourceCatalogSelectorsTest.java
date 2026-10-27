@@ -9,6 +9,44 @@ import org.junit.jupiter.api.Test;
 
 class SourceCatalogSelectorsTest {
   @Test
+  void legacyBytesAreUnqualifiedWhileProgrammaticMappingsRemainExplicit() {
+    var explicit = entry("file:/app.jar", "named");
+    assertThat(explicit.qualification()).isEqualTo(SourceCatalog.Qualification.EXPLICIT_DEPLOYMENT);
+    String encoded =
+        new String(new SourceCatalog(1, List.of(explicit)).encode(), StandardCharsets.UTF_8);
+    String legacy = encoded.replace(",\n      \"qualification\": \"EXPLICIT_DEPLOYMENT\"", "");
+    assertThat(legacy).doesNotContain("qualification");
+    assertThat(
+            SourceCatalog.parse(legacy.getBytes(StandardCharsets.UTF_8))
+                .entries()
+                .get(0)
+                .qualification())
+        .isEqualTo(SourceCatalog.Qualification.UNSPECIFIED);
+    for (SourceCatalog.Qualification qualification : SourceCatalog.Qualification.values()) {
+      var qualified =
+          new SourceCatalog(
+              1,
+              List.of(
+                  new SourceCatalog.Entry(
+                      explicit.locationUri(),
+                      explicit.artifactId(),
+                      explicit.applicationId(),
+                      explicit.origin(),
+                      explicit.deploymentId(),
+                      explicit.loaderName(),
+                      qualification)));
+      assertThat(SourceCatalog.parse(qualified.encode())).isEqualTo(qualified);
+    }
+    assertThatThrownBy(
+            () ->
+                SourceCatalog.parse(
+                    encoded
+                        .replace("EXPLICIT_DEPLOYMENT", "invented")
+                        .getBytes(StandardCharsets.UTF_8)))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
   void namedLoaderPrecedesMoreSpecificWildcardAndUnknownUsesOnlyWildcard() {
     var broad = entry("vfs:/content/", "deployment.one");
     var narrow = entry("vfs:/content/one.war/", "");

@@ -16,6 +16,9 @@ An explicit `-Dcensus.applicationId=billing` asserts a stable product identity. 
 the Maven display name into an identity or change declaring-artifact ownership. For deployment,
 loader or packaged-artifact overrides, supply `-Dcensus.sourcesFile=/private/sources.json` using
 the shared source-catalog schema. Explicit entries replace the same generated location/selector.
+Generated entries carry `GENERATED_BUILD` qualification; supplied overrides carry
+`EXPLICIT_DEPLOYMENT`. Generated `maven:` deployment labels alone do not establish runtime
+deployment ownership.
 The plugin does not infer original module ownership from classes inside a shaded JAR. When a
 module configures the shade or assembly plugin, its packaged outputs require an explicit physical
 artifact mapping; generated main/test directory mappings still describe ordinary class output.
