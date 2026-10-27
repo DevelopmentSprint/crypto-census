@@ -1,0 +1,5227 @@
+{
+  "baseContext": {
+    "declarations": [
+      {
+        "field": "CLASSIFICATION",
+        "source": {
+          "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+          "kind": "APPLICATION_DEFAULT",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": ""
+        },
+        "value": "sensitive"
+      },
+      {
+        "field": "CLASSIFICATION",
+        "source": {
+          "id": "CATALOG:imported:CLASSIFICATION",
+          "kind": "CATALOG",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "imported"
+        },
+        "value": "internal"
+      },
+      {
+        "field": "CLASSIFICATION",
+        "source": {
+          "id": "USER:conflict:CLASSIFICATION",
+          "kind": "USER",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "conflict"
+        },
+        "value": "public"
+      },
+      {
+        "field": "CONFIDENTIALITY_YEARS",
+        "source": {
+          "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+          "kind": "APPLICATION_DEFAULT",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": ""
+        },
+        "value": "20"
+      },
+      {
+        "field": "CONFIDENTIALITY_YEARS",
+        "source": {
+          "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+          "kind": "CATALOG",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "imported"
+        },
+        "value": "1"
+      }
+    ],
+    "flows": [
+      {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "removedMethod",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "label": "Stale saved method",
+        "state": "RETIRED",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "stale"
+        }
+      }
+    ],
+    "readiness": [],
+    "resolutions": [],
+    "schemaVersion": 1
+  },
+  "baseFields": [
+    {
+      "hash": "264e930f8ab3d48c928d46e1533e122c52c97e4aae94bbe4d87d78718e38e20c",
+      "id": "7b9dc74d9df5f94eaf08afc861f5d130734c4aabb1c6d923af98278122fd0df8",
+      "section": "DECLARATIONS",
+      "value": {
+        "field": "CLASSIFICATION",
+        "source": {
+          "id": "USER:conflict:CLASSIFICATION",
+          "kind": "USER",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "conflict"
+        },
+        "value": "public"
+      }
+    },
+    {
+      "hash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+      "id": "3b34cbcca3527c33973f979905a171eb09eed729d766069f752f79b59ec19507",
+      "section": "DECLARATIONS",
+      "value": {
+        "field": "CONFIDENTIALITY_YEARS",
+        "source": {
+          "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+          "kind": "APPLICATION_DEFAULT",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": ""
+        },
+        "value": "20"
+      }
+    },
+    {
+      "hash": "758008b8be1a24f053760ba4f55b3a20b7e2a07f77f540864fb6b7bc98731cd6",
+      "id": "0ccfbdfa6777a3fab056671ec2948e3a0f019086b2e41433c72da31e3a1a46c3",
+      "section": "DECLARATIONS",
+      "value": {
+        "field": "CONFIDENTIALITY_YEARS",
+        "source": {
+          "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+          "kind": "CATALOG",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "imported"
+        },
+        "value": "1"
+      }
+    },
+    {
+      "hash": "e10393fe2694d4461e2139bf4365f90fd7e267dd537b75d8db68086bce2c9b64",
+      "id": "flow:example%3Arecords:stale",
+      "section": "FLOWS",
+      "value": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "removedMethod",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "label": "Stale saved method",
+        "state": "RETIRED",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "stale"
+        }
+      }
+    },
+    {
+      "hash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+      "id": "afa9a08e5aed95dbd124b063044394e827d025c5e626c650c10e18af2d8da2f2",
+      "section": "DECLARATIONS",
+      "value": {
+        "field": "CLASSIFICATION",
+        "source": {
+          "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+          "kind": "APPLICATION_DEFAULT",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": ""
+        },
+        "value": "sensitive"
+      }
+    },
+    {
+      "hash": "f36025b8b4cd3dc7f7d0ac6f7077e0db2d2f258a0aa284c5f057796e44ba7957",
+      "id": "f5b76d5516a048f668d975c2595aec0face83d5089be2c1a474161f07e8aad80",
+      "section": "DECLARATIONS",
+      "value": {
+        "field": "CLASSIFICATION",
+        "source": {
+          "id": "CATALOG:imported:CLASSIFICATION",
+          "kind": "CATALOG",
+          "reviewedAt": "",
+          "reviewer": "",
+          "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+        },
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "imported"
+        },
+        "value": "internal"
+      }
+    }
+  ],
+  "censusVersion": "0.1.0",
+  "contextHash": "295dda14b89bade6d0447bd150d392f49591b3d7987a3ed80e2947567b0532b3",
+  "coreFactsVersion": "cryptocensus-default/6/facts-1",
+  "emptyFieldHash": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+  "findings": [
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 1024,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:1024:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "e451b7f9f7f26a0864601bd66efa9a741b530e66823e7bbcd56027576203d7d8",
+      "count": 2,
+      "decision": {
+        "businessPriority": "TECHNICAL_REMEDIATION_FIRST",
+        "displayPriority": "TECHNICAL_REMEDIATION_FIRST",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Remediate the current technical finding and assess its quantum-exposed dependencies.",
+        "reasons": [
+          "CURRENT_TECHNICAL_REMEDIATION",
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_SENSITIVE_CONFIDENTIALITY",
+          "TECHNICAL_PRIORITY_INDEPENDENT_OF_CONTEXT"
+        ],
+        "ruleId": "technical-remediation",
+        "technicalRemediation": true
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "d5279ea84c8d80344430c31be568bb2888cab118c2bed86fc8ab2f3afb2c03f1",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA-1024 key transport is disallowed for encryption and decryption (SP 800-131A section 6)",
+        "risk": "BROKEN",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "9d4a40a8846ed885781f44d829521be178596315a5e6e7c2d08af61be79f1ad5",
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
+        ],
+        "ruleId": "authenticity-urgency",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "classical"
+      },
+      "id": "36db23b93c4174ab6641b1812c0c7524948967d23ddbec3458554a7dd914fbf8",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_PEER_AUTHENTICATION",
+      "limitations": [],
+      "lineage": "NOT_APPLICABLE",
+      "pskOriginExposure": "NOT_ESTABLISHED",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "VULNERABLE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "VULNERABLE",
+        "reason": "Observed peer TLS authentication signature; VULNERABLE",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "98e4fdadf58c1d250545c2c9686fc3e360780a99735839936d89a9a593503409",
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
+        ],
+        "ruleId": "authenticity-urgency",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "hybrid"
+      },
+      "id": "5f4742aa3bcc423c9de7d847d9d8fa278c84359c982ebc1d8e38696504825eba",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_PEER_AUTHENTICATION",
+      "limitations": [],
+      "lineage": "NOT_APPLICABLE",
+      "pskOriginExposure": "NOT_ESTABLISHED",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "VULNERABLE",
+        "reason": "Observed peer TLS authentication signature; VULNERABLE",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "8e21c8a03086e1f4f44142f705372a5bb14e58d55f5889fc71916587eae7d9bb",
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
+        ],
+        "ruleId": "authenticity-urgency",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "resumed"
+      },
+      "id": "c176c0636d393c42a08184418c1d724abe8cf11e64d9854b064313e6cf3d98cd",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_PEER_AUTHENTICATION",
+      "limitations": [
+        "mixed-or-unknown-psk-protection"
+      ],
+      "lineage": "VERIFIED",
+      "pskOriginExposure": "VULNERABLE",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "VULNERABLE",
+        "reason": "Observed peer TLS authentication signature; VULNERABLE",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "9d4a40a8846ed885781f44d829521be178596315a5e6e7c2d08af61be79f1ad5",
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+        ],
+        "ruleId": "long-confidentiality",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "classical"
+      },
+      "id": "cc0310835b735945e9a1af416456101c6cbda2270c3ed613dbfb13d0311ed5c4",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_CONFIDENTIALITY",
+      "limitations": [],
+      "lineage": "NOT_APPLICABLE",
+      "pskOriginExposure": "NOT_ESTABLISHED",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "VULNERABLE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "VULNERABLE",
+        "reason": "Negotiated TLS confidentiality dependency; VULNERABLE",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "f66d268bcf19a12e75ad77dca6efaef4bc3412af640e12b522e05f027dad4a57",
+      "count": 3,
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+        ],
+        "ruleId": "long-confidentiality",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "9c39472839b2775ce1c8895ba6293f61c5cd33e140bf831ef166761985c7342e",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "1f45b753ab74d3d4cf8f8ab9621b0e0080ba5192a3d66c434698ae8e8efd972c",
+      "count": 1,
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+        ],
+        "ruleId": "long-confidentiality",
+        "technicalRemediation": false
+      },
+      "direct": false,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "03e7608d8d4088c3eb0e79bb8b59cede5cf262062f3e7c4fd0d72e861fe0f4cd",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          }
+        },
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "39721ede1461379726b7047da5c14a8bb1d9814f9868f931ccb252dfc5fad873",
+      "count": 1,
+      "decision": {
+        "businessPriority": "URGENT_PLANNING",
+        "displayPriority": "URGENT_PLANNING",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+        ],
+        "ruleId": "long-confidentiality",
+        "technicalRemediation": false
+      },
+      "direct": false,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "ecb16e24fb57e21662e2310ef6911133714ce6fa70c5816aee9595c5e9a2b9c3",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 11,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          }
+        },
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "fb913c2360cfa9670e4e2e98a61c3da67f83c776246579232e89bbca8cbcf5c2",
+      "count": 1,
+      "decision": {
+        "businessPriority": "PLANNED_MIGRATION",
+        "displayPriority": "PLANNED_MIGRATION",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+        ],
+        "ruleId": "planned-classical-migration",
+        "technicalRemediation": false
+      },
+      "direct": false,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "89f5e32bdc0d21138d9967f78e703ed53f9b49e2f207d6ee612d2c287481b866",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          }
+        },
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "gateway"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "1f45b753ab74d3d4cf8f8ab9621b0e0080ba5192a3d66c434698ae8e8efd972c",
+      "count": 1,
+      "decision": {
+        "businessPriority": "PLANNED_MIGRATION",
+        "displayPriority": "PLANNED_MIGRATION",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+        ],
+        "ruleId": "planned-classical-migration",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "429d432160453a0a86b20a00afc295175883ca4bea3f08003e27e7478855ba67",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          }
+        },
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "helper"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "39721ede1461379726b7047da5c14a8bb1d9814f9868f931ccb252dfc5fad873",
+      "count": 1,
+      "decision": {
+        "businessPriority": "PLANNED_MIGRATION",
+        "displayPriority": "PLANNED_MIGRATION",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+        ],
+        "ruleId": "planned-classical-migration",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "08093c4fd0fca6838198bc0bc02a75d508de66440e8e0340b1b51398a9854b16",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 11,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          }
+        },
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "helper"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "fb913c2360cfa9670e4e2e98a61c3da67f83c776246579232e89bbca8cbcf5c2",
+      "count": 1,
+      "decision": {
+        "businessPriority": "PLANNED_MIGRATION",
+        "displayPriority": "PLANNED_MIGRATION",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+        ],
+        "ruleId": "planned-classical-migration",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "53a14ca3f746f283e6c48ad294e2facb44c245a4c92090e5d52a25f857895743",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          }
+        },
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "helper"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "459facc7f6918cec093e0a5df8173c95961186886c8a7c76e276ae5885f981b7",
+      "count": 1,
+      "decision": {
+        "businessPriority": "PLANNED_MIGRATION",
+        "displayPriority": "PLANNED_MIGRATION",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+        ],
+        "ruleId": "planned-classical-migration",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "bfd2f8dd368554ac309f211de08004e02b9eda94a9810abbaa6615dc2f6dc42a",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 20,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "imported"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "AES",
+        "keySize": 256,
+        "mode": "GCM",
+        "operation": "ENCRYPT",
+        "padding": "NoPadding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:AES::GCM:NoPadding:256:encrypt@Synthetic"
+      },
+      "association": "UNVERIFIED",
+      "bucketId": "5908b26a7ee37251f92ea7d3933e4d7112bf1fdd5343baa839278daa67bc84ac",
+      "count": 1,
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "ASSOCIATION_NOT_ESTABLISHED"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "FLOW_ASSOCIATION_NOT_ESTABLISHED",
+        "NO_FLOW_OR_CORRELATION_EVIDENCE"
+      ],
+      "id": "0fefb3ed1fbc2085659b177cf5250d01ff6aabd8c0fe8f544def55e3414f705d",
+      "identityId": "",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 1,
+        "location": "example.Legacy",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [],
+      "projectFrame": {
+        "className": "example.Legacy",
+        "descriptor": "",
+        "method": "encrypt",
+        "origin": "UNKNOWN",
+        "sourceArtifact": ""
+      },
+      "runId": "run:22345678-1234-1234-1234-123456789abc",
+      "subject": null,
+      "technical": {
+        "cnsa2": true,
+        "nistQuantumSecurityLevel": 5,
+        "quantumExposure": "RESISTANT",
+        "reason": "AES-GCM with a 256-bit key (CNSA 2.0)",
+        "risk": "QUANTUM_SAFE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "NO_SCOPE",
+      "bucketId": "1c0fd28dd13fb203eb276dc961515d6dfc780689a2849dfc6d631493012dedf2",
+      "count": 5,
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "ASSOCIATION_NOT_ESTABLISHED"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "FLOW_ASSOCIATION_NOT_ESTABLISHED"
+      ],
+      "id": "1a4b9fd1aa27fc04c1f6d0d5305338f0240fcb0199360a167397fa2e07f9bff9",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": -1,
+        "location": "<overflow>",
+        "symbol": null,
+        "via": null
+      },
+      "path": [],
+      "projectFrame": {
+        "className": "<overflow>",
+        "descriptor": "",
+        "method": "unknown",
+        "origin": "UNKNOWN",
+        "sourceArtifact": ""
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": null,
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "NO_SCOPE",
+      "bucketId": "2944c8da6a6cf1abfca3ff395b0110bfd65720043f790746870c958f5db0202d",
+      "count": 1,
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "ASSOCIATION_NOT_ESTABLISHED"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "FLOW_ASSOCIATION_NOT_ESTABLISHED"
+      ],
+      "id": "dff361e93f2b3a173a5f9d5ff307249c26727618c511a27a342e6670f1ee73f9",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 30,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": null,
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "9d4a40a8846ed885781f44d829521be178596315a5e6e7c2d08af61be79f1ad5",
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "TECHNICAL_VERDICT_UNKNOWN"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "TLS_LOCAL_AUTHENTICATION_NOT_ESTABLISHED"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "classical"
+      },
+      "id": "de565832357e390ef7f3d7e1d647b6f7b9be2473c7fe18a9940d4b993ff47745",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_LOCAL_AUTHENTICATION",
+      "limitations": [],
+      "lineage": "NOT_APPLICABLE",
+      "pskOriginExposure": "NOT_ESTABLISHED",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "VULNERABLE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "NOT_ESTABLISHED",
+        "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+        "risk": "UNKNOWN",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "98e4fdadf58c1d250545c2c9686fc3e360780a99735839936d89a9a593503409",
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "TECHNICAL_VERDICT_UNKNOWN"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "TLS_LOCAL_AUTHENTICATION_NOT_ESTABLISHED"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "hybrid"
+      },
+      "id": "ad75ed4cb90adfc4240cef13c1936761ee3d874b9e3d429348750e926f24b7da",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_LOCAL_AUTHENTICATION",
+      "limitations": [],
+      "lineage": "NOT_APPLICABLE",
+      "pskOriginExposure": "NOT_ESTABLISHED",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "NOT_ESTABLISHED",
+        "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+        "risk": "UNKNOWN",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "8e21c8a03086e1f4f44142f705372a5bb14e58d55f5889fc71916587eae7d9bb",
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "TECHNICAL_VERDICT_UNKNOWN"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "TLS_CONFIDENTIALITY_NOT_ESTABLISHED"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "resumed"
+      },
+      "id": "d30f73aaff294373dccce70325bc7e339ec483ba88ae03e6a8bfeb5d949765e0",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_CONFIDENTIALITY",
+      "limitations": [
+        "mixed-or-unknown-psk-protection"
+      ],
+      "lineage": "VERIFIED",
+      "pskOriginExposure": "VULNERABLE",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "NOT_ESTABLISHED",
+        "reason": "Negotiated TLS confidentiality dependency; NOT_ESTABLISHED",
+        "risk": "UNKNOWN",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "8e21c8a03086e1f4f44142f705372a5bb14e58d55f5889fc71916587eae7d9bb",
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+        "reasons": [
+          "TECHNICAL_VERDICT_UNKNOWN"
+        ],
+        "ruleId": "evidence-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites",
+        "TLS_LOCAL_AUTHENTICATION_NOT_ESTABLISHED"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "resumed"
+      },
+      "id": "a2ff0152834d7cee199986249f30d9c967ac873b903a0cd100e00407f08f8317",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_LOCAL_AUTHENTICATION",
+      "limitations": [
+        "mixed-or-unknown-psk-protection"
+      ],
+      "lineage": "VERIFIED",
+      "pskOriginExposure": "VULNERABLE",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "NOT_ESTABLISHED",
+        "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+        "risk": "UNKNOWN",
+        "role": "AUTHENTICITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "050952a027f7cfac99e4dac4d56f5c1848034dbb8642f690542f48197825a249",
+      "count": 1,
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [
+          "classification",
+          "confidentialityYears"
+        ],
+        "nextAction": "Provide the missing flow-specific requirements and review application-wide assumptions.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "APPLICABLE_CONTEXT_MISSING_OR_BROAD"
+        ],
+        "ruleId": "context-required",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "c13f2785f2c50d0115e502151308237bb802869d1ef7612232add47b4b6c134c",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 20,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "broad"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "asset": {
+        "algorithm": "RSA",
+        "keySize": 2048,
+        "mode": "ECB",
+        "operation": "ENCRYPT",
+        "padding": "OAEPWithSHA-256AndMGF1Padding",
+        "primitive": "CIPHER",
+        "protocolVersion": null,
+        "provider": "Synthetic",
+        "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+      },
+      "association": "SYNCHRONOUS_SCOPE",
+      "bucketId": "b0c697e9479bac56e943a3a41d374661672ee480d8c77f9d9e8d0f009ec36b78",
+      "count": 1,
+      "decision": {
+        "businessPriority": "NEEDS_CONTEXT",
+        "displayPriority": "NEEDS_CONTEXT",
+        "incomplete": true,
+        "missingFields": [],
+        "nextAction": "Review conflicting, stale or unmapped declarations while retaining technical findings.",
+        "reasons": [
+          "CLASSICAL_QUANTUM_EXPOSURE",
+          "DECLARATION_REVIEW_REQUIRED"
+        ],
+        "ruleId": "declaration-review",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "id": "fa66d762ea294d9b1170409c4ffe359fb458450e86fe7ad559db3ebcf4bb61fb",
+      "identityId": "synthetic-deployment",
+      "kind": "PRIMITIVE",
+      "occurrence": {
+        "line": 20,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "path": [
+        {
+          "identityId": "synthetic-deployment",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          }
+        }
+      ],
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      },
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "conflict"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": 0,
+        "quantumExposure": "VULNERABLE",
+        "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+        "risk": "QUANTUM_VULNERABLE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      }
+    },
+    {
+      "association": "HANDSHAKE_INITIATION_SCOPE",
+      "associationLimitation": "Initiating execution scope only; no request-to-connection or protected-data-flow proof.",
+      "bucketId": "98e4fdadf58c1d250545c2c9686fc3e360780a99735839936d89a9a593503409",
+      "decision": {
+        "businessPriority": "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE",
+        "displayPriority": "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE",
+        "incomplete": false,
+        "missingFields": [],
+        "nextAction": "Review unobserved paths and key-establishment, key-protection and protocol dependencies separately.",
+        "reasons": [
+          "RESISTANT_PRIMITIVE_IN_OBSERVED_SCOPE"
+        ],
+        "ruleId": "observed-resistant-primitive",
+        "technicalRemediation": false
+      },
+      "direct": true,
+      "entryPointCount": null,
+      "gaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "handshakeRef": {
+        "attempt": 1,
+        "connectionId": "hybrid"
+      },
+      "id": "c47e29d03bde9ba76386f4fd58601834ef482485c441d9ac30e3384970eecc96",
+      "identityId": "synthetic-deployment",
+      "kind": "TLS_CONFIDENTIALITY",
+      "limitations": [],
+      "lineage": "NOT_APPLICABLE",
+      "pskOriginExposure": "NOT_ESTABLISHED",
+      "qualified": true,
+      "runId": "run:12345678-1234-1234-1234-123456789abc",
+      "selectedKeyExchangeExposure": "RESISTANT",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "technical": {
+        "cnsa2": false,
+        "nistQuantumSecurityLevel": -1,
+        "quantumExposure": "RESISTANT",
+        "reason": "Negotiated TLS confidentiality dependency; RESISTANT",
+        "risk": "QUANTUM_SAFE",
+        "role": "CONFIDENTIALITY",
+        "version": "cryptocensus-default/6/facts-1"
+      },
+      "tlsFactsVersion": "tls-facts-v1"
+    }
+  ],
+  "flows": [
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 5,
+      "findingIds": [
+        "03e7608d8d4088c3eb0e79bb8b59cede5cf262062f3e7c4fd0d72e861fe0f4cd",
+        "36db23b93c4174ab6641b1812c0c7524948967d23ddbec3458554a7dd914fbf8",
+        "5f4742aa3bcc423c9de7d847d9d8fa278c84359c982ebc1d8e38696504825eba",
+        "9c39472839b2775ce1c8895ba6293f61c5cd33e140bf831ef166761985c7342e",
+        "a2ff0152834d7cee199986249f30d9c967ac873b903a0cd100e00407f08f8317",
+        "ad75ed4cb90adfc4240cef13c1936761ee3d874b9e3d429348750e926f24b7da",
+        "c176c0636d393c42a08184418c1d724abe8cf11e64d9854b064313e6cf3d98cd",
+        "c47e29d03bde9ba76386f4fd58601834ef482485c441d9ac30e3384970eecc96",
+        "cc0310835b735945e9a1af416456101c6cbda2270c3ed613dbfb13d0311ed5c4",
+        "d30f73aaff294373dccce70325bc7e339ec483ba88ae03e6a8bfeb5d949765e0",
+        "d5279ea84c8d80344430c31be568bb2888cab118c2bed86fc8ab2f3afb2c03f1",
+        "de565832357e390ef7f3d7e1d647b6f7b9be2473c7fe18a9940d4b993ff47745",
+        "ecb16e24fb57e21662e2310ef6911133714ce6fa70c5816aee9595c5e9a2b9c3"
+      ],
+      "gaps": [],
+      "handshakeAttempts": 3,
+      "inclusiveCount": 7,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 5,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "aff7d7130abc212f6231a3e12b8f93c1dec9780ddae0d78f966675870600105d",
+                  "id": "ANNOTATION:archive:AUTHENTICITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "ead90e8959809776ba142ca566cab08c8333dbd15bb0aeb665cc8b48046f97f0"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "AUTHENTICITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:archive:AUTHENTICITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "ead90e8959809776ba142ca566cab08c8333dbd15bb0aeb665cc8b48046f97f0"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "archive"
+                  },
+                  "value": "10"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": "10"
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "843c38c27f1ff7fd2fa35ff2bd7b92c78c9c3ac34fa7662c634fd12550cca3f2",
+                  "id": "ANNOTATION:archive:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "revision": "26a31e9b1afabeeec0fadbec42248a7c629d1c880e2fe0dd5776988ed066f64f"
+                },
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "ANNOTATION:archive:CLASSIFICATION",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "26a31e9b1afabeeec0fadbec42248a7c629d1c880e2fe0dd5776988ed066f64f"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "archive"
+                  },
+                  "value": "sensitive"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": "sensitive"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                },
+                {
+                  "declarationHash": "d2b3ce5cf6cb4290fdca8d6a03641e1ef57835dd8adc63b005128b4ed21c2f27",
+                  "id": "ANNOTATION:archive:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "6a8e95316a68968ef0ff274b1e51af77e1b702dad473df3499994a38fbc526d9"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:archive:CONFIDENTIALITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "6a8e95316a68968ef0ff274b1e51af77e1b702dad473df3499994a38fbc526d9"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "archive"
+                  },
+                  "value": "20"
+                },
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": "20"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [
+                {
+                  "declarationHash": "6ab7fc77c3542669dee1ca00af45db2493c182ad8e33135a184ecd9f92970f36",
+                  "id": "ANNOTATION:archive:IMPACT",
+                  "kind": "ANNOTATION",
+                  "revision": "ae2fbf1a676076d2d4ac967eab35e137e9e450dbfc317ddfefcc8b30edf8f00f"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "IMPACT",
+                  "source": {
+                    "id": "ANNOTATION:archive:IMPACT",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "ae2fbf1a676076d2d4ac967eab35e137e9e450dbfc317ddfefcc8b30edf8f00f"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "archive"
+                  },
+                  "value": "high"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": "high"
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "archive"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [],
+          "handshakeAttempts": 3,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 7,
+          "observed": true,
+          "priority": "TECHNICAL_REMEDIATION_FIRST",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "archive",
+      "labels": [
+        "archive"
+      ],
+      "observed": true,
+      "priority": "TECHNICAL_REMEDIATION_FIRST",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": "sensitive"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "archive"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "archive"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 0,
+      "findingIds": [
+        "89f5e32bdc0d21138d9967f78e703ed53f9b49e2f207d6ee612d2c287481b866"
+      ],
+      "gaps": [],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 1,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 0,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": ""
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                },
+                {
+                  "declarationHash": "f076a5b64830663bfd838417b859b748b23c7f5c55188349d816b689f7da5a38",
+                  "id": "ANNOTATION:gateway:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "revision": "c807388fb5b488ef8c52caf1cab1f8e6cd399f452d57ed3ef4f64ceb91c5c173"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "ANNOTATION:gateway:CLASSIFICATION",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "c807388fb5b488ef8c52caf1cab1f8e6cd399f452d57ed3ef4f64ceb91c5c173"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "gateway"
+                  },
+                  "value": "internal"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": "internal"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                },
+                {
+                  "declarationHash": "be7773978c7cbd19c4a785697d8780527489044928b171313609bda5b7fe5a06",
+                  "id": "ANNOTATION:gateway:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "e9a561518b9fe173a3621a5d010cb92a3cb42d5f87d93ee3b655d24131def85e"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:gateway:CONFIDENTIALITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "e9a561518b9fe173a3621a5d010cb92a3cb42d5f87d93ee3b655d24131def85e"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "gateway"
+                  },
+                  "value": "1"
+                },
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": "1"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": ""
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "gateway"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [],
+          "handshakeAttempts": 0,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 1,
+          "observed": true,
+          "priority": "PLANNED_MIGRATION",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "gateway",
+      "labels": [
+        "gateway"
+      ],
+      "observed": true,
+      "priority": "PLANNED_MIGRATION",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": "sensitive"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "gateway"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "gateway"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 3,
+      "findingIds": [
+        "08093c4fd0fca6838198bc0bc02a75d508de66440e8e0340b1b51398a9854b16",
+        "429d432160453a0a86b20a00afc295175883ca4bea3f08003e27e7478855ba67",
+        "53a14ca3f746f283e6c48ad294e2facb44c245a4c92090e5d52a25f857895743"
+      ],
+      "gaps": [],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 3,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 3,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": ""
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "0156a653cba2e152056e74ca672d157bbe34b412061ce103c18a0c19f9301fd9",
+                  "id": "ANNOTATION:helper:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "revision": "48803d5db4d6a69055d650eb56691933aa4f034dc48cc2b013dc341db8660d54"
+                },
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "ANNOTATION:helper:CLASSIFICATION",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "48803d5db4d6a69055d650eb56691933aa4f034dc48cc2b013dc341db8660d54"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "helper"
+                  },
+                  "value": "internal"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": "internal"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "4f3979f62e23467a367fd43d7c2f8e29e96f7c3314f85a1e65dded5cbf0fc613",
+                  "id": "ANNOTATION:helper:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "2827afe90c79ef80125a80881e21693693f62221d393086bcca998f8a2ce22d0"
+                },
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:helper:CONFIDENTIALITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "2827afe90c79ef80125a80881e21693693f62221d393086bcca998f8a2ce22d0"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "helper"
+                  },
+                  "value": "1"
+                },
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": "1"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": ""
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "helper"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [],
+          "handshakeAttempts": 0,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 3,
+          "observed": true,
+          "priority": "PLANNED_MIGRATION",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "helper",
+      "labels": [
+        "helper"
+      ],
+      "observed": true,
+      "priority": "PLANNED_MIGRATION",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": "sensitive"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "helper"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "helper"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 1,
+      "findingIds": [
+        "bfd2f8dd368554ac309f211de08004e02b9eda94a9810abbaa6615dc2f6dc42a"
+      ],
+      "gaps": [],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 1,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 1,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": ""
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                },
+                {
+                  "declarationHash": "f36025b8b4cd3dc7f7d0ac6f7077e0db2d2f258a0aa284c5f057796e44ba7957",
+                  "id": "CATALOG:imported:CLASSIFICATION",
+                  "kind": "CATALOG",
+                  "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "CATALOG:imported:CLASSIFICATION",
+                    "kind": "CATALOG",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "imported"
+                  },
+                  "value": "internal"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": "internal"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                },
+                {
+                  "declarationHash": "758008b8be1a24f053760ba4f55b3a20b7e2a07f77f540864fb6b7bc98731cd6",
+                  "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+                  "kind": "CATALOG",
+                  "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                },
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+                    "kind": "CATALOG",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "imported"
+                  },
+                  "value": "1"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": "1"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": ""
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [],
+          "handshakeAttempts": 0,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 1,
+          "observed": true,
+          "priority": "PLANNED_MIGRATION",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "imported",
+      "labels": [
+        "imported"
+      ],
+      "observed": true,
+      "priority": "PLANNED_MIGRATION",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            },
+            {
+              "declarationHash": "f36025b8b4cd3dc7f7d0ac6f7077e0db2d2f258a0aa284c5f057796e44ba7957",
+              "id": "CATALOG:imported:CLASSIFICATION",
+              "kind": "CATALOG",
+              "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            },
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "CATALOG:imported:CLASSIFICATION",
+                "kind": "CATALOG",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": "internal"
+            }
+          ],
+          "status": "AGREED",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": "internal"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            },
+            {
+              "declarationHash": "758008b8be1a24f053760ba4f55b3a20b7e2a07f77f540864fb6b7bc98731cd6",
+              "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+              "kind": "CATALOG",
+              "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+                "kind": "CATALOG",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "imported"
+              },
+              "value": "1"
+            }
+          ],
+          "status": "AGREED",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": "1"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "imported"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "imported"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 1,
+      "findingIds": [
+        "c13f2785f2c50d0115e502151308237bb802869d1ef7612232add47b4b6c134c"
+      ],
+      "gaps": [],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 1,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 1,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": ""
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                }
+              ],
+              "status": "APPLICATION_DEFAULT",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": "sensitive"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                }
+              ],
+              "status": "APPLICATION_DEFAULT",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": "20"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": ""
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "broad"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [],
+          "handshakeAttempts": 0,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 1,
+          "observed": true,
+          "priority": "NEEDS_CONTEXT",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "broad",
+      "labels": [
+        "broad"
+      ],
+      "observed": true,
+      "priority": "NEEDS_CONTEXT",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": "sensitive"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "broad"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "broad"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 1,
+      "findingIds": [
+        "fa66d762ea294d9b1170409c4ffe359fb458450e86fe7ad559db3ebcf4bb61fb"
+      ],
+      "gaps": [],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 1,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 1,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "53a8e3279cae25de791dea5ffd2cf23789b6f561031c88505088b35bb3ba8695",
+                  "id": "ANNOTATION:conflict:AUTHENTICITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "6632bd6abd7b9929f62f2304aa5bbef42e46b91aed90bdc93517a884e0ead34b"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "AUTHENTICITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:conflict:AUTHENTICITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "6632bd6abd7b9929f62f2304aa5bbef42e46b91aed90bdc93517a884e0ead34b"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "conflict"
+                  },
+                  "value": "10"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": "10"
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "264e930f8ab3d48c928d46e1533e122c52c97e4aae94bbe4d87d78718e38e20c",
+                  "id": "USER:conflict:CLASSIFICATION",
+                  "kind": "USER",
+                  "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+                },
+                {
+                  "declarationHash": "d0cb42bbe49aabccf101e2ae8e1df1db84871b6831283cd342cffbd36c502f3f",
+                  "id": "ANNOTATION:conflict:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "revision": "104a9e852eee967cfc1879372e40db2e7bbf5d935238d07e52bb555d5a36abea"
+                },
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "ANNOTATION:conflict:CLASSIFICATION",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "104a9e852eee967cfc1879372e40db2e7bbf5d935238d07e52bb555d5a36abea"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "conflict"
+                  },
+                  "value": "sensitive"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "USER:conflict:CLASSIFICATION",
+                    "kind": "USER",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "conflict"
+                  },
+                  "value": "public"
+                }
+              ],
+              "status": "CONFLICT",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": ""
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                },
+                {
+                  "declarationHash": "62100bd1806d431979e5dfe914db8a5ffb75313d0059b7bc1e34a7cd62ebf70e",
+                  "id": "ANNOTATION:conflict:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "431ff55288ccb6b48cfca5e6ae306676d57a97205fad71ef73c2102d9d33c76d"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:conflict:CONFIDENTIALITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "431ff55288ccb6b48cfca5e6ae306676d57a97205fad71ef73c2102d9d33c76d"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "conflict"
+                  },
+                  "value": "20"
+                },
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": "20"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [
+                {
+                  "declarationHash": "cad815fcaac4ac1823200f401483208ec07efb9ccf46d66a58f240595c09f1c9",
+                  "id": "ANNOTATION:conflict:IMPACT",
+                  "kind": "ANNOTATION",
+                  "revision": "cd800c62bcdd24d205cbd2c2a77a1924caa6bcf1319700bd37357c037cc4dd45"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "IMPACT",
+                  "source": {
+                    "id": "ANNOTATION:conflict:IMPACT",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "cd800c62bcdd24d205cbd2c2a77a1924caa6bcf1319700bd37357c037cc4dd45"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "conflict"
+                  },
+                  "value": "high"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": "high"
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [],
+          "handshakeAttempts": 0,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 1,
+          "observed": true,
+          "priority": "NEEDS_CONTEXT",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "conflict",
+      "labels": [
+        "conflict"
+      ],
+      "observed": true,
+      "priority": "NEEDS_CONTEXT",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "264e930f8ab3d48c928d46e1533e122c52c97e4aae94bbe4d87d78718e38e20c",
+              "id": "USER:conflict:CLASSIFICATION",
+              "kind": "USER",
+              "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+            },
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            },
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "USER:conflict:CLASSIFICATION",
+                "kind": "USER",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "conflict"
+              },
+              "value": "public"
+            }
+          ],
+          "status": "AGREED",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": "public"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "conflict"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "conflict"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 0,
+      "findingIds": [],
+      "gaps": [
+        "NO_OBSERVATION"
+      ],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 0,
+      "incomplete": true,
+      "instances": [
+        {
+          "assessmentIncomplete": true,
+          "countsSaturated": false,
+          "coverageIncomplete": true,
+          "directCount": 0,
+          "fields": [
+            {
+              "field": "AUTHENTICITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5ac2106fc840ab152fc23f2492a2612b89a9f6f409b6b87187b262684e6c8b9f",
+                  "id": "ANNOTATION:dormant:AUTHENTICITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "22a2cdfa4864c327a1eec2f3a5af896c1f1824901f6b52d9697641e408428799"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "AUTHENTICITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:dormant:AUTHENTICITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "22a2cdfa4864c327a1eec2f3a5af896c1f1824901f6b52d9697641e408428799"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "dormant"
+                  },
+                  "value": "10"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": "10"
+            },
+            {
+              "field": "CLASSIFICATION",
+              "sourceRefs": [
+                {
+                  "declarationHash": "a50484006bb5e4a0b87eb69e56cdb3a913070243204a15d48d6cb49871301c17",
+                  "id": "ANNOTATION:dormant:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "revision": "064b32cece1dee88115aab123b0d0d6957e483862691c9e491fc6ae9aa4ca55a"
+                },
+                {
+                  "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+                  "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "ANNOTATION:dormant:CLASSIFICATION",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "064b32cece1dee88115aab123b0d0d6957e483862691c9e491fc6ae9aa4ca55a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "dormant"
+                  },
+                  "value": "sensitive"
+                },
+                {
+                  "field": "CLASSIFICATION",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "sensitive"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": "sensitive"
+            },
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "sourceRefs": [
+                {
+                  "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+                  "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                  "kind": "APPLICATION_DEFAULT",
+                  "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                },
+                {
+                  "declarationHash": "a2dbff01afda66e9765f62d069529bdd59f1015717146659b38709c5d3e13d28",
+                  "id": "ANNOTATION:dormant:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "revision": "8ec33912d37013c08d0d4b35977d66c9a751e14f523f6118e3f66138442e8e18"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "ANNOTATION:dormant:CONFIDENTIALITY_YEARS",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "8ec33912d37013c08d0d4b35977d66c9a751e14f523f6118e3f66138442e8e18"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "dormant"
+                  },
+                  "value": "20"
+                },
+                {
+                  "field": "CONFIDENTIALITY_YEARS",
+                  "source": {
+                    "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                    "kind": "APPLICATION_DEFAULT",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": ""
+                  },
+                  "value": "20"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": "20"
+            },
+            {
+              "field": "EXPOSURE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": ""
+            },
+            {
+              "field": "IMPACT",
+              "sourceRefs": [
+                {
+                  "declarationHash": "a403ff9c6974435ed20e068b286fa5b32c7ef02ecb79fe47a03d85e91458c9e0",
+                  "id": "ANNOTATION:dormant:IMPACT",
+                  "kind": "ANNOTATION",
+                  "revision": "85250cbeb95ca41bac3bd9ec02cf035f6402789512888214a6de3acc83a8d05d"
+                }
+              ],
+              "sources": [
+                {
+                  "field": "IMPACT",
+                  "source": {
+                    "id": "ANNOTATION:dormant:IMPACT",
+                    "kind": "ANNOTATION",
+                    "reviewedAt": "",
+                    "reviewer": "",
+                    "revision": "85250cbeb95ca41bac3bd9ec02cf035f6402789512888214a6de3acc83a8d05d"
+                  },
+                  "subject": {
+                    "applicationId": "example:records",
+                    "flowId": "dormant"
+                  },
+                  "value": "high"
+                }
+              ],
+              "status": "AGREED",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": "high"
+            },
+            {
+              "field": "OWNER",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": ""
+            },
+            {
+              "field": "PURPOSE",
+              "sourceRefs": [],
+              "sources": [],
+              "status": "UNKNOWN",
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": "dormant"
+              },
+              "value": ""
+            }
+          ],
+          "gaps": [
+            "NO_OBSERVATION"
+          ],
+          "handshakeAttempts": 0,
+          "identity": {
+            "applicationId": "example:records",
+            "deploymentId": "synthetic-release",
+            "id": "synthetic-deployment",
+            "loaderId": "loader-1",
+            "provenance": "source-catalog",
+            "sourceArtifact": "example:workload",
+            "status": "RESOLVED"
+          },
+          "identityId": "synthetic-deployment",
+          "inclusiveCount": 0,
+          "observed": false,
+          "priority": "NEEDS_CONTEXT",
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "unknownCount": false
+        }
+      ],
+      "label": "dormant",
+      "labels": [
+        "dormant"
+      ],
+      "observed": false,
+      "priority": "NEEDS_CONTEXT",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": "sensitive"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "dormant"
+          },
+          "value": ""
+        }
+      ],
+      "state": "ACTIVE",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "dormant"
+      },
+      "unknownCount": false
+    },
+    {
+      "assessmentIncomplete": true,
+      "bindings": [
+        {
+          "binding": {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "removedMethod",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          },
+          "runId": "run:12345678-1234-1234-1234-123456789abc",
+          "status": "NOT_OBSERVED"
+        },
+        {
+          "binding": {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "removedMethod",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          },
+          "runId": "run:22345678-1234-1234-1234-123456789abc",
+          "status": "NOT_OBSERVED"
+        }
+      ],
+      "countsSaturated": false,
+      "coverageIncomplete": true,
+      "directCount": 0,
+      "findingIds": [],
+      "gaps": [
+        "NO_OBSERVATION"
+      ],
+      "handshakeAttempts": 0,
+      "inclusiveCount": 0,
+      "incomplete": true,
+      "instances": [],
+      "label": "Stale saved method",
+      "labels": [
+        "Stale saved method"
+      ],
+      "observed": false,
+      "priority": "NEEDS_CONTEXT",
+      "readiness": {
+        "assertedState": null,
+        "basis": "UNASSESSED",
+        "effectiveState": "UNASSESSED",
+        "gaps": [],
+        "note": "",
+        "provenance": null,
+        "validationRefs": []
+      },
+      "readinessIncomplete": false,
+      "savedContextFields": [
+        {
+          "field": "AUTHENTICITY_YEARS",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": ""
+        },
+        {
+          "field": "CLASSIFICATION",
+          "sourceRefs": [
+            {
+              "declarationHash": "eb8de1e4860d98afa72b42d18e85cf40525c88578b373a2a559ac7455b309eed",
+              "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CLASSIFICATION",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "sensitive"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": "sensitive"
+        },
+        {
+          "field": "CONFIDENTIALITY_YEARS",
+          "sourceRefs": [
+            {
+              "declarationHash": "5b6be88a5bdf6dcb304e26bd373d156e1a70192f8ba9ba68b0feb6bdb287bc5c",
+              "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+              "kind": "APPLICATION_DEFAULT",
+              "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+            }
+          ],
+          "sources": [
+            {
+              "field": "CONFIDENTIALITY_YEARS",
+              "source": {
+                "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+                "kind": "APPLICATION_DEFAULT",
+                "reviewedAt": "",
+                "reviewer": "",
+                "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+              },
+              "subject": {
+                "applicationId": "example:records",
+                "flowId": ""
+              },
+              "value": "20"
+            }
+          ],
+          "status": "APPLICATION_DEFAULT",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": "20"
+        },
+        {
+          "field": "EXPOSURE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": ""
+        },
+        {
+          "field": "IMPACT",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": ""
+        },
+        {
+          "field": "OWNER",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": ""
+        },
+        {
+          "field": "PURPOSE",
+          "sourceRefs": [],
+          "sources": [],
+          "status": "UNKNOWN",
+          "subject": {
+            "applicationId": "example:records",
+            "flowId": "stale"
+          },
+          "value": ""
+        }
+      ],
+      "state": "RETIRED",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "stale"
+      },
+      "unknownCount": false
+    }
+  ],
+  "gaps": [
+    "CORE_HEALTH:cryptocensus:overflowedSites",
+    "NO_FLOW_OR_CORRELATION_EVIDENCE",
+    "NO_TRUSTED_FLOW_EVIDENCE"
+  ],
+  "incomplete": true,
+  "limitations": [
+    "Entry-point counts are not bytes protected, transaction counts or coverage of all application code.",
+    "Synchronous execution scope is not taint tracking or causal data-flow proof; off-thread work may be missing.",
+    "Readiness assertions are not authenticated validation or interoperability evidence.",
+    "No action identified for an observed primitive says nothing about unobserved paths or unassessed dependencies."
+  ],
+  "profile": {
+    "authenticityYears": 5,
+    "confidentialityYears": 5,
+    "coreFactsVersion": "cryptocensus-default/6/facts-1",
+    "highImpactLevel": 3,
+    "impact": {
+      "high": 3,
+      "low": 1,
+      "medium": 2
+    },
+    "ruleSetVersion": "business-v1",
+    "schemaVersion": 1,
+    "sensitiveLevel": 2,
+    "sensitivity": {
+      "internal": 1,
+      "public": 0,
+      "restricted": 3,
+      "sensitive": 2
+    },
+    "tlsFactsVersion": "tls-facts-v1"
+  },
+  "profileHash": "035baa4c7297d542dfdbc02343054bff3867c46810b3d6a7840a7a95ff6aa352",
+  "ruleSetVersion": "business-v1",
+  "runs": [
+    {
+      "attributionGaps": [
+        "NO_TRUSTED_FLOW_EVIDENCE"
+      ],
+      "capabilities": [],
+      "cbomHash": "608f57c28decb0abe89e8265e3cebae0ac3af067ee8439d1c96218921c00e5ee",
+      "collectionGaps": [
+        "NO_FLOW_OR_CORRELATION_EVIDENCE"
+      ],
+      "coreHealth": {
+        "cryptocensus:drainTimedOut": 0,
+        "cryptocensus:dropped": 0,
+        "cryptocensus:overflowedSites": 0,
+        "cryptocensus:recordingFailures": 0,
+        "cryptocensus:transformErrors": 0,
+        "cryptocensus:untrackedTypes": 0
+      },
+      "enrichmentHealth": {},
+      "environments": [
+        "fixture"
+      ],
+      "evidenceAccepted": false,
+      "evidenceHash": "",
+      "flows": [],
+      "handshakes": [],
+      "id": "run:22345678-1234-1234-1234-123456789abc",
+      "identities": [],
+      "metadata": {
+        "cryptocensus:drainTimedOut": "0",
+        "cryptocensus:dropped": "0",
+        "cryptocensus:overflowedSites": "0",
+        "cryptocensus:policy": "cryptocensus-default/6",
+        "cryptocensus:recordingFailures": "0",
+        "cryptocensus:runId": "22345678-1234-1234-1234-123456789abc",
+        "cryptocensus:schema": "census-agent/1",
+        "cryptocensus:transformErrors": "0",
+        "cryptocensus:untrackedTypes": "0"
+      },
+      "nonce": "22345678-1234-1234-1234-123456789abc",
+      "workloads": [
+        "synthetic-unannotated"
+      ]
+    },
+    {
+      "attributionGaps": [],
+      "capabilities": [
+        {
+          "detail": "synthetic",
+          "feature": "annotation-scopes",
+          "status": "SUPPORTED"
+        },
+        {
+          "detail": "synthetic",
+          "feature": "tls-sunjsse-1.3-correlation",
+          "status": "SUPPORTED"
+        }
+      ],
+      "cbomHash": "0428680441aa1422d90e6ce04c0936227e727a039120f390f0b4758ea26d43fc",
+      "collectionGaps": [
+        "CORE_HEALTH:cryptocensus:overflowedSites"
+      ],
+      "coreHealth": {
+        "cryptocensus:drainTimedOut": 0,
+        "cryptocensus:dropped": 0,
+        "cryptocensus:overflowedSites": 5,
+        "cryptocensus:recordingFailures": 0,
+        "cryptocensus:transformErrors": 0,
+        "cryptocensus:untrackedTypes": 0
+      },
+      "enrichmentHealth": {
+        "CONSERVATION_UNVERIFIED": 0,
+        "DRAIN_TIMEOUT": 0,
+        "DROPPED_BINDINGS": 0,
+        "DROPPED_FLOWS": 0,
+        "DROPPED_HANDSHAKES": 0,
+        "LOST_ATTRIBUTION": 0,
+        "OUTPUT_FAILURES": 0,
+        "RECORDING_FAILURES": 0,
+        "SATURATED_COUNTS": 0,
+        "SCOPE_INTEGRITY": 0,
+        "SCOPE_RESTORE_FAILURES": 0,
+        "TRANSFORM_ERRORS": 0
+      },
+      "environments": [
+        "fixture"
+      ],
+      "evidenceAccepted": true,
+      "evidenceHash": "2c52ff882bf6398a3835998e79551d6ebb66083e390e6bd09d9eaa6b3df81c74",
+      "flows": [
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "archive",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [
+              {
+                "field": "AUTHENTICITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:archive:AUTHENTICITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "ead90e8959809776ba142ca566cab08c8333dbd15bb0aeb665cc8b48046f97f0"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                },
+                "value": "10"
+              },
+              {
+                "field": "CLASSIFICATION",
+                "source": {
+                  "id": "ANNOTATION:archive:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "26a31e9b1afabeeec0fadbec42248a7c629d1c880e2fe0dd5776988ed066f64f"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                },
+                "value": "sensitive"
+              },
+              {
+                "field": "CONFIDENTIALITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:archive:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "6a8e95316a68968ef0ff274b1e51af77e1b702dad473df3499994a38fbc526d9"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                },
+                "value": "20"
+              },
+              {
+                "field": "IMPACT",
+                "source": {
+                  "id": "ANNOTATION:archive:IMPACT",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "ae2fbf1a676076d2d4ac967eab35e137e9e450dbfc317ddfefcc8b30edf8f00f"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                },
+                "value": "high"
+              }
+            ],
+            "label": "archive",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        },
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "broad",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [],
+            "label": "broad",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "broad"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        },
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "conflict",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [
+              {
+                "field": "AUTHENTICITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:conflict:AUTHENTICITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "6632bd6abd7b9929f62f2304aa5bbef42e46b91aed90bdc93517a884e0ead34b"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "conflict"
+                },
+                "value": "10"
+              },
+              {
+                "field": "CLASSIFICATION",
+                "source": {
+                  "id": "ANNOTATION:conflict:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "104a9e852eee967cfc1879372e40db2e7bbf5d935238d07e52bb555d5a36abea"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "conflict"
+                },
+                "value": "sensitive"
+              },
+              {
+                "field": "CONFIDENTIALITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:conflict:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "431ff55288ccb6b48cfca5e6ae306676d57a97205fad71ef73c2102d9d33c76d"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "conflict"
+                },
+                "value": "20"
+              },
+              {
+                "field": "IMPACT",
+                "source": {
+                  "id": "ANNOTATION:conflict:IMPACT",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "cd800c62bcdd24d205cbd2c2a77a1924caa6bcf1319700bd37357c037cc4dd45"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "conflict"
+                },
+                "value": "high"
+              }
+            ],
+            "label": "conflict",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "conflict"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        },
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "dormant",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [
+              {
+                "field": "AUTHENTICITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:dormant:AUTHENTICITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "22a2cdfa4864c327a1eec2f3a5af896c1f1824901f6b52d9697641e408428799"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "dormant"
+                },
+                "value": "10"
+              },
+              {
+                "field": "CLASSIFICATION",
+                "source": {
+                  "id": "ANNOTATION:dormant:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "064b32cece1dee88115aab123b0d0d6957e483862691c9e491fc6ae9aa4ca55a"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "dormant"
+                },
+                "value": "sensitive"
+              },
+              {
+                "field": "CONFIDENTIALITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:dormant:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "8ec33912d37013c08d0d4b35977d66c9a751e14f523f6118e3f66138442e8e18"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "dormant"
+                },
+                "value": "20"
+              },
+              {
+                "field": "IMPACT",
+                "source": {
+                  "id": "ANNOTATION:dormant:IMPACT",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "85250cbeb95ca41bac3bd9ec02cf035f6402789512888214a6de3acc83a8d05d"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "dormant"
+                },
+                "value": "high"
+              }
+            ],
+            "label": "dormant",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "dormant"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        },
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "gateway",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [
+              {
+                "field": "CLASSIFICATION",
+                "source": {
+                  "id": "ANNOTATION:gateway:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "c807388fb5b488ef8c52caf1cab1f8e6cd399f452d57ed3ef4f64ceb91c5c173"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "gateway"
+                },
+                "value": "internal"
+              },
+              {
+                "field": "CONFIDENTIALITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:gateway:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "e9a561518b9fe173a3621a5d010cb92a3cb42d5f87d93ee3b655d24131def85e"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "gateway"
+                },
+                "value": "1"
+              }
+            ],
+            "label": "gateway",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "gateway"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        },
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "helper",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [
+              {
+                "field": "CLASSIFICATION",
+                "source": {
+                  "id": "ANNOTATION:helper:CLASSIFICATION",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "48803d5db4d6a69055d650eb56691933aa4f034dc48cc2b013dc341db8660d54"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "helper"
+                },
+                "value": "internal"
+              },
+              {
+                "field": "CONFIDENTIALITY_YEARS",
+                "source": {
+                  "id": "ANNOTATION:helper:CONFIDENTIALITY_YEARS",
+                  "kind": "ANNOTATION",
+                  "reviewedAt": "",
+                  "reviewer": "",
+                  "revision": "2827afe90c79ef80125a80881e21693693f62221d393086bcca998f8a2ce22d0"
+                },
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "helper"
+                },
+                "value": "1"
+              }
+            ],
+            "label": "helper",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "helper"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        },
+        {
+          "definition": {
+            "bindings": [
+              {
+                "className": "example.Workload",
+                "descriptor": "()V",
+                "method": "imported",
+                "origin": "MAIN",
+                "sourceArtifact": "example:workload"
+              }
+            ],
+            "declarations": [],
+            "label": "imported",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "imported"
+            }
+          },
+          "identityId": "synthetic-deployment"
+        }
+      ],
+      "handshakes": [
+        {
+          "adapter": "synthetic-adapter",
+          "attempt": 1,
+          "connectionId": "classical",
+          "diagnostics": [],
+          "initiation": {
+            "association": "SYNCHRONOUS_SCOPE",
+            "identityId": "synthetic-deployment",
+            "path": [
+              {
+                "identityId": "synthetic-deployment",
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                }
+              }
+            ]
+          },
+          "negotiation": {
+            "cipherSuite": "TLS_AES_256_GCM_SHA384",
+            "localSignatureScheme": "",
+            "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+            "protocol": "TLSv1.3",
+            "selectedGroupId": 29,
+            "selectedGroupName": "x25519"
+          },
+          "outcome": "COMPLETED",
+          "relatedAssetRefs": [
+            "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+          ],
+          "resumption": {
+            "freshKeyExchange": "YES",
+            "pskOrigin": null,
+            "resumed": "NO"
+          },
+          "role": "CLIENT",
+          "transport": "SOCKET"
+        },
+        {
+          "adapter": "synthetic-adapter",
+          "attempt": 1,
+          "connectionId": "hybrid",
+          "diagnostics": [],
+          "initiation": {
+            "association": "SYNCHRONOUS_SCOPE",
+            "identityId": "synthetic-deployment",
+            "path": [
+              {
+                "identityId": "synthetic-deployment",
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                }
+              }
+            ]
+          },
+          "negotiation": {
+            "cipherSuite": "TLS_AES_256_GCM_SHA384",
+            "localSignatureScheme": "",
+            "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+            "protocol": "TLSv1.3",
+            "selectedGroupId": 4588,
+            "selectedGroupName": "X25519MLKEM768"
+          },
+          "outcome": "COMPLETED",
+          "relatedAssetRefs": [
+            "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+          ],
+          "resumption": {
+            "freshKeyExchange": "YES",
+            "pskOrigin": null,
+            "resumed": "NO"
+          },
+          "role": "CLIENT",
+          "transport": "SOCKET"
+        },
+        {
+          "adapter": "synthetic-adapter",
+          "attempt": 1,
+          "connectionId": "resumed",
+          "diagnostics": [],
+          "initiation": {
+            "association": "SYNCHRONOUS_SCOPE",
+            "identityId": "synthetic-deployment",
+            "path": [
+              {
+                "identityId": "synthetic-deployment",
+                "subject": {
+                  "applicationId": "example:records",
+                  "flowId": "archive"
+                }
+              }
+            ]
+          },
+          "negotiation": {
+            "cipherSuite": "TLS_AES_256_GCM_SHA384",
+            "localSignatureScheme": "",
+            "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+            "protocol": "TLSv1.3",
+            "selectedGroupId": 4588,
+            "selectedGroupName": "X25519MLKEM768"
+          },
+          "outcome": "COMPLETED",
+          "relatedAssetRefs": [
+            "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+          ],
+          "resumption": {
+            "freshKeyExchange": "YES",
+            "pskOrigin": {
+              "attempt": 1,
+              "connectionId": "classical"
+            },
+            "resumed": "YES"
+          },
+          "role": "CLIENT",
+          "transport": "SOCKET"
+        }
+      ],
+      "id": "run:12345678-1234-1234-1234-123456789abc",
+      "identities": [
+        {
+          "applicationId": "example:records",
+          "deploymentId": "synthetic-release",
+          "id": "synthetic-deployment",
+          "loaderId": "loader-1",
+          "provenance": "source-catalog",
+          "sourceArtifact": "example:workload",
+          "status": "RESOLVED"
+        }
+      ],
+      "metadata": {
+        "cryptocensus:drainTimedOut": "0",
+        "cryptocensus:dropped": "0",
+        "cryptocensus:overflowedSites": "5",
+        "cryptocensus:policy": "cryptocensus-default/6",
+        "cryptocensus:recordingFailures": "0",
+        "cryptocensus:runId": "12345678-1234-1234-1234-123456789abc",
+        "cryptocensus:schema": "census-agent/1",
+        "cryptocensus:transformErrors": "0",
+        "cryptocensus:untrackedTypes": "0"
+      },
+      "nonce": "12345678-1234-1234-1234-123456789abc",
+      "workloads": [
+        "synthetic-annotated"
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "tlsFactsVersion": "tls-facts-v1"
+}

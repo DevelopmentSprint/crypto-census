@@ -1,0 +1,231 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:1024:encrypt@Synthetic",
+      "cryptoProperties": {
+        "algorithmProperties": {
+          "cryptoFunctions": [
+            "encrypt"
+          ],
+          "mode": "ecb",
+          "padding": "oaep",
+          "parameterSetIdentifier": "1024",
+          "primitive": "pke"
+        },
+        "assetType": "algorithm"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "additionalContext": "count=2",
+            "line": 10,
+            "location": "example.Workload",
+            "symbol": "encrypt"
+          }
+        ]
+      },
+      "name": "RSA-1024-ECB",
+      "properties": [
+        {
+          "name": "cryptocensus:risk",
+          "value": "broken"
+        },
+        {
+          "name": "cryptocensus:reason",
+          "value": "RSA-1024 key transport is disallowed for encryption and decryption (SP 800-131A section 6)"
+        },
+        {
+          "name": "cryptocensus:cnsa2",
+          "value": "false"
+        },
+        {
+          "name": "cryptocensus:count",
+          "value": "2"
+        },
+        {
+          "name": "cryptocensus:primitive",
+          "value": "CIPHER"
+        },
+        {
+          "name": "cryptocensus:algorithm",
+          "value": "RSA"
+        },
+        {
+          "name": "cryptocensus:mode",
+          "value": "ECB"
+        },
+        {
+          "name": "cryptocensus:padding",
+          "value": "OAEPWithSHA-256AndMGF1Padding"
+        },
+        {
+          "name": "cryptocensus:keySize",
+          "value": "1024"
+        },
+        {
+          "name": "cryptocensus:provider",
+          "value": "Synthetic"
+        },
+        {
+          "name": "cryptocensus:operation",
+          "value": "ENCRYPT"
+        }
+      ],
+      "type": "cryptographic-asset"
+    },
+    {
+      "bom-ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "cryptoProperties": {
+        "algorithmProperties": {
+          "cryptoFunctions": [
+            "encrypt"
+          ],
+          "mode": "ecb",
+          "nistQuantumSecurityLevel": 0,
+          "padding": "oaep",
+          "parameterSetIdentifier": "2048",
+          "primitive": "pke"
+        },
+        "assetType": "algorithm"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "additionalContext": "count=5",
+            "location": "<overflow>"
+          },
+          {
+            "additionalContext": "count=5",
+            "line": 10,
+            "location": "example.Workload",
+            "symbol": "encrypt"
+          },
+          {
+            "additionalContext": "count=1",
+            "line": 11,
+            "location": "example.Workload",
+            "symbol": "encrypt"
+          },
+          {
+            "additionalContext": "count=3",
+            "line": 20,
+            "location": "example.Workload",
+            "symbol": "encrypt"
+          },
+          {
+            "additionalContext": "count=1",
+            "line": 30,
+            "location": "example.Workload",
+            "symbol": "encrypt"
+          }
+        ]
+      },
+      "name": "RSA-2048-ECB",
+      "properties": [
+        {
+          "name": "cryptocensus:risk",
+          "value": "quantum-vulnerable"
+        },
+        {
+          "name": "cryptocensus:reason",
+          "value": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM"
+        },
+        {
+          "name": "cryptocensus:cnsa2",
+          "value": "false"
+        },
+        {
+          "name": "cryptocensus:count",
+          "value": "15"
+        },
+        {
+          "name": "cryptocensus:primitive",
+          "value": "CIPHER"
+        },
+        {
+          "name": "cryptocensus:algorithm",
+          "value": "RSA"
+        },
+        {
+          "name": "cryptocensus:mode",
+          "value": "ECB"
+        },
+        {
+          "name": "cryptocensus:padding",
+          "value": "OAEPWithSHA-256AndMGF1Padding"
+        },
+        {
+          "name": "cryptocensus:keySize",
+          "value": "2048"
+        },
+        {
+          "name": "cryptocensus:provider",
+          "value": "Synthetic"
+        },
+        {
+          "name": "cryptocensus:operation",
+          "value": "ENCRYPT"
+        }
+      ],
+      "type": "cryptographic-asset"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "Synthetic contract fixture",
+      "type": "application"
+    },
+    "properties": [
+      {
+        "name": "cryptocensus:policy",
+        "value": "cryptocensus-default/6"
+      },
+      {
+        "name": "cryptocensus:drainTimedOut",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:dropped",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:overflowedSites",
+        "value": "5"
+      },
+      {
+        "name": "cryptocensus:recordingFailures",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:runId",
+        "value": "12345678-1234-1234-1234-123456789abc"
+      },
+      {
+        "name": "cryptocensus:schema",
+        "value": "census-agent/1"
+      },
+      {
+        "name": "cryptocensus:transformErrors",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:untrackedTypes",
+        "value": "0"
+      }
+    ],
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "name": "crypto-census",
+          "type": "application",
+          "version": "0.1.0"
+        }
+      ]
+    }
+  },
+  "serialNumber": "urn:uuid:12345678-1234-1234-1234-123456789abc",
+  "specVersion": "1.6",
+  "version": 1
+}

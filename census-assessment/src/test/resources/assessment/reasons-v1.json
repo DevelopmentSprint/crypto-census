@@ -1,0 +1,1077 @@
+[
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 1024,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:1024:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "TECHNICAL_REMEDIATION_FIRST",
+      "displayPriority": "TECHNICAL_REMEDIATION_FIRST",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Remediate the current technical finding and assess its quantum-exposed dependencies.",
+      "reasons": [
+        "CURRENT_TECHNICAL_REMEDIATION",
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_SENSITIVE_CONFIDENTIALITY",
+        "TECHNICAL_PRIORITY_INDEPENDENT_OF_CONTEXT"
+      ],
+      "ruleId": "technical-remediation",
+      "technicalRemediation": true
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 10,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA-1024 key transport is disallowed for encryption and decryption (SP 800-131A section 6)",
+      "risk": "BROKEN",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
+      ],
+      "ruleId": "authenticity-urgency",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "classical"
+    },
+    "kind": "TLS_PEER_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "VULNERABLE",
+      "reason": "Observed peer TLS authentication signature; VULNERABLE",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
+      ],
+      "ruleId": "authenticity-urgency",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "hybrid"
+    },
+    "kind": "TLS_PEER_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "VULNERABLE",
+      "reason": "Observed peer TLS authentication signature; VULNERABLE",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize signature migration planning, verification lifetimes and replacement dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY"
+      ],
+      "ruleId": "authenticity-urgency",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "resumed"
+    },
+    "kind": "TLS_PEER_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "VULNERABLE",
+      "reason": "Observed peer TLS authentication signature; VULNERABLE",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+      ],
+      "ruleId": "long-confidentiality",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "classical"
+    },
+    "kind": "TLS_CONFIDENTIALITY",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "VULNERABLE",
+      "reason": "Negotiated TLS confidentiality dependency; VULNERABLE",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+      ],
+      "ruleId": "long-confidentiality",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 10,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+      ],
+      "ruleId": "long-confidentiality",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 10,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      },
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "URGENT_PLANNING",
+      "displayPriority": "URGENT_PLANNING",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Prioritize migration planning for this confidential flow and verify protocol and key-protection dependencies.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "LONG_LIVED_SENSITIVE_CONFIDENTIALITY"
+      ],
+      "ruleId": "long-confidentiality",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 11,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      },
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "PLANNED_MIGRATION",
+      "displayPriority": "PLANNED_MIGRATION",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+      ],
+      "ruleId": "planned-classical-migration",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 10,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "gateway"
+        }
+      },
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "gateway"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "PLANNED_MIGRATION",
+      "displayPriority": "PLANNED_MIGRATION",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+      ],
+      "ruleId": "planned-classical-migration",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 10,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      },
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "helper"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "PLANNED_MIGRATION",
+      "displayPriority": "PLANNED_MIGRATION",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+      ],
+      "ruleId": "planned-classical-migration",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 11,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      },
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "helper"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "PLANNED_MIGRATION",
+      "displayPriority": "PLANNED_MIGRATION",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+      ],
+      "ruleId": "planned-classical-migration",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 10,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "gateway"
+        }
+      },
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "helper"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "PLANNED_MIGRATION",
+      "displayPriority": "PLANNED_MIGRATION",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Plan replacement of this classical dependency; shorter lifetimes do not establish safety.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "CLASSICAL_PUBLIC_KEY_DEPENDENCY"
+      ],
+      "ruleId": "planned-classical-migration",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 20,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "imported"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "imported"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "AES",
+      "keySize": 256,
+      "mode": "GCM",
+      "operation": "ENCRYPT",
+      "padding": "NoPadding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:AES::GCM:NoPadding:256:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "ASSOCIATION_NOT_ESTABLISHED"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 1,
+      "location": "example.Legacy",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [],
+    "subject": null,
+    "technical": {
+      "cnsa2": true,
+      "nistQuantumSecurityLevel": 5,
+      "quantumExposure": "RESISTANT",
+      "reason": "AES-GCM with a 256-bit key (CNSA 2.0)",
+      "risk": "QUANTUM_SAFE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "ASSOCIATION_NOT_ESTABLISHED"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": -1,
+      "location": "<overflow>",
+      "symbol": null,
+      "via": null
+    },
+    "path": [],
+    "subject": null,
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "ASSOCIATION_NOT_ESTABLISHED"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 30,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [],
+    "subject": null,
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "TECHNICAL_VERDICT_UNKNOWN"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "classical"
+    },
+    "kind": "TLS_LOCAL_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "NOT_ESTABLISHED",
+      "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+      "risk": "UNKNOWN",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "TECHNICAL_VERDICT_UNKNOWN"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "hybrid"
+    },
+    "kind": "TLS_LOCAL_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "NOT_ESTABLISHED",
+      "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+      "risk": "UNKNOWN",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "TECHNICAL_VERDICT_UNKNOWN"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "resumed"
+    },
+    "kind": "TLS_CONFIDENTIALITY",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "NOT_ESTABLISHED",
+      "reason": "Negotiated TLS confidentiality dependency; NOT_ESTABLISHED",
+      "risk": "UNKNOWN",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Collect supported execution evidence and review its association and technical gaps.",
+      "reasons": [
+        "TECHNICAL_VERDICT_UNKNOWN"
+      ],
+      "ruleId": "evidence-required",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "resumed"
+    },
+    "kind": "TLS_LOCAL_AUTHENTICATION",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "NOT_ESTABLISHED",
+      "reason": "Observed local TLS authentication signature; NOT_ESTABLISHED",
+      "risk": "UNKNOWN",
+      "role": "AUTHENTICITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [
+        "classification",
+        "confidentialityYears"
+      ],
+      "nextAction": "Provide the missing flow-specific requirements and review application-wide assumptions.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "APPLICABLE_CONTEXT_MISSING_OR_BROAD"
+      ],
+      "ruleId": "context-required",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 20,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "broad"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "broad"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "asset": {
+      "algorithm": "RSA",
+      "keySize": 2048,
+      "mode": "ECB",
+      "operation": "ENCRYPT",
+      "padding": "OAEPWithSHA-256AndMGF1Padding",
+      "primitive": "CIPHER",
+      "protocolVersion": null,
+      "provider": "Synthetic",
+      "ref": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic"
+    },
+    "decision": {
+      "businessPriority": "NEEDS_CONTEXT",
+      "displayPriority": "NEEDS_CONTEXT",
+      "incomplete": true,
+      "missingFields": [],
+      "nextAction": "Review conflicting, stale or unmapped declarations while retaining technical findings.",
+      "reasons": [
+        "CLASSICAL_QUANTUM_EXPOSURE",
+        "DECLARATION_REVIEW_REQUIRED"
+      ],
+      "ruleId": "declaration-review",
+      "technicalRemediation": false
+    },
+    "kind": "PRIMITIVE",
+    "occurrence": {
+      "line": 20,
+      "location": "example.Workload",
+      "symbol": "encrypt",
+      "via": null
+    },
+    "path": [
+      {
+        "identityId": "synthetic-deployment",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "conflict"
+        }
+      }
+    ],
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "conflict"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": 0,
+      "quantumExposure": "VULNERABLE",
+      "reason": "RSA key transport is broken by Shor's algorithm; migrate to ML-KEM",
+      "risk": "QUANTUM_VULNERABLE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  },
+  {
+    "decision": {
+      "businessPriority": "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE",
+      "displayPriority": "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE",
+      "incomplete": false,
+      "missingFields": [],
+      "nextAction": "Review unobserved paths and key-establishment, key-protection and protocol dependencies separately.",
+      "reasons": [
+        "RESISTANT_PRIMITIVE_IN_OBSERVED_SCOPE"
+      ],
+      "ruleId": "observed-resistant-primitive",
+      "technicalRemediation": false
+    },
+    "handshakeRef": {
+      "attempt": 1,
+      "connectionId": "hybrid"
+    },
+    "kind": "TLS_CONFIDENTIALITY",
+    "subject": {
+      "applicationId": "example:records",
+      "flowId": "archive"
+    },
+    "technical": {
+      "cnsa2": false,
+      "nistQuantumSecurityLevel": -1,
+      "quantumExposure": "RESISTANT",
+      "reason": "Negotiated TLS confidentiality dependency; RESISTANT",
+      "risk": "QUANTUM_SAFE",
+      "role": "CONFIDENTIALITY",
+      "version": "cryptocensus-default/6/facts-1"
+    }
+  }
+]
