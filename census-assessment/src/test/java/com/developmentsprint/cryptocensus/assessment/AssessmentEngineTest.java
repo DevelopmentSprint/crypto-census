@@ -91,7 +91,7 @@ class AssessmentEngineTest {
                     "example:archive",
                     "app",
                     EvidenceDocument.IdentityStatus.RESOLVED,
-                    "source-catalog")),
+                    "source-catalog:EXPLICIT_DEPLOYMENT")),
             List.of(
                 new EvidenceDocument.Capability(
                     "annotation-scopes",
@@ -106,6 +106,229 @@ class AssessmentEngineTest {
     return CanonicalJson.array(Map.of("items", value), "items").stream()
         .map(CanonicalJson::object)
         .toList();
+  }
+
+  @Test
+  void ambiguousTlsRetainsNegotiationButRequiresOwnershipContext() {
+    var input =
+        input(
+            "12345678-1234-1234-1234-123456789abc",
+            "one",
+            "20",
+            value ->
+                twoDeployments(withTls(value, true, false), "source-catalog", "source-catalog"));
+    var report = AssessmentEngine.assess(List.of(input), EMPTY, PolicyProfile.defaults()).data();
+    assertThat(objects(report.get("findings")))
+        .filteredOn(f -> !"PRIMITIVE".equals(f.get("kind")))
+        .hasSize(3)
+        .allSatisfy(
+            finding -> {
+              assertThat(
+                      CanonicalJson.array(finding, "gaps").stream().map(Object::toString).toList())
+                  .contains(DeploymentOwnership.GAP);
+              assertThat(CanonicalJson.object(finding.get("decision")))
+                  .containsEntry("displayPriority", "NEEDS_CONTEXT");
+              if ("TLS_CONFIDENTIALITY".equals(finding.get("kind"))) {
+                assertThat(CanonicalJson.object(finding.get("technical")))
+                    .containsEntry("quantumExposure", "RESISTANT");
+              }
+            });
+  }
+
+  @Test
+  void repeatedUnqualifiedIdentityAcrossRunsIsNotDeploymentAmbiguity() {
+    var first =
+        input(
+            "12345678-1234-1234-1234-123456789abc",
+            "one",
+            "20",
+            value -> provenance(value, "source-catalog"));
+    var second =
+        input(
+            "22345678-1234-1234-1234-123456789abc",
+            "two",
+            "20",
+            value -> provenance(value, "source-catalog"));
+    var report =
+        AssessmentEngine.assess(List.of(first, second), EMPTY, PolicyProfile.defaults()).data();
+    assertThat(CanonicalJson.array(report, "gaps").stream().map(Object::toString).toList())
+        .doesNotContain(DeploymentOwnership.GAP);
+    assertThat(objects(report.get("findings")))
+        .allSatisfy(
+            finding ->
+                assertThat(CanonicalJson.object(finding.get("decision")))
+                    .containsEntry("displayPriority", "URGENT_PLANNING"));
+  }
+
+  private static EvidenceDocument provenance(EvidenceDocument value, String provenance) {
+    var identity = value.identities().get(0);
+    return new EvidenceDocument(
+        1,
+        value.runId(),
+        value.cbomHash(),
+        value.flows(),
+        value.observations(),
+        value.handshakes(),
+        List.of(
+            new EvidenceDocument.IdentityMapping(
+                identity.id(),
+                identity.deploymentId(),
+                identity.loaderId(),
+                identity.sourceArtifact(),
+                identity.applicationId(),
+                identity.status(),
+                provenance)),
+        value.capabilities(),
+        value.health());
+  }
+
+  @Test
+  void unqualifiedLoadersStaySeparateAndCannotBorrowSavedContext() {
+    for (String provenance :
+        List.of(
+            "source-catalog",
+            "source-catalog:GENERATED_BUILD",
+            "source-catalog:UNSPECIFIED",
+            "explicit-application-id")) {
+      var input =
+          input(
+              "12345678-1234-1234-1234-123456789abc",
+              "one",
+              "20",
+              value -> twoDeployments(value, provenance, provenance));
+      var saved =
+          new ContextDocument(
+              1,
+              List.of(),
+              List.of(
+                  declaration(ContextModel.Field.CLASSIFICATION, "restricted"),
+                  declaration(ContextModel.Field.CONFIDENTIALITY_YEARS, "40")),
+              List.of(),
+              List.of());
+      var report = AssessmentEngine.assess(List.of(input), saved, PolicyProfile.defaults()).data();
+      assertThat(CanonicalJson.array(report, "gaps").stream().map(Object::toString).toList())
+          .contains(DeploymentOwnership.GAP);
+      assertThat(objects(report.get("findings")))
+          .hasSize(2)
+          .allSatisfy(
+              finding -> {
+                assertThat(CanonicalJson.object(finding.get("decision")))
+                    .containsEntry("displayPriority", "NEEDS_CONTEXT");
+                assertThat(CanonicalJson.object(finding.get("technical")))
+                    .containsEntry("quantumExposure", "VULNERABLE");
+              });
+      var flow = objects(report.get("flows")).get(0);
+      assertThat(flow).containsEntry("inclusiveCount", 3L);
+      assertThat(objects(flow.get("instances")))
+          .hasSize(2)
+          .allSatisfy(
+              instance -> {
+                assertThat(objects(instance.get("fields"))).isEmpty();
+                assertThat(
+                        CanonicalJson.array(instance, "gaps").stream()
+                            .map(Object::toString)
+                            .toList())
+                    .contains(DeploymentOwnership.GAP);
+              });
+      assertThat(objects(objects(report.get("runs")).get(0).get("flows"))).hasSize(2);
+    }
+  }
+
+  @Test
+  void explicitDeploymentKeepsItsOwnPriorityBesideAnUnqualifiedPeer() {
+    var input =
+        input(
+            "12345678-1234-1234-1234-123456789abc",
+            "one",
+            "20",
+            value ->
+                twoDeployments(
+                    value, "source-catalog:EXPLICIT_DEPLOYMENT", "source-catalog:GENERATED_BUILD"));
+    var findings =
+        objects(
+            AssessmentEngine.assess(List.of(input), EMPTY, PolicyProfile.defaults())
+                .data()
+                .get("findings"));
+    assertThat(findings)
+        .allSatisfy(
+            finding -> {
+              assertThat(CanonicalJson.object(finding.get("decision")))
+                  .containsEntry(
+                      "displayPriority",
+                      "one".equals(finding.get("identityId"))
+                          ? "URGENT_PLANNING"
+                          : "NEEDS_CONTEXT");
+              assertThat(CanonicalJson.array(finding, "gaps").contains(DeploymentOwnership.GAP))
+                  .isEqualTo(!"one".equals(finding.get("identityId")));
+            });
+  }
+
+  @Test
+  void explicitDeploymentsWithSameSubjectRetainIndependentDeclarations() {
+    var input =
+        input(
+            "12345678-1234-1234-1234-123456789abc",
+            "one",
+            "20",
+            value ->
+                twoDeployments(
+                    value,
+                    "source-catalog:EXPLICIT_DEPLOYMENT",
+                    "source-catalog:EXPLICIT_DEPLOYMENT"));
+    var report = AssessmentEngine.assess(List.of(input), EMPTY, PolicyProfile.defaults()).data();
+    assertThat(CanonicalJson.array(report, "gaps").stream().map(Object::toString).toList())
+        .doesNotContain(DeploymentOwnership.GAP);
+    assertThat(objects(objects(report.get("flows")).get(0).get("instances")))
+        .hasSize(2)
+        .allSatisfy(instance -> assertThat(objects(instance.get("fields"))).isNotEmpty());
+  }
+
+  private static EvidenceDocument twoDeployments(
+      EvidenceDocument base, String first, String second) {
+    var original = base.observations().get(0);
+    var scope =
+        new EvidenceDocument.ScopeContext(
+            "two",
+            List.of(new EvidenceDocument.ScopeRef("two", SUBJECT)),
+            EvidenceDocument.Association.SYNCHRONOUS_SCOPE);
+    return new EvidenceDocument(
+        1,
+        base.runId(),
+        base.cbomHash(),
+        List.of(
+            base.flows().get(0),
+            new EvidenceDocument.DiscoveredFlow(
+                "two",
+                new ContextModel.FlowDefinition(
+                    SUBJECT,
+                    "Archive",
+                    List.of(declaration(ContextModel.Field.CLASSIFICATION, "public")),
+                    List.of(FRAME)))),
+        List.of(
+            new EvidenceDocument.Observation(
+                original.assetRef(), original.occurrence(), original.context(), 1, FRAME),
+            new EvidenceDocument.Observation(
+                original.assetRef(), original.occurrence(), scope, 2, FRAME)),
+        base.handshakes(),
+        List.of(
+            new EvidenceDocument.IdentityMapping(
+                "one",
+                "maven:example:archive",
+                "loader-one",
+                "example:archive",
+                "app",
+                EvidenceDocument.IdentityStatus.RESOLVED,
+                first),
+            new EvidenceDocument.IdentityMapping(
+                "two",
+                "maven:example:archive",
+                "loader-two",
+                "example:archive",
+                "app",
+                EvidenceDocument.IdentityStatus.RESOLVED,
+                second)),
+        base.capabilities(),
+        base.health());
   }
 
   @Test
@@ -299,7 +522,7 @@ class AssessmentEngineTest {
                       "example:archive",
                       "app",
                       EvidenceDocument.IdentityStatus.RESOLVED,
-                      "source-catalog"));
+                      "source-catalog:EXPLICIT_DEPLOYMENT"));
               return new EvidenceDocument(
                   1,
                   base.runId(),

@@ -126,6 +126,10 @@ public final class FlowAttribution {
       }
       gaps.add("NO_TRUSTED_FLOW_EVIDENCE");
     } else {
+      Set<String> ambiguous = DeploymentOwnership.ambiguous(evidence);
+      if (!ambiguous.isEmpty()) {
+        gaps.add(DeploymentOwnership.GAP);
+      }
       Map<String, EvidenceDocument.IdentityMapping> identities = new HashMap<>();
       evidence.identities().forEach(identity -> identities.put(identity.id(), identity));
       boolean scopesSupported =
@@ -144,7 +148,11 @@ public final class FlowAttribution {
         EvidenceDocument.IdentityMapping identity =
             identities.get(observation.context().identityId());
         List<ContextModel.Subject> matches =
-            matching(identity, observation.projectFrame(), reviews);
+            matching(
+                identity,
+                observation.projectFrame(),
+                reviews,
+                ambiguous.contains(observation.context().identityId()));
         if (observation.context().association() == EvidenceDocument.Association.SYNCHRONOUS_SCOPE
             && scopesSupported) {
           List<EvidenceDocument.ScopeRef> path = observation.context().path();
@@ -246,7 +254,8 @@ public final class FlowAttribution {
   private static List<ContextModel.Subject> matching(
       EvidenceDocument.IdentityMapping identity,
       ContextModel.Binding frame,
-      Map<BindingKey, BindingStatus> reviews) {
+      Map<BindingKey, BindingStatus> reviews,
+      boolean ambiguous) {
     if (identity == null
         || identity.status() != EvidenceDocument.IdentityStatus.RESOLVED
         || !identity.sourceArtifact().equals(frame.sourceArtifact())
@@ -258,6 +267,9 @@ public final class FlowAttribution {
         (key, status) -> {
           if (key.subject().applicationId().equals(identity.applicationId())
               && key.binding().equals(frame)) {
+            if (ambiguous) {
+              return BindingStatus.AMBIGUOUS;
+            }
             subjects.add(key.subject());
             return status == BindingStatus.AMBIGUOUS ? status : BindingStatus.OBSERVED;
           }

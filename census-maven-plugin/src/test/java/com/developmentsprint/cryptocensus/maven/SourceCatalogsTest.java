@@ -16,6 +16,30 @@ class SourceCatalogsTest {
   @TempDir Path temporary;
 
   @Test
+  void operatorSuppliedUnqualifiedEntryBecomesAnExplicitOverride() {
+    var module = project("application", temporary.resolve("app"));
+    var generated =
+        SourceCatalogs.generate(List.of(module), List.of(), new SourceCatalog(1, List.of()));
+    var main = generated.entries().get(0);
+    var legacy =
+        new SourceCatalog.Entry(
+            main.locationUri(),
+            main.artifactId(),
+            "reviewed-product",
+            main.origin(),
+            "reviewed-deployment",
+            main.loaderName(),
+            SourceCatalog.Qualification.UNSPECIFIED);
+    var overridden =
+        SourceCatalogs.generate(List.of(module), List.of(), new SourceCatalog(1, List.of(legacy)));
+    assertThat(overridden.entries()).hasSameSizeAs(generated.entries());
+    var selected = overridden.resolve(main.locationUri()).orElseThrow();
+    assertThat(selected.applicationId()).isEqualTo("reviewed-product");
+    assertThat(selected.deploymentId()).isEqualTo("reviewed-deployment");
+    assertThat(selected.qualification()).isEqualTo(SourceCatalog.Qualification.EXPLICIT_DEPLOYMENT);
+  }
+
+  @Test
   void retainsDeclaringReactorOwnershipAndExplicitOverrides() {
     MavenProject library = project("library", temporary.resolve("library"));
     MavenProject consumer = project("consumer", temporary.resolve("consumer"));
@@ -72,6 +96,8 @@ class SourceCatalogsTest {
             List.of(vendor),
             new SourceCatalog(1, List.of()),
             java.util.Map.of("acme:application", "product"));
+    assertThat(generated.entries())
+        .allMatch(entry -> entry.qualification() == SourceCatalog.Qualification.GENERATED_BUILD);
     assertThat(generated.entries())
         .filteredOn(entry -> "acme:application".equals(entry.artifactId()))
         .isNotEmpty()

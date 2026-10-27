@@ -98,10 +98,20 @@ final class SourceCatalogs {
                     applications.get(entry.artifactId()),
                     entry.origin(),
                     entry.deploymentId(),
-                    entry.loaderName())
+                    entry.loaderName(),
+                    entry.qualification())
                 : entry);
     for (SourceCatalog.Entry override : overrides.entries()) {
-      entries.put(key(override), override);
+      entries.put(
+          key(override),
+          new SourceCatalog.Entry(
+              override.locationUri(),
+              override.artifactId(),
+              override.applicationId(),
+              override.origin(),
+              override.deploymentId(),
+              override.loaderName(),
+              SourceCatalog.Qualification.EXPLICIT_DEPLOYMENT));
     }
     return new SourceCatalog(SourceCatalog.VERSION, List.copyOf(entries.values()));
   }
@@ -168,7 +178,14 @@ final class SourceCatalogs {
     if (directory && !uri.endsWith("/")) {
       uri += "/";
     }
-    return new SourceCatalog.Entry(uri, artifact, application, origin, "maven:" + artifact);
+    return new SourceCatalog.Entry(
+        uri,
+        artifact,
+        application,
+        origin,
+        "maven:" + artifact,
+        "",
+        SourceCatalog.Qualification.GENERATED_BUILD);
   }
 
   private static void add(

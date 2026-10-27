@@ -50,6 +50,13 @@
             "maxLength": 128,
             "minLength": 1
           },
+          "qualification": {
+            "enum": [
+              "EXPLICIT_DEPLOYMENT",
+              "GENERATED_BUILD",
+              "UNSPECIFIED"
+            ]
+          },
           "loaderName": {
             "type": "string",
             "maxLength": 256
