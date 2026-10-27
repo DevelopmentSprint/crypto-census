@@ -54,3 +54,16 @@ servers or APM agents are not in the matrix. Provider frames from IBM's provider
 OpenJCEPlus), SunPKCS11 (including NSS-based FIPS mode), SunMSCAPI, Bouncy Castle (including BC-FIPS
 and BCJSSE), ACCP, Conscrypt, wolfCrypt and the Luna, nShield and AWS CloudHSM providers are
 recognized for call-site attribution.
+
+## Optional enrichment capabilities
+
+Ordinary agent runtime support does not imply that every optional adapter is available. The
+passive annotations artifact targets Java 17 without runtime dependencies. Synchronous annotation
+and loader behavior has separate [context conformance evidence](CONTEXT-CONFORMANCE.md), including
+actual Liberty/WildFly deployments and named loaders. Unresolved/custom mappings require explicit
+source catalogs; shaded ownership is not inferred.
+
+Negotiated TLS correlation uses a narrower [adapter capability matrix](TLS-CORRELATION.md).
+Unsupported vendors/providers continue ordinary inventory with correlation unavailable. No automatic
+async propagation or request-to-pooled-connection association is claimed. Browser workflow checks
+exercise the self-contained HTML in Chromium; these do not claim every browser/version is tested.

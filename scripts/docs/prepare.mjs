@@ -12,6 +12,17 @@ if (archive && Object.keys(process.env).some(key => /^DOCS_(?:COVERAGE_DIR|CBOM_
   throw new Error('Release archives cannot use Latest evidence or evidence requirements.')
 }
 const unmeasured = archive ? 'historical measurement unavailable' : 'not measured locally'
+// Public synthetic measurements and schemas linked from the advisory documentation.
+for (const asset of [
+  'measurements/enrichment-2026-10-27.json',
+  'schemas/source-catalog-v1.schema.json',
+  'schemas/assessment-v1.schema.json'
+]) {
+  const target = path.join('docs/public', asset)
+  await mkdir(path.dirname(target), { recursive: true })
+  await copyFile(path.join('docs', asset), target)
+}
+
 const destination = 'docs/public/badges'
 await mkdir(destination, { recursive: true })
 const input = process.env.DOCS_COVERAGE_DIR

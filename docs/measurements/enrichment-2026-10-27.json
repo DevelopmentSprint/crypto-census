@@ -1,0 +1,4766 @@
+{
+  "java": "openjdk version \"25.0.2\" 2026-01-20\nOpenJDK Runtime Environment Homebrew (build 25.0.2)\nOpenJDK 64-Bit Server VM Homebrew (build 25.0.2, mixed mode, sharing)",
+  "architecture": "arm64",
+  "os": "Darwin",
+  "os_release": "25.6.0",
+  "logical_cpus": 16,
+  "revision": "ded46d216122057f137e912b75bec96eeef0466d",
+  "agent_sha256": "7c66853509ae4b317ae8bf50f9d8db7db6607a8efad59e3834ddfdc99837eb74",
+  "forks": 3,
+  "rounds": 5,
+  "heap": "256 MiB fixed",
+  "results": [
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "plain-hot",
+      "fork": 0,
+      "startup_nanos": 25062917,
+      "process_nanos": 72282917,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4191792,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2888625,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 5676041,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 3054500,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2772042,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "plain-hot",
+      "fork": 0,
+      "startup_nanos": 360474875,
+      "process_nanos": 462222750,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 5314792,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2853750,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6514167,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2843916,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2830750,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "plain-hot",
+      "fork": 0,
+      "startup_nanos": 459875375,
+      "process_nanos": 543018458,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4295750,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2818667,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6403625,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2910125,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2834000,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-hot",
+      "fork": 0,
+      "startup_nanos": 25397750,
+      "process_nanos": 72350250,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4079250,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2841625,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 5364708,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2863875,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2842375,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-hot",
+      "fork": 0,
+      "startup_nanos": 338741333,
+      "process_nanos": 430520625,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4145583,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2809875,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 5458583,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2842292,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2894000,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-hot",
+      "fork": 0,
+      "startup_nanos": 411214250,
+      "process_nanos": 746775375,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 38372917,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 37890041,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 38082500,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 39777000,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 36835583,
+          "allocated_bytes": 384000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "plain-digest",
+      "fork": 0,
+      "startup_nanos": 26036083,
+      "process_nanos": 90109500,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5663541,
+          "allocated_bytes": 6160000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 1031291,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 1016541,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 967917,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 1064292,
+          "allocated_bytes": 3200000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "plain-digest",
+      "fork": 0,
+      "startup_nanos": 333895416,
+      "process_nanos": 726201375,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 40166375,
+          "allocated_bytes": 31824176
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 32714875,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 27833209,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 28280125,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 30418667,
+          "allocated_bytes": 28000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "plain-digest",
+      "fork": 0,
+      "startup_nanos": 381971375,
+      "process_nanos": 2212058041,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 279712625,
+          "allocated_bytes": 223920048
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 268093084,
+          "allocated_bytes": 223920072
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 262885083,
+          "allocated_bytes": 223920024
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 273650750,
+          "allocated_bytes": 223920048
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 264338208,
+          "allocated_bytes": 223920024
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-digest",
+      "fork": 0,
+      "startup_nanos": 31069791,
+      "process_nanos": 100741250,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5561750,
+          "allocated_bytes": 6160000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 1032250,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 965000,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 1063000,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 975250,
+          "allocated_bytes": 3200000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-digest",
+      "fork": 0,
+      "startup_nanos": 376049958,
+      "process_nanos": 810687542,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 78242791,
+          "allocated_bytes": 30471888
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 30442000,
+          "allocated_bytes": 29920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 28498333,
+          "allocated_bytes": 29920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 29017292,
+          "allocated_bytes": 29920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 31588667,
+          "allocated_bytes": 29920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-digest",
+      "fork": 0,
+      "startup_nanos": 431182250,
+      "process_nanos": 2630127125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 322560500,
+          "allocated_bytes": 272400048
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 323411250,
+          "allocated_bytes": 272400048
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 322042334,
+          "allocated_bytes": 272400048
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 317039917,
+          "allocated_bytes": 272400024
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 322556875,
+          "allocated_bytes": 272400048
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "stackwalk",
+      "fork": 0,
+      "startup_nanos": 328413875,
+      "process_nanos": 550297250,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 22745166,
+          "allocated_bytes": 13678112
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 20267709,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 19062084,
+          "allocated_bytes": 13520064
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 16122625,
+          "allocated_bytes": 13357856
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 16148834,
+          "allocated_bytes": 13280000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "stackwalk",
+      "fork": 0,
+      "startup_nanos": 507273666,
+      "process_nanos": 766349791,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 23360042,
+          "allocated_bytes": 13760000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 18092667,
+          "allocated_bytes": 13521888
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 19097292,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 15836792,
+          "allocated_bytes": 13454072
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 15883458,
+          "allocated_bytes": 13280000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "prefilter-plain",
+      "fork": 0,
+      "startup_nanos": 333713875,
+      "process_nanos": 571272417,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 33929666,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 31655792,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 24811125,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 23228292,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 21847166,
+          "allocated_bytes": 50800000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "prefilter-plain",
+      "fork": 0,
+      "startup_nanos": 410302042,
+      "process_nanos": 627276958,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 30333459,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 25264166,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 20244208,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 20519959,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 22244667,
+          "allocated_bytes": 50800000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "prefilter-annotated",
+      "fork": 0,
+      "startup_nanos": 340018334,
+      "process_nanos": 805396584,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 72772708,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 59185333,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 57363792,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 60748458,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 58658833,
+          "allocated_bytes": 166560000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "prefilter-annotated",
+      "fork": 0,
+      "startup_nanos": 490907417,
+      "process_nanos": 934276584,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 63283500,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 58021875,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 62124333,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 56864125,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 58063791,
+          "allocated_bytes": 166560000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "matching-plain",
+      "fork": 0,
+      "startup_nanos": 333408500,
+      "process_nanos": 438074958,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5514042,
+          "allocated_bytes": 7988128
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 4486625,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 4478500,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 4360958,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 6019542,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "matching-plain",
+      "fork": 0,
+      "startup_nanos": 454098208,
+      "process_nanos": 561807541,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5899833,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 5185542,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 4647417,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 7333167,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 4075583,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "matching-annotated",
+      "fork": 0,
+      "startup_nanos": 344098167,
+      "process_nanos": 449124917,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5179167,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 5122333,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 5172083,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 6331542,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 4024500,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "matching-annotated",
+      "fork": 0,
+      "startup_nanos": 411433917,
+      "process_nanos": 575708667,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 7861541,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 7436458,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 9958000,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 7224125,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 9101542,
+          "allocated_bytes": 15600000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "load-plain",
+      "fork": 0,
+      "startup_nanos": 26354167,
+      "process_nanos": 60770000,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1619500,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1960125,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1322541,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1166916,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1194959,
+          "allocated_bytes": 108624
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "load-plain",
+      "fork": 0,
+      "startup_nanos": 335796959,
+      "process_nanos": 425851167,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1436791,
+          "allocated_bytes": 364360
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1715292,
+          "allocated_bytes": 363600
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1225292,
+          "allocated_bytes": 363600
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1247083,
+          "allocated_bytes": 363600
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1136167,
+          "allocated_bytes": 363600
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "load-plain",
+      "fork": 0,
+      "startup_nanos": 389837750,
+      "process_nanos": 471074917,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 2359041,
+          "allocated_bytes": 405200
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1597208,
+          "allocated_bytes": 405200
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 2758750,
+          "allocated_bytes": 405200
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1624250,
+          "allocated_bytes": 405200
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 2135750,
+          "allocated_bytes": 405200
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "load-annotated",
+      "fork": 0,
+      "startup_nanos": 26308917,
+      "process_nanos": 63439167,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1519458,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1928750,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 2031250,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1509708,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1529750,
+          "allocated_bytes": 118888
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "load-annotated",
+      "fork": 0,
+      "startup_nanos": 334588583,
+      "process_nanos": 402868541,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1616542,
+          "allocated_bytes": 544480
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1948667,
+          "allocated_bytes": 543976
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1328708,
+          "allocated_bytes": 543752
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1245125,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1696250,
+          "allocated_bytes": 543720
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "load-annotated",
+      "fork": 0,
+      "startup_nanos": 442392542,
+      "process_nanos": 1000566209,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 64432167,
+          "allocated_bytes": 29949304
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 48273917,
+          "allocated_bytes": 29056048
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 37799750,
+          "allocated_bytes": 28910680
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 42237125,
+          "allocated_bytes": 28498056
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 38303708,
+          "allocated_bytes": 28525656
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "tls",
+      "fork": 0,
+      "startup_nanos": 30181125,
+      "process_nanos": 515114250,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 36010917,
+          "allocated_bytes": 1433344
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 29233458,
+          "allocated_bytes": 1431360
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 28260542,
+          "allocated_bytes": 1430368
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 27213333,
+          "allocated_bytes": 1429816
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 25734208,
+          "allocated_bytes": 1429320
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "tls",
+      "fork": 0,
+      "startup_nanos": 319454375,
+      "process_nanos": 908607916,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 47678666,
+          "allocated_bytes": 2123352
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 37637125,
+          "allocated_bytes": 2059672
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 37503916,
+          "allocated_bytes": 2058272
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 33456625,
+          "allocated_bytes": 2058208
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 32349500,
+          "allocated_bytes": 2057800
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "tls",
+      "fork": 0,
+      "startup_nanos": 484606000,
+      "process_nanos": 1258481333,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 50570500,
+          "allocated_bytes": 4456288
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 47664084,
+          "allocated_bytes": 4455088
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 43125458,
+          "allocated_bytes": 4444040
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 46511709,
+          "allocated_bytes": 4426928
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 37368625,
+          "allocated_bytes": 4377176
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "tls",
+      "workload": "tls",
+      "fork": 0,
+      "startup_nanos": 550333375,
+      "process_nanos": 1368643875,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 59168125,
+          "allocated_bytes": 4546392
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 50236625,
+          "allocated_bytes": 4513352
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 44105209,
+          "allocated_bytes": 4512840
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 42430334,
+          "allocated_bytes": 4487640
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 40126417,
+          "allocated_bytes": 4472296
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "plain-hot",
+      "fork": 1,
+      "startup_nanos": 354400875,
+      "process_nanos": 454201500,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 5474708,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2820833,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6516000,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2826667,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2833458,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "plain-hot",
+      "fork": 1,
+      "startup_nanos": 442376792,
+      "process_nanos": 556231750,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 5085125,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2822167,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6041958,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2816250,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2811083,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "plain-hot",
+      "fork": 1,
+      "startup_nanos": 26618667,
+      "process_nanos": 76453042,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4129084,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2844375,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 5784458,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2852667,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2809500,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-hot",
+      "fork": 1,
+      "startup_nanos": 384234041,
+      "process_nanos": 503327083,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4277708,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2976541,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6824458,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2946708,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 3083958,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-hot",
+      "fork": 1,
+      "startup_nanos": 490206750,
+      "process_nanos": 855518459,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 39829208,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 50403208,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 41955375,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 49837708,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 39406375,
+          "allocated_bytes": 384000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-hot",
+      "fork": 1,
+      "startup_nanos": 24458792,
+      "process_nanos": 72189833,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4310125,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2907792,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 5816125,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2889291,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2958708,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "plain-digest",
+      "fork": 1,
+      "startup_nanos": 376547792,
+      "process_nanos": 784439500,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 48823083,
+          "allocated_bytes": 31731424
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 34852459,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 31009708,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 30535958,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 30592083,
+          "allocated_bytes": 28000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "plain-digest",
+      "fork": 1,
+      "startup_nanos": 437721000,
+      "process_nanos": 2255575959,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 269531084,
+          "allocated_bytes": 223440048
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 262919584,
+          "allocated_bytes": 223440216
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 264425875,
+          "allocated_bytes": 223440024
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 261250458,
+          "allocated_bytes": 223440048
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 261871917,
+          "allocated_bytes": 223440024
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "plain-digest",
+      "fork": 1,
+      "startup_nanos": 26834166,
+      "process_nanos": 97321875,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5083250,
+          "allocated_bytes": 6160000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 989667,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 1019625,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 955917,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 964833,
+          "allocated_bytes": 3200000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-digest",
+      "fork": 1,
+      "startup_nanos": 330843041,
+      "process_nanos": 742134583,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 44298250,
+          "allocated_bytes": 31383480
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 37820750,
+          "allocated_bytes": 29680000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 37054834,
+          "allocated_bytes": 29680000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 31841458,
+          "allocated_bytes": 29680000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 32281500,
+          "allocated_bytes": 29680000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-digest",
+      "fork": 1,
+      "startup_nanos": 436291916,
+      "process_nanos": 2670763375,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 323697958,
+          "allocated_bytes": 269760048
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 330067750,
+          "allocated_bytes": 269760096
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 347171291,
+          "allocated_bytes": 269760048
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 329174584,
+          "allocated_bytes": 269760024
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 316495709,
+          "allocated_bytes": 269760048
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-digest",
+      "fork": 1,
+      "startup_nanos": 27044125,
+      "process_nanos": 91407750,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5414250,
+          "allocated_bytes": 6160000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 1211083,
+          "allocated_bytes": 3440000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 1078584,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 1048125,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 1064291,
+          "allocated_bytes": 3200000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "stackwalk",
+      "fork": 1,
+      "startup_nanos": 365198792,
+      "process_nanos": 611140709,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 26364334,
+          "allocated_bytes": 13741328
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 22044708,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 21354000,
+          "allocated_bytes": 13520160
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 16747500,
+          "allocated_bytes": 13503584
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 17304250,
+          "allocated_bytes": 13280000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "stackwalk",
+      "fork": 1,
+      "startup_nanos": 446185792,
+      "process_nanos": 659104042,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 25562333,
+          "allocated_bytes": 13760000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 20640750,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 17355000,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 16508666,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 16345750,
+          "allocated_bytes": 13488920
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "prefilter-plain",
+      "fork": 1,
+      "startup_nanos": 318776000,
+      "process_nanos": 573704666,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 33933917,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 30741333,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 23874958,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 22061584,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 21546542,
+          "allocated_bytes": 50800000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "prefilter-plain",
+      "fork": 1,
+      "startup_nanos": 434530958,
+      "process_nanos": 649881375,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 31574959,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 25632917,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 20403667,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 20319459,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 23645083,
+          "allocated_bytes": 50800000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "prefilter-annotated",
+      "fork": 1,
+      "startup_nanos": 355019416,
+      "process_nanos": 817824333,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 76252375,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 60587583,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 58357250,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 60727334,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 58320958,
+          "allocated_bytes": 166560000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "prefilter-annotated",
+      "fork": 1,
+      "startup_nanos": 447250291,
+      "process_nanos": 881399125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 60670417,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 63372667,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 57440750,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 56442292,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 56821625,
+          "allocated_bytes": 166560000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "matching-plain",
+      "fork": 1,
+      "startup_nanos": 345774791,
+      "process_nanos": 446627416,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 4717250,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 4414166,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 4841625,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 4376250,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 5141000,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "matching-plain",
+      "fork": 1,
+      "startup_nanos": 419781709,
+      "process_nanos": 518551917,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5902500,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 4448292,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 4607042,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 4369042,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 4006958,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "matching-annotated",
+      "fork": 1,
+      "startup_nanos": 328569250,
+      "process_nanos": 429740125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5064125,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 5130958,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 5205375,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 5766916,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 3953500,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "matching-annotated",
+      "fork": 1,
+      "startup_nanos": 434440084,
+      "process_nanos": 589988917,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 7784458,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 7567916,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 6841541,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 6412416,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 7546167,
+          "allocated_bytes": 15600000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "load-plain",
+      "fork": 1,
+      "startup_nanos": 317982459,
+      "process_nanos": 404685209,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1203958,
+          "allocated_bytes": 364360
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1774458,
+          "allocated_bytes": 363664
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1355667,
+          "allocated_bytes": 363600
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1249958,
+          "allocated_bytes": 363600
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1025208,
+          "allocated_bytes": 363600
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "load-plain",
+      "fork": 1,
+      "startup_nanos": 483334500,
+      "process_nanos": 565098500,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 4988250,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 2125583,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1252792,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1684958,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1600375,
+          "allocated_bytes": 404816
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "load-plain",
+      "fork": 1,
+      "startup_nanos": 27334417,
+      "process_nanos": 61015209,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1605125,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1636958,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1210667,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1287500,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1273167,
+          "allocated_bytes": 108624
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "load-annotated",
+      "fork": 1,
+      "startup_nanos": 354219084,
+      "process_nanos": 435784209,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 2042125,
+          "allocated_bytes": 544480
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1954500,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1309042,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1244750,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1157792,
+          "allocated_bytes": 543720
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "load-annotated",
+      "fork": 1,
+      "startup_nanos": 389704500,
+      "process_nanos": 913269667,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 66768750,
+          "allocated_bytes": 30084384
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 53326917,
+          "allocated_bytes": 29002152
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 37490250,
+          "allocated_bytes": 28953872
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 39574708,
+          "allocated_bytes": 28479864
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 31376000,
+          "allocated_bytes": 28471088
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "load-annotated",
+      "fork": 1,
+      "startup_nanos": 25080417,
+      "process_nanos": 62525125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1824417,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 2281667,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1865792,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1461625,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1518750,
+          "allocated_bytes": 118888
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "tls",
+      "fork": 1,
+      "startup_nanos": 349591000,
+      "process_nanos": 992692333,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 50185000,
+          "allocated_bytes": 2122920
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 37413000,
+          "allocated_bytes": 2060056
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 35905375,
+          "allocated_bytes": 2058808
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 35064459,
+          "allocated_bytes": 2057832
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 34411792,
+          "allocated_bytes": 2057936
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "tls",
+      "fork": 1,
+      "startup_nanos": 428114166,
+      "process_nanos": 1137337916,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 63248750,
+          "allocated_bytes": 4456480
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 44470541,
+          "allocated_bytes": 4456008
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 41808625,
+          "allocated_bytes": 4443920
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 48336084,
+          "allocated_bytes": 4424784
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 35948167,
+          "allocated_bytes": 4408560
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "tls",
+      "workload": "tls",
+      "fork": 1,
+      "startup_nanos": 542027333,
+      "process_nanos": 1238794833,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 52134667,
+          "allocated_bytes": 4554440
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 45688834,
+          "allocated_bytes": 4533984
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 46195709,
+          "allocated_bytes": 4535464
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 45583459,
+          "allocated_bytes": 4512456
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 46042208,
+          "allocated_bytes": 4465488
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "tls",
+      "fork": 1,
+      "startup_nanos": 25010375,
+      "process_nanos": 457744167,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 35303458,
+          "allocated_bytes": 1433712
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 29178334,
+          "allocated_bytes": 1432144
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 28317000,
+          "allocated_bytes": 1430608
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 27255416,
+          "allocated_bytes": 1429920
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 25081000,
+          "allocated_bytes": 1430120
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "plain-hot",
+      "fork": 2,
+      "startup_nanos": 392356667,
+      "process_nanos": 501998750,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 5089750,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2816333,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6247791,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2826958,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 8916500,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "plain-hot",
+      "fork": 2,
+      "startup_nanos": 106200166,
+      "process_nanos": 173480833,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4761625,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2796792,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6631875,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2827208,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 2839042,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "plain-hot",
+      "fork": 2,
+      "startup_nanos": 368347208,
+      "process_nanos": 501012917,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 5410792,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 3270459,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 10709833,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 4473666,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 3351250,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-hot",
+      "fork": 2,
+      "startup_nanos": 509398000,
+      "process_nanos": 872394667,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 43129834,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 41057708,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 39658833,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 40918375,
+          "allocated_bytes": 384000000
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 47511792,
+          "allocated_bytes": 384000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-hot",
+      "fork": 2,
+      "startup_nanos": 37461833,
+      "process_nanos": 97512916,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 5507917,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 2854542,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 8247125,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 3055833,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 3052000,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-hot",
+      "fork": 2,
+      "startup_nanos": 437995083,
+      "process_nanos": 538920958,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4467334,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 1,
+          "operations": 2000000,
+          "nanos": 3104625,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 2,
+          "operations": 2000000,
+          "nanos": 6187916,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 3,
+          "operations": 2000000,
+          "nanos": 2966708,
+          "allocated_bytes": 0
+        },
+        {
+          "round": 4,
+          "operations": 2000000,
+          "nanos": 3008208,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "plain-digest",
+      "fork": 2,
+      "startup_nanos": 482356708,
+      "process_nanos": 2398360833,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 270544708,
+          "allocated_bytes": 222960048
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 267258583,
+          "allocated_bytes": 222960024
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 267786125,
+          "allocated_bytes": 222960024
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 268555375,
+          "allocated_bytes": 222960048
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 263636750,
+          "allocated_bytes": 222960072
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "plain-digest",
+      "fork": 2,
+      "startup_nanos": 23539833,
+      "process_nanos": 84190167,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5120416,
+          "allocated_bytes": 6160000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 1008500,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 1032958,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 1005458,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 958250,
+          "allocated_bytes": 3200000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "plain-digest",
+      "fork": 2,
+      "startup_nanos": 329790666,
+      "process_nanos": 685501125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 35918750,
+          "allocated_bytes": 31654336
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 31201209,
+          "allocated_bytes": 28284736
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 29320584,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 29613625,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 32542959,
+          "allocated_bytes": 28000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-digest",
+      "fork": 2,
+      "startup_nanos": 432941375,
+      "process_nanos": 2695671625,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 331304125,
+          "allocated_bytes": 270960264
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 335722792,
+          "allocated_bytes": 270960048
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 333445209,
+          "allocated_bytes": 270960264
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 331115084,
+          "allocated_bytes": 270960024
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 333421750,
+          "allocated_bytes": 270960048
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-digest",
+      "fork": 2,
+      "startup_nanos": 24052792,
+      "process_nanos": 85487250,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5852083,
+          "allocated_bytes": 6160000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 1024167,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 1003750,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 1030583,
+          "allocated_bytes": 3200000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 881875,
+          "allocated_bytes": 3032984
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-digest",
+      "fork": 2,
+      "startup_nanos": 319354833,
+      "process_nanos": 696828375,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 43199792,
+          "allocated_bytes": 31100512
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 31106083,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 29128833,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 29919667,
+          "allocated_bytes": 28000000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 31838959,
+          "allocated_bytes": 28000000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "stackwalk",
+      "fork": 2,
+      "startup_nanos": 397264792,
+      "process_nanos": 593112458,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 20152125,
+          "allocated_bytes": 13692608
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 18685542,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 16496292,
+          "allocated_bytes": 13481288
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 16535875,
+          "allocated_bytes": 13280000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 15724250,
+          "allocated_bytes": 13280000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "stackwalk",
+      "fork": 2,
+      "startup_nanos": 331159167,
+      "process_nanos": 573284209,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 23756500,
+          "allocated_bytes": 13762248
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 28576209,
+          "allocated_bytes": 13520000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 31737333,
+          "allocated_bytes": 13433712
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 16557834,
+          "allocated_bytes": 13280000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 15465292,
+          "allocated_bytes": 13280000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "prefilter-plain",
+      "fork": 2,
+      "startup_nanos": 429439625,
+      "process_nanos": 658016750,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 33326292,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 25178541,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 20735208,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 20111125,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 22656875,
+          "allocated_bytes": 50800000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "prefilter-plain",
+      "fork": 2,
+      "startup_nanos": 381606708,
+      "process_nanos": 637030167,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 33432834,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 33819459,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 29854875,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 25288500,
+          "allocated_bytes": 50800000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 23862875,
+          "allocated_bytes": 50800000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "prefilter-annotated",
+      "fork": 2,
+      "startup_nanos": 413981833,
+      "process_nanos": 856879500,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 61907708,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 58910583,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 57547667,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 58587625,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 57242709,
+          "allocated_bytes": 166560000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "prefilter-annotated",
+      "fork": 2,
+      "startup_nanos": 356907542,
+      "process_nanos": 822289625,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 74150792,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 59101458,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 66753458,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 59271625,
+          "allocated_bytes": 166560000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 60905584,
+          "allocated_bytes": 166560000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "matching-plain",
+      "fork": 2,
+      "startup_nanos": 569536958,
+      "process_nanos": 668386083,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 5368459,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 3191125,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 3185000,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 3709875,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 4216833,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "matching-plain",
+      "fork": 2,
+      "startup_nanos": 407534875,
+      "process_nanos": 531109666,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 4867583,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 4392291,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 4343375,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 4472667,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 5639292,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "matching-annotated",
+      "fork": 2,
+      "startup_nanos": 463804458,
+      "process_nanos": 631051000,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 8746000,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 6784875,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 7892292,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 7453500,
+          "allocated_bytes": 15600000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 8185250,
+          "allocated_bytes": 15600000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "matching-annotated",
+      "fork": 2,
+      "startup_nanos": 448299875,
+      "process_nanos": 576248416,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 10000,
+          "nanos": 4980625,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 1,
+          "operations": 10000,
+          "nanos": 4974667,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 2,
+          "operations": 10000,
+          "nanos": 6323875,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 3,
+          "operations": 10000,
+          "nanos": 4131291,
+          "allocated_bytes": 7920000
+        },
+        {
+          "round": 4,
+          "operations": 10000,
+          "nanos": 4615000,
+          "allocated_bytes": 7920000
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "load-plain",
+      "fork": 2,
+      "startup_nanos": 497859750,
+      "process_nanos": 582603000,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1684125,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1464500,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 2042291,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1936584,
+          "allocated_bytes": 404816
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 2949709,
+          "allocated_bytes": 404816
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "load-plain",
+      "fork": 2,
+      "startup_nanos": 27994666,
+      "process_nanos": 63738125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1836667,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1729875,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1613250,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1456125,
+          "allocated_bytes": 108624
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1065792,
+          "allocated_bytes": 108624
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "load-plain",
+      "fork": 2,
+      "startup_nanos": 449970958,
+      "process_nanos": 552527291,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1237875,
+          "allocated_bytes": 364488
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 4046042,
+          "allocated_bytes": 364496
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 2404708,
+          "allocated_bytes": 364176
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1639500,
+          "allocated_bytes": 363984
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1557708,
+          "allocated_bytes": 363984
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "load-annotated",
+      "fork": 2,
+      "startup_nanos": 463614084,
+      "process_nanos": 1171320584,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 113624125,
+          "allocated_bytes": 30008152
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 43470750,
+          "allocated_bytes": 28996936
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 44245959,
+          "allocated_bytes": 28922096
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 41528875,
+          "allocated_bytes": 28660120
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 71641958,
+          "allocated_bytes": 28513112
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "load-annotated",
+      "fork": 2,
+      "startup_nanos": 26822625,
+      "process_nanos": 61739625,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 1610959,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 1792333,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 1396667,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1365042,
+          "allocated_bytes": 118888
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 1400833,
+          "allocated_bytes": 118888
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "load-annotated",
+      "fork": 2,
+      "startup_nanos": 374089709,
+      "process_nanos": 483926292,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 2201583,
+          "allocated_bytes": 544480
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 4727125,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 2067666,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 1678125,
+          "allocated_bytes": 543720
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 2236166,
+          "allocated_bytes": 543720
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "tls",
+      "fork": 2,
+      "startup_nanos": 465754917,
+      "process_nanos": 1325444208,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 78419750,
+          "allocated_bytes": 4455288
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 56750500,
+          "allocated_bytes": 4434224
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 58556750,
+          "allocated_bytes": 4423208
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 56449875,
+          "allocated_bytes": 4378848
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 41841125,
+          "allocated_bytes": 4332152
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "tls",
+      "workload": "tls",
+      "fork": 2,
+      "startup_nanos": 537500292,
+      "process_nanos": 1511016875,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 98286167,
+          "allocated_bytes": 4593120
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 72272209,
+          "allocated_bytes": 4512176
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 58012417,
+          "allocated_bytes": 4512880
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 55031917,
+          "allocated_bytes": 4463016
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 52812417,
+          "allocated_bytes": 4434400
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "tls",
+      "fork": 2,
+      "startup_nanos": 70663000,
+      "process_nanos": 582392542,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 45565291,
+          "allocated_bytes": 1433864
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 37107291,
+          "allocated_bytes": 1431728
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 37105041,
+          "allocated_bytes": 1430536
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 29501833,
+          "allocated_bytes": 1430056
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 28817958,
+          "allocated_bytes": 1429872
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "tls",
+      "fork": 2,
+      "startup_nanos": 458302792,
+      "process_nanos": 1191076750,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 1,
+          "nanos": 62345500,
+          "allocated_bytes": 2124024
+        },
+        {
+          "round": 1,
+          "operations": 1,
+          "nanos": 45964750,
+          "allocated_bytes": 2059528
+        },
+        {
+          "round": 2,
+          "operations": 1,
+          "nanos": 38587000,
+          "allocated_bytes": 2058128
+        },
+        {
+          "round": 3,
+          "operations": 1,
+          "nanos": 37312500,
+          "allocated_bytes": 2058088
+        },
+        {
+          "round": 4,
+          "operations": 1,
+          "nanos": 34500625,
+          "allocated_bytes": 2058048
+        }
+      ],
+      "diagnostic": false,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "no agent",
+      "mode": "off",
+      "workload": "scoped-hot",
+      "fork": 0,
+      "startup_nanos": 30237000,
+      "process_nanos": 67948334,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 4448667,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": true,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "core CBOM present",
+      "mode": "core",
+      "workload": "scoped-hot",
+      "fork": 0,
+      "startup_nanos": 554819709,
+      "process_nanos": 690180084,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 7381458,
+          "allocated_bytes": 0
+        }
+      ],
+      "diagnostic": true,
+      "registry": [],
+      "memory": [],
+      "evidence_written": false
+    },
+    {
+      "qualification": "exact-byte paired, healthy evidence; workload-specific checks passed",
+      "mode": "enrichment",
+      "workload": "scoped-hot",
+      "fork": 0,
+      "startup_nanos": 727775000,
+      "process_nanos": 957235125,
+      "samples": [
+        {
+          "round": 0,
+          "operations": 2000000,
+          "nanos": 46113958,
+          "allocated_bytes": 384000000
+        }
+      ],
+      "diagnostic": true,
+      "registry": [],
+      "memory": [],
+      "evidence_written": true
+    },
+    {
+      "qualification": "bounded live registries; sidecar publication failed (not a complete evidence run)",
+      "mode": "enrichment",
+      "workload": "stress",
+      "fork": 0,
+      "startup_nanos": 534512917,
+      "process_nanos": 6531674417,
+      "samples": [],
+      "diagnostic": false,
+      "registry": [
+        "REGISTRY 1 4096 16384 {TRANSFORM_ERRORS=0, RECORDING_FAILURES=0, SCOPE_RESTORE_FAILURES=0, SATURATED_COUNTS=0, OUTPUT_FAILURES=0, CONSERVATION_UNVERIFIED=7617, DRAIN_TIMEOUT=0, LOST_ATTRIBUTION=11158, DROPPED_BINDINGS=0, DROPPED_HANDSHAKES=0, DROPPED_FLOWS=708, SCOPE_INTEGRITY=0}",
+        "REGISTRY 2 4096 16384 {TRANSFORM_ERRORS=0, RECORDING_FAILURES=0, SCOPE_RESTORE_FAILURES=0, SATURATED_COUNTS=0, OUTPUT_FAILURES=0, CONSERVATION_UNVERIFIED=31618, DRAIN_TIMEOUT=0, LOST_ATTRIBUTION=59160, DROPPED_BINDINGS=0, DROPPED_HANDSHAKES=0, DROPPED_FLOWS=5508, SCOPE_INTEGRITY=0}",
+        "REGISTRY 3 4096 16384 {TRANSFORM_ERRORS=0, RECORDING_FAILURES=0, SCOPE_RESTORE_FAILURES=0, SATURATED_COUNTS=0, OUTPUT_FAILURES=0, CONSERVATION_UNVERIFIED=55619, DRAIN_TIMEOUT=0, LOST_ATTRIBUTION=107162, DROPPED_BINDINGS=0, DROPPED_HANDSHAKES=0, DROPPED_FLOWS=10308, SCOPE_INTEGRITY=0}"
+      ],
+      "memory": [
+        "MEMORY 0 21612760 18513736 2805",
+        "MEMORY 1 10605504 27219240 2987",
+        "MEMORY 2 10627712 25497984 3002",
+        "MEMORY 3 10627856 24163112 3002"
+      ],
+      "evidence_written": false
+    }
+  ],
+  "summary": [
+    {
+      "workload": "load-annotated",
+      "mode": "core",
+      "startup_ms": 354.219084,
+      "ns_per_operation": 1696250.0,
+      "min_ns": 1157792.0,
+      "max_ns": 4727125.0,
+      "allocated_bytes_per_operation": 543720.0
+    },
+    {
+      "workload": "load-annotated",
+      "mode": "enrichment",
+      "startup_ms": 442.392542,
+      "ns_per_operation": 43470750.0,
+      "min_ns": 31376000.0,
+      "max_ns": 113624125.0,
+      "allocated_bytes_per_operation": 28922096.0
+    },
+    {
+      "workload": "load-annotated",
+      "mode": "off",
+      "startup_ms": 26.308917,
+      "ns_per_operation": 1529750.0,
+      "min_ns": 1365042.0,
+      "max_ns": 2281667.0,
+      "allocated_bytes_per_operation": 118888.0
+    },
+    {
+      "workload": "load-plain",
+      "mode": "core",
+      "startup_ms": 335.796959,
+      "ns_per_operation": 1355667.0,
+      "min_ns": 1025208.0,
+      "max_ns": 4046042.0,
+      "allocated_bytes_per_operation": 363664.0
+    },
+    {
+      "workload": "load-plain",
+      "mode": "enrichment",
+      "startup_ms": 483.3345,
+      "ns_per_operation": 1936584.0,
+      "min_ns": 1252792.0,
+      "max_ns": 4988250.0,
+      "allocated_bytes_per_operation": 404816.0
+    },
+    {
+      "workload": "load-plain",
+      "mode": "off",
+      "startup_ms": 27.334417,
+      "ns_per_operation": 1456125.0,
+      "min_ns": 1065792.0,
+      "max_ns": 1960125.0,
+      "allocated_bytes_per_operation": 108624.0
+    },
+    {
+      "workload": "matching-annotated",
+      "mode": "core",
+      "startup_ms": 344.098167,
+      "ns_per_operation": 512.2333,
+      "min_ns": 395.35,
+      "max_ns": 633.1542,
+      "allocated_bytes_per_operation": 792.0
+    },
+    {
+      "workload": "matching-annotated",
+      "mode": "enrichment",
+      "startup_ms": 434.440084,
+      "ns_per_operation": 756.7916,
+      "min_ns": 641.2416,
+      "max_ns": 995.8,
+      "allocated_bytes_per_operation": 1560.0
+    },
+    {
+      "workload": "matching-plain",
+      "mode": "core",
+      "startup_ms": 345.774791,
+      "ns_per_operation": 448.6625,
+      "min_ns": 434.3375,
+      "max_ns": 601.9542,
+      "allocated_bytes_per_operation": 792.0
+    },
+    {
+      "workload": "matching-plain",
+      "mode": "enrichment",
+      "startup_ms": 454.098208,
+      "ns_per_operation": 444.8292,
+      "min_ns": 318.5,
+      "max_ns": 733.3167,
+      "allocated_bytes_per_operation": 792.0
+    },
+    {
+      "workload": "plain-digest",
+      "mode": "core",
+      "startup_ms": 333.895416,
+      "ns_per_operation": 3100.9708,
+      "min_ns": 2783.3209,
+      "max_ns": 4882.3083,
+      "allocated_bytes_per_operation": 2800.0
+    },
+    {
+      "workload": "plain-digest",
+      "mode": "enrichment",
+      "startup_ms": 437.721,
+      "ns_per_operation": 26725.8583,
+      "min_ns": 26125.0458,
+      "max_ns": 27971.2625,
+      "allocated_bytes_per_operation": 22344.0048
+    },
+    {
+      "workload": "plain-digest",
+      "mode": "off",
+      "startup_ms": 26.036083,
+      "ns_per_operation": 101.6541,
+      "min_ns": 95.5917,
+      "max_ns": 566.3541,
+      "allocated_bytes_per_operation": 320.0
+    },
+    {
+      "workload": "plain-hot",
+      "mode": "core",
+      "startup_ms": 360.474875,
+      "ns_per_operation": 1.675625,
+      "min_ns": 1.4104165,
+      "max_ns": 5.3549165,
+      "allocated_bytes_per_operation": 0.0
+    },
+    {
+      "workload": "plain-hot",
+      "mode": "enrichment",
+      "startup_ms": 442.376792,
+      "ns_per_operation": 1.4550625,
+      "min_ns": 1.4055415,
+      "max_ns": 4.45825,
+      "allocated_bytes_per_operation": 0.0
+    },
+    {
+      "workload": "plain-hot",
+      "mode": "off",
+      "startup_ms": 26.618667,
+      "ns_per_operation": 1.4443125,
+      "min_ns": 1.386021,
+      "max_ns": 3.3159375,
+      "allocated_bytes_per_operation": 0.0
+    },
+    {
+      "workload": "prefilter-annotated",
+      "mode": "core",
+      "startup_ms": 355.019416,
+      "ns_per_operation": 6058.7583,
+      "min_ns": 5736.3792,
+      "max_ns": 7625.2375,
+      "allocated_bytes_per_operation": 16656.0
+    },
+    {
+      "workload": "prefilter-annotated",
+      "mode": "enrichment",
+      "startup_ms": 447.250291,
+      "ns_per_operation": 5806.3791,
+      "min_ns": 5644.2292,
+      "max_ns": 6337.2667,
+      "allocated_bytes_per_operation": 16656.0
+    },
+    {
+      "workload": "prefilter-plain",
+      "mode": "core",
+      "startup_ms": 333.713875,
+      "ns_per_operation": 2528.85,
+      "min_ns": 2154.6542,
+      "max_ns": 3393.3917,
+      "allocated_bytes_per_operation": 5080.0
+    },
+    {
+      "workload": "prefilter-plain",
+      "mode": "enrichment",
+      "startup_ms": 429.439625,
+      "ns_per_operation": 2265.6875,
+      "min_ns": 2011.1125,
+      "max_ns": 3332.6292,
+      "allocated_bytes_per_operation": 5080.0
+    },
+    {
+      "workload": "scoped-digest",
+      "mode": "core",
+      "startup_ms": 330.843041,
+      "ns_per_operation": 3183.8959,
+      "min_ns": 2849.8333,
+      "max_ns": 7824.2791,
+      "allocated_bytes_per_operation": 2968.0
+    },
+    {
+      "workload": "scoped-digest",
+      "mode": "enrichment",
+      "startup_ms": 432.941375,
+      "ns_per_operation": 32917.4584,
+      "min_ns": 31649.5709,
+      "max_ns": 34717.1291,
+      "allocated_bytes_per_operation": 27096.0048
+    },
+    {
+      "workload": "scoped-digest",
+      "mode": "off",
+      "startup_ms": 27.044125,
+      "ns_per_operation": 104.8125,
+      "min_ns": 88.1875,
+      "max_ns": 585.2083,
+      "allocated_bytes_per_operation": 320.0
+    },
+    {
+      "workload": "scoped-hot",
+      "mode": "core",
+      "startup_ms": 384.234041,
+      "ns_per_operation": 1.541979,
+      "min_ns": 1.4049375,
+      "max_ns": 3.412229,
+      "allocated_bytes_per_operation": 0.0
+    },
+    {
+      "workload": "scoped-hot",
+      "mode": "enrichment",
+      "startup_ms": 490.20675,
+      "ns_per_operation": 19.914604,
+      "min_ns": 18.4177915,
+      "max_ns": 25.201604,
+      "allocated_bytes_per_operation": 192.0
+    },
+    {
+      "workload": "scoped-hot",
+      "mode": "off",
+      "startup_ms": 25.39775,
+      "ns_per_operation": 1.526,
+      "min_ns": 1.4208125,
+      "max_ns": 4.1235625,
+      "allocated_bytes_per_operation": 0.0
+    },
+    {
+      "workload": "stackwalk",
+      "mode": "core",
+      "startup_ms": 331.159167,
+      "ns_per_operation": 2026.7709,
+      "min_ns": 1546.5292,
+      "max_ns": 3173.7333,
+      "allocated_bytes_per_operation": 1352.0
+    },
+    {
+      "workload": "stackwalk",
+      "mode": "enrichment",
+      "startup_ms": 446.185792,
+      "ns_per_operation": 1735.5,
+      "min_ns": 1572.425,
+      "max_ns": 2556.2333,
+      "allocated_bytes_per_operation": 1352.0
+    },
+    {
+      "workload": "stress",
+      "mode": "enrichment",
+      "startup_ms": 534.512917,
+      "ns_per_operation": null,
+      "min_ns": null,
+      "max_ns": null,
+      "allocated_bytes_per_operation": null
+    },
+    {
+      "workload": "tls",
+      "mode": "core",
+      "startup_ms": 349.591,
+      "ns_per_operation": 37413000.0,
+      "min_ns": 32349500.0,
+      "max_ns": 62345500.0,
+      "allocated_bytes_per_operation": 2058272.0
+    },
+    {
+      "workload": "tls",
+      "mode": "enrichment",
+      "startup_ms": 465.754917,
+      "ns_per_operation": 47664084.0,
+      "min_ns": 35948167.0,
+      "max_ns": 78419750.0,
+      "allocated_bytes_per_operation": 4434224.0
+    },
+    {
+      "workload": "tls",
+      "mode": "off",
+      "startup_ms": 30.181125,
+      "ns_per_operation": 29178334.0,
+      "min_ns": 25081000.0,
+      "max_ns": 45565291.0,
+      "allocated_bytes_per_operation": 1430536.0
+    },
+    {
+      "workload": "tls",
+      "mode": "tls",
+      "startup_ms": 542.027333,
+      "ns_per_operation": 50236625.0,
+      "min_ns": 40126417.0,
+      "max_ns": 98286167.0,
+      "allocated_bytes_per_operation": 4512840.0
+    }
+  ],
+  "measured_date": "2026-10-27",
+  "hardware": "Apple M3 Max, 16 logical CPUs, 48 GiB memory",
+  "scope": "Exploratory synthetic local measurements; main-thread allocations; pooled rounds, not confidence intervals; no production overhead claim",
+  "hot_method_diagnostics": {
+    "off": {
+      "code_lengths": {},
+      "inlining": [
+        {
+          "outcome": "inline_success",
+          "reason": "inline"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        }
+      ]
+    },
+    "core": {
+      "code_lengths": {},
+      "inlining": [
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        }
+      ]
+    },
+    "enrichment": {
+      "code_lengths": {
+        "com.developmentsprint.cryptocensus.it.EnrichmentMeasurementWorkload-original.1793099299638.class": {
+          "<init>()V": 5,
+          "main([Ljava/lang/String;)V": 107,
+          "operation(Ljava/lang/String;Ljava/nio/file/Path;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 441,
+          "measure(Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;II)V": 173,
+          "plainHot(I)I": 13,
+          "scopedHot(I)I": 13,
+          "digest(I)I": 17,
+          "scopedDigest(I)I": 5,
+          "tls(Ljava/nio/file/Path;)V": 157,
+          "reflected(Ljava/lang/String;Ljava/lang/String;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 32,
+          "prefilter(Ljava/nio/file/Path;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 40,
+          "matching(Ljava/nio/file/Path;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 178,
+          "load(Ljava/nio/file/Path;IZ)I": 168,
+          "stress(Ljava/nio/file/Path;I)V": 60,
+          "recursive(I)V": 23,
+          "memory(I)V": 70,
+          "field(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;": 49,
+          "registry(I)V": 140,
+          "lambda$matching$0(Ljava/util/List;Ljava/lang/reflect/Method;I)I": 62,
+          "lambda$prefilter$0(Ljava/lang/reflect/Method;[BI)I": 24,
+          "lambda$reflected$0(Ljava/lang/reflect/Method;I)I": 15,
+          "lambda$operation$3(Ljava/nio/file/Path;I)I": 7,
+          "lambda$operation$2(Ljava/nio/file/Path;I)I": 8,
+          "lambda$operation$1(I)I": 5,
+          "lambda$operation$0(I)I": 5
+        },
+        "com.developmentsprint.cryptocensus.it.EnrichmentMeasurementWorkload.1793099299638.class": {
+          "<init>()V": 5,
+          "main([Ljava/lang/String;)V": 107,
+          "operation(Ljava/lang/String;Ljava/nio/file/Path;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 441,
+          "measure(Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;II)V": 173,
+          "plainHot(I)I": 13,
+          "scopedHot(I)I": 57,
+          "digest(I)I": 17,
+          "scopedDigest(I)I": 49,
+          "tls(Ljava/nio/file/Path;)V": 203,
+          "reflected(Ljava/lang/String;Ljava/lang/String;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 32,
+          "prefilter(Ljava/nio/file/Path;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 40,
+          "matching(Ljava/nio/file/Path;)Lcom/developmentsprint/cryptocensus/it/EnrichmentMeasurementWorkload$Operation;": 178,
+          "load(Ljava/nio/file/Path;IZ)I": 168,
+          "stress(Ljava/nio/file/Path;I)V": 60,
+          "recursive(I)V": 59,
+          "memory(I)V": 70,
+          "field(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;": 49,
+          "registry(I)V": 140,
+          "lambda$matching$0(Ljava/util/List;Ljava/lang/reflect/Method;I)I": 62,
+          "lambda$prefilter$0(Ljava/lang/reflect/Method;[BI)I": 24,
+          "lambda$reflected$0(Ljava/lang/reflect/Method;I)I": 15,
+          "lambda$operation$3(Ljava/nio/file/Path;I)I": 7,
+          "lambda$operation$2(Ljava/nio/file/Path;I)I": 8,
+          "lambda$operation$1(I)I": 5,
+          "lambda$operation$0(I)I": 5
+        }
+      },
+      "inlining": [
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_success",
+          "reason": "inline (hot)"
+        },
+        {
+          "outcome": "inline_fail",
+          "reason": "callee is too large"
+        },
+        {
+          "outcome": "inline_fail",
+          "reason": "callee is too large"
+        },
+        {
+          "outcome": "inline_fail",
+          "reason": "callee is too large"
+        }
+      ]
+    }
+  }
+}

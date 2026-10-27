@@ -1,0 +1,101 @@
+{
+  "declarations": [
+    {
+      "field": "CLASSIFICATION",
+      "source": {
+        "id": "APPLICATION_DEFAULT::CLASSIFICATION",
+        "kind": "APPLICATION_DEFAULT",
+        "reviewedAt": "",
+        "reviewer": "",
+        "revision": "7f5d636a95a0fdf2ea727d2985b06ff224f4ae7158f0a1603b239d34451d7858"
+      },
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": ""
+      },
+      "value": "sensitive"
+    },
+    {
+      "field": "CLASSIFICATION",
+      "source": {
+        "id": "CATALOG:imported:CLASSIFICATION",
+        "kind": "CATALOG",
+        "reviewedAt": "",
+        "reviewer": "",
+        "revision": "3d464576fc6d7cc26b2eaaecd482c9e6844692b2796d79296ceea4e3300b192a"
+      },
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "imported"
+      },
+      "value": "internal"
+    },
+    {
+      "field": "CLASSIFICATION",
+      "source": {
+        "id": "USER:conflict:CLASSIFICATION",
+        "kind": "USER",
+        "reviewedAt": "",
+        "reviewer": "",
+        "revision": "41a09885b47f7ab706ff43d2db216e89a3663b07f3506c3f9f3cbe2c805b3520"
+      },
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "conflict"
+      },
+      "value": "public"
+    },
+    {
+      "field": "CONFIDENTIALITY_YEARS",
+      "source": {
+        "id": "APPLICATION_DEFAULT::CONFIDENTIALITY_YEARS",
+        "kind": "APPLICATION_DEFAULT",
+        "reviewedAt": "",
+        "reviewer": "",
+        "revision": "5cce56ea68771e24c23a29902c6e4e2d99604b4b93c967de6c3543d35406131a"
+      },
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": ""
+      },
+      "value": "20"
+    },
+    {
+      "field": "CONFIDENTIALITY_YEARS",
+      "source": {
+        "id": "CATALOG:imported:CONFIDENTIALITY_YEARS",
+        "kind": "CATALOG",
+        "reviewedAt": "",
+        "reviewer": "",
+        "revision": "b5c8ec45c61db1a7bff5d6329db6b5e462f60c4b5f3c8c8ad747baceb0aec64f"
+      },
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "imported"
+      },
+      "value": "1"
+    }
+  ],
+  "flows": [
+    {
+      "bindings": [
+        {
+          "className": "example.Workload",
+          "descriptor": "()V",
+          "method": "removedMethod",
+          "origin": "MAIN",
+          "sourceArtifact": "example:workload"
+        }
+      ],
+      "label": "Stale saved method",
+      "state": "RETIRED",
+      "subject": {
+        "applicationId": "example:records",
+        "flowId": "stale"
+      }
+    }
+  ],
+  "readiness": [],
+  "resolutions": [],
+  "schemaVersion": 1
+}

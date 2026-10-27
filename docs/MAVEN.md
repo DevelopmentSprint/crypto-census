@@ -105,6 +105,19 @@ Not detected (by design or not yet):
 - code paths your tests never exercise;
 - hostile code inside the observed JVM (see [safety and limitations](SAFETY.md)).
 
+## Optional assessment and managed context
+
+`prepare-agent` accepts `census.enrichment`, `census.tlsCorrelation`, `census.applicationId` and
+`census.sourcesFile`. `check` optionally generates advisory output with `census.assessment=true`.
+`assess` reads explicitly selected saved runs/files without invoking a test lifecycle;
+`context-apply` applies exported proposals to an explicitly selected durable context destination.
+Neither goal weakens existing `check` policy or collection-health failures.
+
+The [plugin parameter reference](../census-maven-plugin/README.md#assess-saved-evidence)
+contains the executable configuration, multiple-input options and source-catalog rules. The
+[guided workflow](ADVISORY-WORKFLOW.md) explains the reviewer steps. Migration enforcement gates
+are future work; the current report is advisory.
+
 ## Enterprise evidence delivery
 
 Use the explicit [`publish` goal](DELIVERY.md) to send an existing report to a company HTTPS receiver. Without a sealed manifest, it requires an expected digest and caller-supplied run identity. With a manifest, it obtains the artifact and identity from verified run evidence as described below.

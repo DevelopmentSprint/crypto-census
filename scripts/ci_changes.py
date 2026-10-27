@@ -126,7 +126,7 @@ def required(results):
     if classify.get('result') != 'success' or mode not in ('full', 'docs-only'):
         return False
     expected = 'success' if mode == 'full' else 'skipped'
-    return all(results.get(job, {}).get('result') == expected for job in ('build', 'dogfood', 'app-servers'))
+    return all(results.get(job, {}).get('result') == expected for job in ('build', 'dogfood', 'app-servers', 'private-tracker', 'advisory-demo', 'guided-report'))
 
 
 def main():

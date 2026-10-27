@@ -166,7 +166,11 @@ class ChangesTest(unittest.TestCase):
         self.git('add', 'scripts', 'mvnw')
         self.git('commit', '-qm', 'test hook tools baseline')
         baseline = self.git('rev-parse', 'HEAD')
-        self.git('update-ref', 'refs/remotes/origin/develop', baseline)
+        remote = self.repo / 'hook-remote.git'
+        self.git('init', '--bare', str(remote))
+        self.git('remote', 'set-url', 'origin', str(remote))
+        self.git('push', 'origin', baseline + ':refs/heads/develop')
+        self.git('fetch', 'origin')
         bin_dir = self.repo / 'fake-bin'
         bin_dir.mkdir()
         for name in ('npm', 'node'):
@@ -224,15 +228,15 @@ class ChangesTest(unittest.TestCase):
         self.git('add', '.beads/private.json')
         result = push(runtime)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Private tracker state', result.stderr)
+        self.assertIn('forbidden path', result.stderr)
         self.assertFalse(log.exists())
 
     def test_gate_rejects_every_wrong_required_result(self):
         for mode, expected in (('full', 'success'), ('docs-only', 'skipped')):
             valid = {'classify': {'result': 'success', 'outputs': {'mode': mode}},
-                     **{key: {'result': expected} for key in ('build', 'dogfood', 'app-servers')}}
+                     **{key: {'result': expected} for key in ('build', 'dogfood', 'app-servers', 'private-tracker', 'advisory-demo', 'guided-report')}}
             self.assertTrue(changes.required(valid))
-            for job in ('build', 'dogfood', 'app-servers'):
+            for job in ('build', 'dogfood', 'app-servers', 'private-tracker', 'advisory-demo', 'guided-report'):
                 for outcome in ('success', 'skipped', 'failure', 'cancelled', None):
                     if outcome == expected:
                         continue
@@ -247,7 +251,7 @@ class ChangesTest(unittest.TestCase):
         self.assertIn('  workflow_dispatch:', ci)
         self.assertNotIn('paths-ignore:', ci)
         self.assertIn('name: Required CI', ci)
-        self.assertIn('needs: [classify, build, dogfood, app-servers]', ci)
+        self.assertIn('needs: [classify, build, dogfood, app-servers, private-tracker, advisory-demo, guided-report]', ci)
         self.assertIn('if: always()', ci.split('  required:')[1])
         for job in ('build', 'dogfood', 'app-servers', 'early-access'):
             segment = ci.split(f'  {job}:')[1].split('    name:')[0]

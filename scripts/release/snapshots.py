@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 from central import CI_JOBS, NS, REPOSITORY, command, load_run, release_version, require
 
-MODULE_DIRS = ('census-core', 'census-agent', 'census-delivery', 'census-cli',
+MODULE_DIRS = ('census-annotations', 'census-core', 'census-assessment', 'census-agent', 'census-delivery', 'census-cli',
                'census-maven-plugin', 'census-demo', 'census-app-servers')
 
 

@@ -115,6 +115,9 @@ final class RunEvidence {
     long total = 0;
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, "cbom-*.json")) {
       for (Path file : stream) {
+        if (basename(file).endsWith(".evidence.json")) {
+          continue;
+        }
         if (!basename(file).matches("cbom-[A-Za-z0-9._-]+\\.json")) {
           throw new IllegalArgumentException("Unsupported raw JVM report basename");
         }

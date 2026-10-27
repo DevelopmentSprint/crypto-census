@@ -127,6 +127,17 @@ class BundleTest(unittest.TestCase):
             self.files[name + ".asc"] = b"test signature"
             self.files[name + ".sha256"] = hashlib.sha256(self.files[name]).hexdigest().encode()
 
+    def test_context_modules_are_required_published_artifacts(self):
+        for module in ('census-annotations', 'census-assessment'):
+            stem = f'com/developmentsprint/{module}/0.1.0/{module}-0.1.0'
+            for suffix in ('.pom', '.jar', '-sources.jar', '-javadoc.jar'):
+                with self.subTest(module=module, suffix=suffix):
+                    self.assertIn(stem + suffix, central.expected_artifacts('0.1.0'))
+                    missing = dict(self.files)
+                    del missing[stem + suffix]
+                    with self.assertRaises(ValueError):
+                        self.inspect(missing)
+
     def inspect(self, files=None, verify=None):
         bundle = io.BytesIO()
         with zipfile.ZipFile(bundle, "w") as archive:
@@ -135,12 +146,12 @@ class BundleTest(unittest.TestCase):
         bundle.seek(0)
         return central.inspect_bundle(bundle, "0.1.0", FINGERPRINT, verify or (lambda *_: None))
 
-    def test_exact_22_artifacts_are_verified_and_hashed(self):
+    def test_exact_30_artifacts_are_verified_and_hashed(self):
         with patch.object(central, "gpg_verify") as verify:
             result = self.inspect(verify=verify)
-        self.assertEqual(len(result), 22)
-        self.assertEqual(verify.call_count, 22)
-        self.assertEqual(len({r["path"] for r in result}), 22)
+        self.assertEqual(len(result), 30)
+        self.assertEqual(verify.call_count, 30)
+        self.assertEqual(len({r["path"] for r in result}), 30)
 
     def test_rejects_extra_paths_dumps_and_demo_artifacts(self):
         for name in (".beads/dump.sql", "renamed-backup.zip", "../secret", "settings.xml",

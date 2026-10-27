@@ -68,6 +68,13 @@ java -javaagent:census-agent.jar=output=cbom.json,app=payments-api -jar payments
 
 The agent writes at graceful JVM shutdown. Exercise representative workloads before stopping it.
 
+## Business context and migration planning
+
+Opt in with `mvn verify -Dcensus.enrichment=true -Dcensus.assessment=true` to produce a local
+JSON/HTML advisory report. Add natural Java flow/protection annotations, or enter context in the
+offline page and reassess saved evidence without rerunning tests. Priority, declared readiness
+and missing coverage remain separate. Start with the [observe/enrich/reassess workflow](docs/ADVISORY-WORKFLOW.md).
+
 ## Compatibility
 
 Java 17+ is required. CI gates cover Temurin and Semeru/OpenJ9, Windows and Linux, embedded Tomcat, Open Liberty, WildFly, and OpenTelemetry coexistence. Exact versions and exclusions are in [Compatibility](docs/COMPATIBILITY.md); the [conformance matrix](docs/CONFORMANCE.md) defines the tests and deprecation ratchet. An unlisted runtime is unverified.
@@ -76,7 +83,7 @@ Java 17+ is required. CI gates cover Temurin and Semeru/OpenJ9, Windows and Linu
 
 Census observes executed JCA/JSSE entry points; it complements source scanners. Unexecuted paths and APIs that bypass JCA are invisible. The policy distinguishes known weakness from missing information; `unknown` fails by default, and `quantum-safe` does not imply CNSA 2.0 compliance. See [observation and risk policy](docs/POLICY.md).
 
-The agent observes without changing application cryptographic operations, bounds collection and output, and records collection health. It runs inside the application: hostile code can forge or suppress evidence. Overhead is not benchmarked; current positioning is tests and staging. Read the complete [safety guarantees and limitations](docs/SAFETY.md) before deployment.
+The agent observes without changing application cryptographic operations, bounds collection and output, and records collection health. It runs inside the application: hostile code can forge or suppress evidence. Exploratory [enrichment measurements](docs/ENRICHMENT-MEASUREMENTS.md) show substantial synthetic overhead and a full-capacity publication limit; they do not establish production suitability. Current positioning remains tests and staging. Read the complete [safety guarantees and limitations](docs/SAFETY.md) before deployment.
 
 ## Guides
 
@@ -91,10 +98,12 @@ The agent observes without changing application cryptographic operations, bounds
 
 ## Roadmap
 
-Production overhead benchmarks and sampling; periodic/on-demand flushing; additional PSS/OAEP/GCM/PBE parameters and named curves; TLS session/group correlation; a Gradle plugin; keystore/truststore inventory; and additional FIPS, APM, and macOS conformance rows. Artifact SBOMs, provenance and reproducible-build configuration remain release-assurance work.
+Production overhead benchmarks and sampling; periodic/on-demand flushing; additional PSS/OAEP/GCM/PBE parameters and named curves; additional provider correlation and request-to-connection adapters; explicit async context propagation; a Gradle plugin; keystore/truststore inventory; and additional FIPS, APM, and macOS conformance rows. Artifact SBOMs, provenance and reproducible-build configuration remain release-assurance work.
 
 ## License
 
 Copyright 2026 Development Sprint, LLC. [Apache License 2.0](LICENSE).
+
+Explicit artifact and deployment mappings, including named-loader selectors and local application-server URLs, are described in [source catalogs](docs/SOURCE-CATALOG.md).
 
 For delivery to a company HTTPS receiver, see [CBOM delivery](docs/DELIVERY.md). [Delivery profiles](docs/DELIVERY-PROFILES.md) also support guarded Dependency-Track delivery and experimental Sonatype SBOM Manager, JFrog Artifactory, and Anchore Enterprise adapters. Each guide distinguishes stored evidence from imported inventory and documents verification limits.

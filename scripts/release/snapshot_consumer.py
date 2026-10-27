@@ -106,7 +106,8 @@ public class CryptoTest { @Test void usesCrypto() throws Exception { CryptoWorkl
         inspect_cbom(standalone / 'cbom.json')
         # Resolve the full published coordinate/classifier set independently of the reactor.
         artifacts = [('census-parent', 'pom', None)]
-        for module in ('census-core', 'census-agent', 'census-delivery', 'census-cli', 'census-maven-plugin'):
+        for module in ('census-annotations', 'census-core', 'census-assessment', 'census-agent',
+                       'census-delivery', 'census-cli', 'census-maven-plugin'):
             artifacts += [(module, kind, classifier) for kind, classifier in
                           (('pom', None), ('jar', None), ('jar', 'sources'), ('jar', 'javadoc'))]
         artifacts.append(('census-delivery', 'jar', 'tests'))
@@ -119,7 +120,7 @@ public class CryptoTest { @Test void usesCrypto() throws Exception { CryptoWorkl
                           '-Dartifact=' + coordinate, f'-DoutputDirectory={standalone}',
                           '-Dmdep.stripVersion=true'], standalone)
         invoke(['java', '-jar', 'census-cli.jar', '--help'], standalone)
-        print(f'External {args.version} consumer passed: quickstart, strict policy failure, standalone agent, CLI, all 22 artifacts; two fresh caches')
+        print(f'External {args.version} consumer passed: quickstart, strict policy failure, standalone agent, CLI, all {len(artifacts)} artifacts; two fresh caches')
 
 
 def main():

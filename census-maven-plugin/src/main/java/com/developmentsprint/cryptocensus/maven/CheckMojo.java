@@ -65,6 +65,27 @@ public class CheckMojo extends AbstractMojo {
   @Parameter(property = "census.failOn", defaultValue = "broken")
   private String failOn;
 
+  /** Generate a canonical business-context assessment for this build's exact run. */
+  @Parameter(property = "census.assessment", defaultValue = "false")
+  private boolean assessment;
+
+  @Parameter(property = "census.contextFile")
+  private File contextFile;
+
+  @Parameter(property = "census.policyFile")
+  private File policyFile;
+
+  @Parameter(
+      property = "census.assessmentOutputDirectory",
+      defaultValue = "${project.build.directory}/cryptocensus/assessment")
+  private File assessmentOutputDirectory;
+
+  @Parameter(property = "census.workload", defaultValue = "unspecified")
+  private String workload;
+
+  @Parameter(property = "census.environment", defaultValue = "unspecified")
+  private String environment;
+
   /**
    * Also fail on assets the policy cannot judge (unrecognized algorithms, unobserved key strength).
    * On by default: an algorithm the policy cannot classify is not evidence that it is safe.
@@ -475,8 +496,34 @@ public class CheckMojo extends AbstractMojo {
                   + ". Run census:enforce independently of delivery.");
       return;
     }
+    MojoExecutionException assessmentFailure = null;
+    if (mode() == Mode.CHECK && assessment) {
+      try {
+        ReportWorkflow.write(
+            List.of(Path.of(runDir)),
+            contextFile,
+            policyFile,
+            assessmentOutputDirectory.toPath(),
+            workload,
+            environment);
+      } catch (IOException | IllegalArgumentException | java.time.DateTimeException e) {
+        assessmentFailure =
+            new MojoExecutionException(
+                "Could not generate the requested business-context assessment", e);
+      }
+    }
     if (!problems.isEmpty()) {
-      throw new MojoFailureException(String.join("\n\n", problems));
+      if (assessmentFailure != null) {
+        problems.add(assessmentFailure.getMessage());
+      }
+      MojoFailureException failure = new MojoFailureException(String.join("\n\n", problems));
+      if (assessmentFailure != null) {
+        failure.addSuppressed(assessmentFailure);
+      }
+      throw failure;
+    }
+    if (assessmentFailure != null) {
+      throw assessmentFailure;
     }
   }
 

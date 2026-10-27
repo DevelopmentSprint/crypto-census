@@ -1,5 +1,8 @@
 package com.developmentsprint.cryptocensus.demo;
 
+import com.developmentsprint.cryptocensus.annotations.CryptoFlow;
+import com.developmentsprint.cryptocensus.annotations.CryptoPurpose;
+import com.developmentsprint.cryptocensus.annotations.DataProtection;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -32,6 +35,8 @@ public final class PaymentSigner {
    * @return the SHA256withRSA signature
    * @throws GeneralSecurityException on signing failure
    */
+  @CryptoFlow(value = "payment-signing", purpose = CryptoPurpose.SIGNING)
+  @DataProtection(classification = "sensitive", authenticityYears = 20)
   public byte[] sign(String instruction) throws GeneralSecurityException {
     Signature signature = Signature.getInstance("SHA256withRSA");
     signature.initSign(keys.getPrivate());

@@ -172,3 +172,16 @@ For the [verified WildFly image](CONFORMANCE.md#app-servers-and-other-agents), c
 ```
 
 Deploy the WAR into `/opt/jboss/wildfly/standalone/deployments`, exercise it, and use the same stop/copy/remove sequence with your WildFly container name. The [pinned executable test](../census-app-servers/src/test/java/com/developmentsprint/cryptocensus/appservers/AppServerIT.java) demonstrates both deployments, graceful shutdown, and health assertions. Preserve other agents and server-specific JVM flags when composing options.
+
+## Business context without changing existing gates
+
+Enable `-Dcensus.enrichment=true -Dcensus.assessment=true` for optional business evidence and
+advisory reporting. Existing risk/collection gates retain their defaults. The
+[guided workflow](ADVISORY-WORKFLOW.md) covers Java annotations, unmodified call-site binding,
+private context apply and reassessment without test reruns. Keep sidecars and HTML/JSON reports
+out of broad CI uploads; an ordinary `cbom-*.json` glob also matches evidence sidecars.
+
+Generated catalogs distinguish main/test output and known reactor artifacts from libraries.
+Shared annotated dependencies keep declaring-artifact identity rather than adopting the test
+runner's identity. Version/type/classifier mismatches and known shaded packages do not acquire
+ownership by guesswork; use explicit mappings as described in [source catalogs](SOURCE-CATALOG.md).

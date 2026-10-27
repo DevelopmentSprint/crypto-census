@@ -1,0 +1,1251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crypto Census assessment output v1",
+  "description": "Offline assessment output. Structural validation does not authenticate provenance, prove completeness/readiness, or recompute policy decisions and content hashes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "censusVersion",
+    "ruleSetVersion",
+    "coreFactsVersion",
+    "tlsFactsVersion",
+    "contextHash",
+    "profileHash",
+    "profile",
+    "runs",
+    "findings",
+    "flows",
+    "incomplete",
+    "gaps",
+    "baseContext",
+    "baseFields",
+    "emptyFieldHash",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "censusVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleSetVersion": {
+      "const": "business-v1"
+    },
+    "coreFactsVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tlsFactsVersion": {
+      "const": "tls-facts-v1"
+    },
+    "contextHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "profileHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "profile": {
+      "$ref": "#/$defs/profile"
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/run"
+      },
+      "maxItems": 64
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/primitiveFinding"
+          },
+          {
+            "$ref": "#/$defs/tlsFinding"
+          }
+        ]
+      },
+      "maxItems": 32768
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/flow"
+      },
+      "maxItems": 4096
+    },
+    "incomplete": {
+      "type": "boolean"
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "baseContext": {
+      "$ref": "context-v1.schema.json#/$defs/context"
+    },
+    "baseFields": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/baseField"
+      }
+    },
+    "emptyFieldHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ruleId",
+        "businessPriority",
+        "displayPriority",
+        "technicalRemediation",
+        "incomplete",
+        "reasons",
+        "missingFields",
+        "nextAction"
+      ],
+      "properties": {
+        "ruleId": {
+          "enum": [
+            "evidence-required",
+            "declaration-review",
+            "technical-remediation",
+            "long-confidentiality",
+            "authenticity-urgency",
+            "planned-classical-migration",
+            "context-required",
+            "observed-resistant-primitive",
+            "exposure-not-established"
+          ]
+        },
+        "businessPriority": {
+          "enum": [
+            "TECHNICAL_REMEDIATION_FIRST",
+            "URGENT_PLANNING",
+            "PLANNED_MIGRATION",
+            "NEEDS_CONTEXT",
+            "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE"
+          ]
+        },
+        "displayPriority": {
+          "enum": [
+            "TECHNICAL_REMEDIATION_FIRST",
+            "URGENT_PLANNING",
+            "PLANNED_MIGRATION",
+            "NEEDS_CONTEXT",
+            "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE"
+          ]
+        },
+        "technicalRemediation": {
+          "type": "boolean"
+        },
+        "incomplete": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "missingFields": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "classification",
+              "confidentialityYears",
+              "authenticityYears",
+              "impact",
+              "observedProtectionRole"
+            ]
+          }
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "technical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "risk",
+        "reason",
+        "nistQuantumSecurityLevel",
+        "cnsa2",
+        "quantumExposure",
+        "role",
+        "version"
+      ],
+      "properties": {
+        "risk": {
+          "enum": [
+            "QUANTUM_SAFE",
+            "ACCEPTABLE",
+            "UNKNOWN",
+            "QUANTUM_VULNERABLE",
+            "WEAK",
+            "BROKEN"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "nistQuantumSecurityLevel": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 5
+        },
+        "cnsa2": {
+          "type": "boolean"
+        },
+        "quantumExposure": {
+          "enum": [
+            "VULNERABLE",
+            "RESISTANT",
+            "NOT_ESTABLISHED"
+          ]
+        },
+        "role": {
+          "enum": [
+            "CONFIDENTIALITY",
+            "AUTHENTICITY",
+            "NOT_ESTABLISHED"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "primitive",
+        "algorithm",
+        "keySize",
+        "provider",
+        "operation",
+        "mode",
+        "padding",
+        "protocolVersion"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "maxLength": 4096,
+          "minLength": 1
+        },
+        "primitive": {
+          "enum": [
+            "CIPHER",
+            "SIGNATURE",
+            "KEY_AGREEMENT",
+            "KEM",
+            "KEY_PAIR_GENERATION",
+            "KEY_GENERATION",
+            "MESSAGE_DIGEST",
+            "MAC",
+            "TLS"
+          ]
+        },
+        "algorithm": {
+          "type": "string"
+        },
+        "keySize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation": {
+          "anyOf": [
+            {
+              "enum": [
+                "ENCRYPT",
+                "DECRYPT",
+                "WRAP",
+                "UNWRAP",
+                "SIGN",
+                "VERIFY"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "padding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protocolVersion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "primitiveFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "runId",
+        "bucketId",
+        "identityId",
+        "subject",
+        "direct",
+        "technical",
+        "decision",
+        "gaps",
+        "kind",
+        "asset",
+        "occurrence",
+        "count",
+        "path",
+        "association",
+        "projectFrame"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "runId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "bucketId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "identityId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "$ref": "context-v1.schema.json#/$defs/subject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direct": {
+          "type": "boolean"
+        },
+        "technical": {
+          "$ref": "#/$defs/technical"
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "const": "PRIMITIVE"
+        },
+        "asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "occurrence": {
+          "$ref": "evidence-v1.schema.json#/$defs/occurrence"
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "evidence-v1.schema.json#/$defs/scopeRef"
+          },
+          "maxItems": 32
+        },
+        "association": {
+          "enum": [
+            "SYNCHRONOUS_SCOPE",
+            "EXPLICIT_BINDING",
+            "NO_SCOPE",
+            "SCOPE_LOST",
+            "UNVERIFIED"
+          ]
+        },
+        "projectFrame": {
+          "$ref": "context-v1.schema.json#/$defs/binding"
+        }
+      }
+    },
+    "tlsFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "runId",
+        "bucketId",
+        "identityId",
+        "subject",
+        "direct",
+        "technical",
+        "decision",
+        "gaps",
+        "kind",
+        "handshakeRef",
+        "association",
+        "associationLimitation",
+        "entryPointCount",
+        "qualified",
+        "tlsFactsVersion",
+        "lineage",
+        "selectedKeyExchangeExposure",
+        "pskOriginExposure",
+        "limitations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "runId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "bucketId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "identityId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "$ref": "context-v1.schema.json#/$defs/subject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direct": {
+          "type": "boolean"
+        },
+        "technical": {
+          "$ref": "#/$defs/technical"
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "enum": [
+            "TLS_CONFIDENTIALITY",
+            "TLS_LOCAL_AUTHENTICATION",
+            "TLS_PEER_AUTHENTICATION"
+          ]
+        },
+        "handshakeRef": {
+          "$ref": "evidence-v1.schema.json#/$defs/attempt"
+        },
+        "association": {
+          "enum": [
+            "UNVERIFIED",
+            "HANDSHAKE_INITIATION_SCOPE"
+          ]
+        },
+        "associationLimitation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entryPointCount": {
+          "type": "null"
+        },
+        "qualified": {
+          "type": "boolean"
+        },
+        "tlsFactsVersion": {
+          "const": "tls-facts-v1"
+        },
+        "lineage": {
+          "enum": [
+            "NOT_APPLICABLE",
+            "VERIFIED",
+            "UNKNOWN"
+          ]
+        },
+        "selectedKeyExchangeExposure": {
+          "enum": [
+            "VULNERABLE",
+            "RESISTANT",
+            "NOT_ESTABLISHED"
+          ]
+        },
+        "pskOriginExposure": {
+          "enum": [
+            "VULNERABLE",
+            "RESISTANT",
+            "NOT_ESTABLISHED"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "field",
+        "status",
+        "value",
+        "sources",
+        "sourceRefs"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "context-v1.schema.json#/$defs/subject"
+        },
+        "field": {
+          "$ref": "context-v1.schema.json#/$defs/declaration/properties/field"
+        },
+        "status": {
+          "enum": [
+            "AGREED",
+            "REVIEWED",
+            "APPLICATION_DEFAULT",
+            "UNKNOWN",
+            "CONFLICT",
+            "STALE_RESOLUTION"
+          ]
+        },
+        "value": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "context-v1.schema.json#/$defs/declaration"
+          }
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "context-v1.schema.json#/$defs/sourceRef"
+          }
+        }
+      }
+    },
+    "instance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directCount",
+        "inclusiveCount",
+        "handshakeAttempts",
+        "unknownCount",
+        "countsSaturated",
+        "observed",
+        "priority",
+        "assessmentIncomplete",
+        "gaps",
+        "runId",
+        "identityId",
+        "identity",
+        "fields",
+        "coverageIncomplete"
+      ],
+      "properties": {
+        "directCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "inclusiveCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "handshakeAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "unknownCount": {
+          "type": "boolean"
+        },
+        "countsSaturated": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "priority": {
+          "enum": [
+            "TECHNICAL_REMEDIATION_FIRST",
+            "URGENT_PLANNING",
+            "PLANNED_MIGRATION",
+            "NEEDS_CONTEXT",
+            "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE"
+          ]
+        },
+        "assessmentIncomplete": {
+          "type": "boolean"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "identityId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "evidence-v1.schema.json#/$defs/identity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "coverageIncomplete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effectiveState",
+        "assertedState",
+        "provenance",
+        "note",
+        "validationRefs",
+        "basis",
+        "gaps"
+      ],
+      "properties": {
+        "effectiveState": {
+          "enum": [
+            "UNASSESSED",
+            "BLOCKED",
+            "CANDIDATE",
+            "VALIDATED_IN_TESTED_SCOPE"
+          ]
+        },
+        "assertedState": {
+          "anyOf": [
+            {
+              "enum": [
+                "UNASSESSED",
+                "BLOCKED",
+                "CANDIDATE",
+                "VALIDATED_IN_TESTED_SCOPE"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "context-v1.schema.json#/$defs/source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "validationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1
+          },
+          "maxItems": 64
+        },
+        "basis": {
+          "enum": [
+            "UNASSESSED",
+            "USER_OR_IMPORT_ASSERTION"
+          ]
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "bindingReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "binding",
+        "status"
+      ],
+      "properties": {
+        "runId": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "binding": {
+          "$ref": "context-v1.schema.json#/$defs/binding"
+        },
+        "status": {
+          "enum": [
+            "OBSERVED",
+            "NOT_OBSERVED",
+            "INELIGIBLE",
+            "AMBIGUOUS"
+          ]
+        }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directCount",
+        "inclusiveCount",
+        "handshakeAttempts",
+        "unknownCount",
+        "countsSaturated",
+        "observed",
+        "priority",
+        "assessmentIncomplete",
+        "gaps",
+        "subject",
+        "label",
+        "labels",
+        "state",
+        "savedContextFields",
+        "findingIds",
+        "readiness",
+        "readinessIncomplete",
+        "coverageIncomplete",
+        "incomplete",
+        "bindings",
+        "instances"
+      ],
+      "properties": {
+        "directCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "inclusiveCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "handshakeAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "unknownCount": {
+          "type": "boolean"
+        },
+        "countsSaturated": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "priority": {
+          "enum": [
+            "TECHNICAL_REMEDIATION_FIRST",
+            "URGENT_PLANNING",
+            "PLANNED_MIGRATION",
+            "NEEDS_CONTEXT",
+            "NO_PQC_ACTION_IDENTIFIED_IN_OBSERVED_SCOPE"
+          ]
+        },
+        "assessmentIncomplete": {
+          "type": "boolean"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subject": {
+          "$ref": "context-v1.schema.json#/$defs/subject"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          }
+        },
+        "state": {
+          "enum": [
+            "ACTIVE",
+            "RETIRED"
+          ]
+        },
+        "savedContextFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "findingIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "readiness": {
+          "$ref": "#/$defs/readiness"
+        },
+        "readinessIncomplete": {
+          "type": "boolean"
+        },
+        "coverageIncomplete": {
+          "type": "boolean"
+        },
+        "incomplete": {
+          "type": "boolean"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bindingReview"
+          }
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/instance"
+          }
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nonce",
+        "cbomHash",
+        "evidenceHash",
+        "workloads",
+        "environments",
+        "metadata",
+        "coreHealth",
+        "evidenceAccepted",
+        "collectionGaps",
+        "attributionGaps",
+        "enrichmentHealth",
+        "capabilities",
+        "identities",
+        "flows",
+        "handshakes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "nonce": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "cbomHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evidenceHash": {
+          "type": "string",
+          "pattern": "^([a-f0-9]{64})?$"
+        },
+        "workloads": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          }
+        },
+        "environments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "coreHealth": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9223372036854775807
+          }
+        },
+        "evidenceAccepted": {
+          "type": "boolean"
+        },
+        "collectionGaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attributionGaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "enrichmentHealth": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {}
+            },
+            {
+              "$ref": "evidence-v1.schema.json#/properties/health"
+            }
+          ]
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "evidence-v1.schema.json#/$defs/capability"
+          },
+          "maxItems": 256
+        },
+        "identities": {
+          "type": "array",
+          "items": {
+            "$ref": "evidence-v1.schema.json#/$defs/identity"
+          },
+          "maxItems": 4096
+        },
+        "flows": {
+          "type": "array",
+          "items": {
+            "$ref": "evidence-v1.schema.json#/$defs/discoveredFlow"
+          },
+          "maxItems": 4096
+        },
+        "handshakes": {
+          "type": "array",
+          "items": {
+            "$ref": "evidence-v1.schema.json#/$defs/handshake"
+          },
+          "maxItems": 4096
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "ruleSetVersion",
+        "coreFactsVersion",
+        "tlsFactsVersion",
+        "sensitivity",
+        "impact",
+        "confidentialityYears",
+        "authenticityYears",
+        "sensitiveLevel",
+        "highImpactLevel"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "ruleSetVersion": {
+          "const": "business-v1"
+        },
+        "coreFactsVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tlsFactsVersion": {
+          "const": "tls-facts-v1"
+        },
+        "sensitivity": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "maxProperties": 256
+        },
+        "impact": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "maxProperties": 256
+        },
+        "confidentialityYears": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "authenticityYears": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "sensitiveLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "highImpactLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "baseField": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "section",
+            "id",
+            "value",
+            "hash"
+          ],
+          "properties": {
+            "section": {
+              "const": "FLOWS"
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 2048,
+              "minLength": 1
+            },
+            "value": {
+              "$ref": "context-v1.schema.json#/$defs/flow"
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "section",
+            "id",
+            "value",
+            "hash"
+          ],
+          "properties": {
+            "section": {
+              "const": "DECLARATIONS"
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 2048,
+              "minLength": 1
+            },
+            "value": {
+              "$ref": "context-v1.schema.json#/$defs/declaration"
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "section",
+            "id",
+            "value",
+            "hash"
+          ],
+          "properties": {
+            "section": {
+              "const": "RESOLUTIONS"
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 2048,
+              "minLength": 1
+            },
+            "value": {
+              "$ref": "context-v1.schema.json#/$defs/resolution"
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "section",
+            "id",
+            "value",
+            "hash"
+          ],
+          "properties": {
+            "section": {
+              "const": "READINESS"
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 2048,
+              "minLength": 1
+            },
+            "value": {
+              "$ref": "context-v1.schema.json#/$defs/readiness"
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

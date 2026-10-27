@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
@@ -35,6 +36,9 @@ import javax.net.ssl.SSLSession;
  */
 public final class Recorder {
 
+  private static final ThreadLocal<Boolean> INTERNAL_HASH = new ThreadLocal<>();
+  private static final AtomicLong ENRICHMENT_FAILURES = new AtomicLong();
+  private static volatile boolean enrichment;
   private static volatile Inventory inventory = Inventory.bounded(500, 50);
   private static final ThreadLocal<int[]> DEPTH = ThreadLocal.withInitial(() -> new int[1]);
 
@@ -59,6 +63,8 @@ public final class Recorder {
 
   static void configure(int maxAssets, int maxSitesPerAsset) {
     inventory = Inventory.bounded(maxAssets, maxSitesPerAsset);
+    enrichment = false;
+    ENRICHMENT_FAILURES.set(0);
   }
 
   static void enable() {
@@ -67,6 +73,10 @@ public final class Recorder {
 
   static void disable() {
     enabled = false;
+  }
+
+  static void enableEnrichment() {
+    enrichment = true;
   }
 
   static Inventory inventory() {
@@ -95,6 +105,9 @@ public final class Recorder {
    * shutdown drain sees operations that are still inside the provider.
    */
   public static int enter() {
+    if (enrichment && Boolean.TRUE.equals(INTERNAL_HASH.get())) {
+      return 0;
+    }
     int[] depth = DEPTH.get();
     if (depth[0] == 0) {
       // Register first, then check: shutdown disables and then waits for IN_FLIGHT == 0. With both
@@ -193,7 +206,63 @@ public final class Recorder {
         occurrence =
             new Occurrence(occurrence.location(), occurrence.symbol(), occurrence.line(), "jsse");
       }
-      inventory.record(asset, occurrence);
+      if (enrichment) {
+        Inventory.RecordOutcome outcome = inventory.recordWithOutcome(asset, occurrence);
+        attribute(asset, outcome);
+      } else {
+        inventory.record(asset, occurrence);
+      }
+    }
+  }
+
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  private static void attribute(CryptoAsset asset, Inventory.RecordOutcome outcome) {
+    try {
+      Runnable hook = beforeEnrichmentHook;
+      if (hook != null) {
+        hook.run();
+      }
+      AgentEnrichment.record(asset, outcome);
+    } catch (Throwable failed) {
+      markEnrichmentFailure();
+    }
+    try {
+      AgentEnrichment.relatedAsset(asset, outcome);
+    } catch (Throwable failed) {
+      markEnrichmentFailure();
+    }
+  }
+
+  @SuppressFBWarnings(
+      value = "UWF_UNWRITTEN_FIELD",
+      justification = "Fault injection seam written by unit tests only; null in production")
+  static volatile Runnable beforeEnrichmentHook;
+
+  private static void markEnrichmentFailure() {
+    long previous;
+    do {
+      previous = ENRICHMENT_FAILURES.get();
+      if (previous == Long.MAX_VALUE) {
+        return;
+      }
+    } while (!ENRICHMENT_FAILURES.compareAndSet(previous, previous + 1));
+  }
+
+  static long enrichmentFailures() {
+    return ENRICHMENT_FAILURES.get();
+  }
+
+  static boolean suppressInternalHash() {
+    boolean previous = Boolean.TRUE.equals(INTERNAL_HASH.get());
+    INTERNAL_HASH.set(true);
+    return previous;
+  }
+
+  static void restoreInternalHash(boolean previous) {
+    if (previous) {
+      INTERNAL_HASH.set(true);
+    } else {
+      INTERNAL_HASH.remove();
     }
   }
 

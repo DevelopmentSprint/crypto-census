@@ -144,6 +144,12 @@ class AppServerIT {
   private static Cbom.Document exercise(GenericContainer<?> server, int port, String name)
       throws IOException, InterruptedException {
     server.start();
+    // Deployment logs can precede HTTP readiness; probe the root without exercising crypto.
+    Wait.forHttp("/")
+        .forPort(port)
+        .forStatusCodeMatching(status -> status == 200 || status == 404)
+        .withStartupTimeout(Duration.ofMinutes(3))
+        .waitUntilReady(server);
     HttpResponse<String> response =
         HttpClient.newHttpClient()
             .send(

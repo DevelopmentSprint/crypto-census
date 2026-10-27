@@ -41,10 +41,13 @@
   non-standard canonical name will be reported (and judged) under that name.
 - **TLS key-exchange group.** The TLS asset records protocol and cipher suite. The negotiated group
   (`X25519`, `secp256r1`, `X25519MLKEM768`) shows up as separate key-agreement / KEM assets `via jsse`,
-  so a hybrid ML-KEM handshake appears as an ML-KEM asset *and* an X25519 asset.
+  so primitive co-occurrence alone does not establish a completed hybrid handshake. Optional
+  [correlation evidence](TLS-CORRELATION.md) separately records qualified attempts, outcomes and
+  negotiated groups; unsupported paths remain unknown.
 - **TLS sessions are recorded when JSSE creates them**, which is before the handshake has finished
   authenticating; a handshake that later fails is still counted. TLS 1.3 resumption tickets add
-  session objects.
+  session objects. These baseline event counts are distinct from the optional correlated attempt
+  and completion records.
 - **Not captured:** OAEP parameters, the MGF1 hash of RSASSA-PSS, PSS parameters set only after
   `init` (the PSS hash set before `init` is captured, as `SHA256withRSASSA-PSS`; when it is not, the
   signature is reported as unknown rather than judged on the key alone), GCM tag length, PBE iteration counts, the named curve behind
@@ -64,8 +67,11 @@
 - **CDS warning (JDK 17+).** Like other agents that extend the bootstrap class path (OpenTelemetry's,
   for example), the JVM prints `Sharing is only supported for boot loader classes because bootstrap
   classpath has been appended`. It is harmless; class-data sharing stays on for JDK classes.
-- **Overhead** has not been benchmarked yet. Each recorded event walks the stack. The agent is aimed
-  at test suites and staging today.
+- **Overhead:** [local synthetic measurements](ENRICHMENT-MEASUREMENTS.md) cover core/enrichment
+  throughput, allocation, startup, TLS and class loading. They show substantial enrichment cost
+  and do not establish production overhead. Full-capacity collection also failed to publish its
+  sidecar in that experiment. Each recorded event walks the stack; positioning remains tests
+  and staging.
 - Bouncy Castle's **lightweight API** (`org.bouncycastle.crypto.*`) bypasses the JCA and is not
   observed. Bouncy Castle used **as a JCA provider** is.
 
@@ -78,3 +84,21 @@ Not detected (by design or not yet):
 - tests run with reporting disabled *and* an explicit skip property set;
 - code paths your tests never exercise;
 - hostile code inside the observed JVM (see above).
+
+## Optional business context and correlation
+
+Annotations and explicit bindings associate observed execution with declared requirements; they
+do not inspect data sensitivity, trace taint, or prove causal data flow. Scope is synchronous only.
+Unloaded classes, unexecuted paths, off-thread work, unresolved deployment identity and resource
+failure remain coverage limitations. Scope overflow/loss is not silently credited to a parent flow.
+
+Core inventory publishes first. Enrichment snapshots, correlation and sidecar output have separate
+bounds and health diagnostics; missing or invalid sidecars leave ordinary CBOMs usable. Independent
+publication cannot guarantee a sidecar after abrupt exit or force a blocked filesystem operation
+to finish. A nonce and exact-byte hash pair the sidecar; they do not authenticate hostile code.
+
+The local guided report treats every runtime/imported string as text, bounds imports and uses a
+hash-based CSP without network access. Java validates context proposals and holds a destination
+lock during managed merge/write. Manual writers outside that protocol remain outside its guarantee.
+A readiness assertion or installed PQC algorithm never establishes verified interoperability.
+These artifacts contain business metadata and should not be attached raw to public issues.

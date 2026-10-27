@@ -8,6 +8,7 @@ import test from 'node:test'
 
 // Override only for an isolated worker reviewing the integration branch's script.
 const script = readFileSync(process.env.DOCS_PREPARE_SCRIPT || fileURLToPath(new URL('./prepare.mjs', import.meta.url)))
+const advisoryAssets = ['measurements/enrichment-2026-10-27.json', 'schemas/source-catalog-v1.schema.json', 'schemas/assessment-v1.schema.json']
 const sha = 'a'.repeat(40)
 const runUrl = 'https://github.com/DevelopmentSprint/crypto-census/actions/runs/123'
 const metric = { covered: 9, missed: 1, percent: 90 }
@@ -20,6 +21,11 @@ function fixture(t) {
   writeFileSync(path.join(directory, 'scripts/docs/example_cbom.py'), readFileSync(fileURLToPath(new URL('./example_cbom.py', import.meta.url))))
   for (const name of ['evidence_source.py', '../ci_changes.py']) {
     writeFileSync(path.join(directory, 'scripts/docs', name), readFileSync(fileURLToPath(new URL(name, import.meta.url))))
+  }
+  for (const asset of advisoryAssets) {
+    const target = path.join(directory, 'docs', asset)
+    mkdirSync(path.dirname(target), { recursive: true })
+    writeFileSync(target, readFileSync(fileURLToPath(new URL('../../docs/' + asset, import.meta.url))))
   }
   const input = path.join(directory, 'input')
   mkdirSync(input)
@@ -69,6 +75,9 @@ test('local preview creates explicitly unmeasured badges and metadata', t => {
     assert.doesNotMatch(svg, /[0-9]+(?:\.[0-9]+)?%/)
   }
   assert.equal(JSON.parse(readFileSync(path.join(f.output, 'coverage.json'))).status, 'not measured locally')
+  for (const asset of advisoryAssets) {
+    assert.deepEqual(readFileSync(path.join(f.directory, 'docs/public', asset)), readFileSync(path.join(f.directory, 'docs', asset)))
+  }
 })
 
 test('matching SHA and exact run retain the artifact bytes', t => {

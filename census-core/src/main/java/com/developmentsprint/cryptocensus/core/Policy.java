@@ -218,6 +218,57 @@ public final class Policy {
     };
   }
 
+  /** Version of the orthogonal facts contract; existing Risk verdict version is unchanged. */
+  public static final String FACTS_VERSION = ID + "/" + VERSION + "/facts-1";
+
+  /** Returns canonical algorithm facts without duplicating a catalog in business assessment. */
+  @SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "Canonical public algorithm identifiers are compared against ASCII policy names, not"
+              + " authorization identities")
+  public TechnicalFacts facts(CryptoAsset asset) {
+    Assessment assessment = assess(asset);
+    String algorithm = asset.algorithm().toUpperCase(Locale.ROOT);
+    TechnicalFacts.ObservedRole role =
+        switch (asset.primitive()) {
+          case CIPHER, KEY_AGREEMENT, KEM -> TechnicalFacts.ObservedRole.CONFIDENTIALITY;
+          case SIGNATURE -> TechnicalFacts.ObservedRole.AUTHENTICITY;
+          default -> TechnicalFacts.ObservedRole.NOT_ESTABLISHED;
+        };
+    TechnicalFacts.QuantumExposure exposure = TechnicalFacts.QuantumExposure.NOT_ESTABLISHED;
+    if (asset.primitive() != Primitive.TLS) {
+      boolean asymmetricUse =
+          switch (asset.primitive()) {
+            case SIGNATURE, KEY_AGREEMENT, KEM, KEY_PAIR_GENERATION -> true;
+            case CIPHER -> "RSA".equals(algorithm);
+            default -> false;
+          };
+      if (asymmetricUse && classicalKey(algorithm)) {
+        exposure = TechnicalFacts.QuantumExposure.VULNERABLE;
+      } else if (assessment.risk() == Risk.QUANTUM_SAFE) {
+        exposure = TechnicalFacts.QuantumExposure.RESISTANT;
+      }
+    }
+    return new TechnicalFacts(assessment, exposure, role, FACTS_VERSION);
+  }
+
+  private static boolean classicalKey(String algorithm) {
+    int with = algorithm.indexOf("WITH");
+    if (with > 0) {
+      String key = algorithm.substring(with + 4);
+      return RSA_SIGNATURE_KEYS.contains(key)
+          || EC_SIGNATURE_KEYS.contains(key)
+          || DSA_SIGNATURE_KEYS.contains(key);
+    }
+    return RSA.contains(algorithm)
+        || EC.contains(algorithm)
+        || FFDH.contains(algorithm)
+        || CURVES.contains(algorithm)
+        || "DSA".equals(algorithm)
+        || "DHKEM".equals(algorithm);
+  }
+
   // ---------------------------------------------------------------- post-quantum
 
   private static Assessment postQuantum(String alg) {

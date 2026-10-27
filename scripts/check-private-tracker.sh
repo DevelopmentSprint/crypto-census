@@ -1,61 +1,83 @@
 #!/usr/bin/env bash
-# Check the index and, from pre-push, every newly published commit on every outgoing ref.
+# Reject private tracker paths in the index or unpublished outgoing commit trees.
 set -euo pipefail
+# Replacements are local views; pushes send the original objects. Inspect originals only.
+export GIT_NO_REPLACE_OBJECTS=1
 cd "$(git rev-parse --show-toplevel)"
-paths=$(mktemp "${TMPDIR:-/tmp}/census-tracker-paths.XXXXXX")
-commits=$(mktemp "${TMPDIR:-/tmp}/census-tracker-commits.XXXXXX")
-trap 'rm -f "$paths" "$commits"' EXIT
+paths_file=$(mktemp "${TMPDIR:-/tmp}/census-private-paths.XXXXXX")
+commits_file=$(mktemp "${TMPDIR:-/tmp}/census-private-commits.XXXXXX")
+trap 'rm -f "$paths_file" "$commits_file"' EXIT
 
-check_paths() {
-  while IFS= read -r -d '' path; do
-    case "/$path/" in
-      */.beads/* | */.beadroad/* | */.dolt/* | */dolt/* | */embeddeddolt/* | */proxieddb/* | */.beads-credential-key/)
-        echo "Private tracker state is staged, tracked, or present in outgoing history. Keep it local-only; see AGENTS.md." >&2
-        return 1
-        ;;
-    esac
-  done < "$paths"
+private_path() {
+  case "/$1/" in
+    */.beads/*|*/.beadroad/*|*/.dolt/*|*/dolt/*|*/embeddeddolt/*|*/proxieddb/*|*/.beads-credential-key/*|*/.beads.gate.lock/*) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
-git ls-files --cached -z > "$paths"
-check_paths
-if [ "$#" -eq 0 ]; then
-  exit 0
+check_paths() {
+  local label="$1" path failed=0
+  while IFS= read -r -d '' path; do
+    if private_path "$path"; then
+      printf 'private-tracker: %s contains forbidden path: %s\n' "$label" "$path" >&2
+      failed=1
+    fi
+  done
+  return "$failed"
+}
+
+if [ "${1:-}" != "--pre-push" ]; then
+  if [ "$#" -ne 0 ]; then
+    echo 'Usage: check-private-tracker.sh [--pre-push named-remote]' >&2
+    exit 2
+  fi
+  git ls-files --cached -z > "$paths_file"
+  check_paths index < "$paths_file"
+  exit
 fi
-if [ "$#" -ne 2 ] || [ "$1" != "--pre-push" ]; then
-  echo "Usage: check-private-tracker.sh [--pre-push remote-name]" >&2
-  exit 2
-fi
-remote=$2
-# A fetched named remote establishes which legacy history was already published.
-# Direct URL pushes fail closed rather than guessing that another remote is equivalent.
-if ! git remote | grep -Fxq -- "$remote"; then
-  echo "Tracker push check requires a named remote. Configure and fetch it before pushing." >&2
+
+remote="${2:-}"
+if [ "$#" -ne 2 ] || [ -z "$remote" ] || ! git remote get-url "$remote" >/dev/null 2>&1; then
+  echo 'private-tracker: pushes require a named Git remote, not a direct URL.' >&2
   exit 1
 fi
-while read -r local_ref local_sha remote_ref remote_sha extra; do
-  if [ -n "${extra:-}" ] || ! [[ "$local_sha" =~ ^[0-9a-f]{40,64}$ ]] || ! [[ "$remote_sha" =~ ^[0-9a-f]{40,64}$ ]]; then
-    echo "Malformed pre-push ref input; refusing publication." >&2
+# Fetch a dedicated snapshot of all destination heads/tags; never trust stale local tracking refs.
+namespace="refs/private-tracker-destination/$remote"
+git check-ref-format "$namespace/heads/check" >/dev/null
+git fetch --quiet --no-tags --prune "$remote" "+refs/heads/*:$namespace/heads/*" "+refs/tags/*:$namespace/tags/*"
+exclusions=()
+while IFS= read -r oid; do
+  if git rev-parse --verify "$oid^{commit}" >/dev/null 2>&1; then
+    exclusions+=("$(git rev-parse "$oid^{commit}")")
+  fi
+done < <(git for-each-ref --format='%(objectname)' "$namespace/")
+
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_oid remote_ref remote_oid extra; do
+  if [ -n "${extra:-}" ] || ! [[ "$local_oid" =~ ^[0-9a-f]{40,64}$ ]] || ! [[ "$remote_oid" =~ ^[0-9a-f]{40,64}$ ]]; then
+    echo 'Malformed pre-push ref input; refusing publication.' >&2
     exit 1
   fi
-  if [[ "$local_sha" =~ ^0+$ ]]; then
-    continue # Deleting a ref publishes no new objects.
-  fi
-  if ! git cat-file -e "${local_sha}^{commit}" 2>/dev/null; then
-    echo "Only refs pointing to commits may be published; cannot validate a raw object tag." >&2
+  [ "$local_oid" = "$zero" ] && continue
+  if [ "$remote_oid" != "$zero" ] && ! git cat-file -e "$remote_oid^{commit}" 2>/dev/null; then
+    echo 'Unknown destination commit; fetch the named remote before publishing.' >&2
     exit 1
   fi
-  if [[ "$remote_sha" =~ ^0+$ ]]; then
-    git rev-list "$local_sha" --not --remotes="$remote" > "$commits"
-  else
-    if ! git cat-file -e "${remote_sha}^{commit}" 2>/dev/null; then
-      echo "Fetch the destination remote before pushing so its existing history can be checked." >&2
-      exit 1
-    fi
-    git rev-list "$local_sha" --not "$remote_sha" --remotes="$remote" > "$commits"
+  if ! tip=$(git rev-parse --verify "$local_oid^{commit}" 2>/dev/null); then
+    echo 'private-tracker: outgoing refs must point to commits (possibly through annotated tags).' >&2
+    exit 1
   fi
+  range=("$tip")
+  if [ "${#exclusions[@]}" -gt 0 ]; then
+    range+=(--not "${exclusions[@]}")
+  fi
+  git rev-list "${range[@]}" > "$commits_file"
   while IFS= read -r commit; do
-    git ls-tree -r --name-only -z "$commit" > "$paths"
-    check_paths
-  done < "$commits"
+    git ls-tree -r -z --name-only "$commit" > "$paths_file"
+    check_paths "outgoing commit $commit" < "$paths_file"
+  done < "$commits_file"
 done
+
+# Also reject staged private state before the build, even when outgoing history is clean.
+git ls-files --cached -z > "$paths_file"
+check_paths index < "$paths_file"

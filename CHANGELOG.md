@@ -8,6 +8,15 @@ All notable changes to Crypto Census. The format follows
 
 ### Added
 
+- Optional `census-annotations` Java API and bounded synchronous flow evidence with explicit
+  deployment identity, provenance and independent enrichment health.
+- Offline `census-assessment` advisory reports, preserved context sources, reviewed resolutions,
+  managed context change sets and a self-contained guided HTML workflow.
+- Maven `assess` and `context-apply` goals, opt-in enrichment/reporting, explicit source catalogs
+  and saved-input reassessment without rerunning application tests.
+- Optional capability-qualified TLS attempt correlation with separate confidentiality and
+  authentication findings and conservative PSK lineage handling.
+
 - Enterprise CBOM preparation and explicit delivery through the Maven plugin and standalone CLI, with pluggable destination profiles, offline plans, preflight checks and private delivery receipts. Original cryptographic evidence remains available separately from derived software-BOM combinations.
 - A guarded Dependency-Track 5.2 integration for dedicated crypto-only projects, with explicit acknowledgement of documented fidelity losses and preservation of the original CBOM. It does not replace a general software inventory or provide full-fidelity cryptographic ingestion.
 - A public repository with protected integration/release branches and [private vulnerability reporting](https://github.com/DevelopmentSprint/crypto-census/security/advisories/new).

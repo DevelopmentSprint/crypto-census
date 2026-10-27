@@ -28,6 +28,23 @@ class CurrentRunTest {
   private final String runId = UUID.randomUUID().toString();
 
   @Test
+  void enrichmentSidecarsAreExcludedFromSealedInventoryAndEnforcement() throws Exception {
+    Path run = prepare();
+    raw(run, "cbom-1.json", false, 0);
+    Path sidecar = run.resolve("cbom-1.evidence.json");
+    Files.writeString(sidecar, "not a CBOM");
+    assertThat(RunEvidence.inputs(run)).containsExactly(run.resolve("cbom-1.json"));
+    configured(new ReportMojo()).execute();
+    var seal = RunEvidence.verify(run, runId, MODULE, VERSION, "1");
+    assertThat(seal.get("inputs")).isEqualTo(RunEvidence.digests(run));
+    Files.writeString(sidecar, "changed enrichment output");
+    configured(new ReportMojo()).execute();
+    EnforceMojo enforce = configured(new EnforceMojo());
+    set(enforce, "manifest", manifest(run, "1").toFile());
+    assertThatCode(enforce::execute).doesNotThrowAnyException();
+  }
+
+  @Test
   void reportRetainsFailingPolicyAndProducerWithoutThrowingAndEnforceRechecks() throws Exception {
     Path run = prepare();
     raw(run, "cbom-1.json", true, 0);

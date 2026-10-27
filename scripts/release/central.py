@@ -24,8 +24,11 @@ CI_JOBS = {
     "App servers (Open Liberty on Semeru, WildFly) / ubuntu-latest",
     "Classify changed paths",
     "Required CI",
+    "Private tracker boundary",
+    "Advisory demo outcomes",
+    "Offline guided report browser workflow",
 }
-MODULES = ("census-parent", "census-core", "census-agent", "census-delivery",
+MODULES = ("census-parent", "census-annotations", "census-core", "census-assessment", "census-agent", "census-delivery",
            "census-cli", "census-maven-plugin")
 PRIVATE_PARTS = {".beads", ".beadroad", ".dolt", "dolt", "embeddeddolt",
                  "proxieddb", ".beads-credential-key"}
@@ -157,7 +160,7 @@ def inspect_bundle(bundle, version, fingerprint, verify_signature):
         names = [i.filename for i in entries if not i.is_dir()]
         require(len(names) == len(set(names)), "Duplicate bundle entries")
         require(set(names) <= allowed and expected | signatures <= set(names),
-                "Bundle must contain exactly the six approved coordinates, all 22 artifacts and signatures")
+                "Bundle must contain exactly the approved coordinates, required artifacts and signatures")
         for info in entries:
             require(not ((info.external_attr >> 16) & 0o170000) == 0o120000, "Symlink in bundle")
             if info.is_dir():

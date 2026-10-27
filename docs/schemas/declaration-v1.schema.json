@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crypto Census declaration v1",
+  "$ref": "#/$defs/declaration",
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationId",
+        "flowId"
+      ],
+      "properties": {
+        "applicationId": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "flowId": {
+          "type": "string",
+          "pattern": "^([a-z0-9][a-z0-9._-]{0,63})?$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "revision",
+        "reviewer",
+        "reviewedAt"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ANNOTATION",
+            "USER",
+            "CATALOG",
+            "APPLICATION_DEFAULT"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 512,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reviewer": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 0
+        },
+        "reviewedAt": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 0
+        }
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "field",
+        "value",
+        "source"
+      ],
+      "properties": {
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "field": {
+          "enum": [
+            "CLASSIFICATION",
+            "CONFIDENTIALITY_YEARS",
+            "AUTHENTICITY_YEARS",
+            "OWNER",
+            "EXPOSURE",
+            "IMPACT",
+            "PURPOSE"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    }
+  }
+}

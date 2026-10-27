@@ -10,6 +10,10 @@ The source of truth is the `build` job's matrix in
 [Compatibility](COMPATIBILITY.md) guide mirror it. If they ever disagree,
 the workflow is right and the documents are a bug.
 
+Annotation scope boundaries, deployment identity and bootstrap-bridge visibility have
+separate [context conformance fixtures](CONTEXT-CONFORMANCE.md). Their runtime gates
+validate the paired evidence sidecar in addition to the core inventory.
+
 ## The matrix
 
 ### JDKs
@@ -50,6 +54,18 @@ with the Docker socket mounted, is pinned by digest in
 `census-app-servers/src/test/resources/testcontainers.properties`; when `testcontainers.version`
 moves, move it to the Ryuk version that release asks for.
 
+### Advisory-feature acceptance gates
+
+These jobs test advisory product behavior; their CI failures are blocking, not the advisory tier below.
+
+| CI job | Evidence |
+| --- | --- |
+| `Offline guided report browser workflow` | Synthetic offline browser editing, application defaults, export/import, Java apply/reassessment, identity gaps and CSP/no-network assertions. |
+| `Advisory demo outcomes` | Real enriched demo priorities/counts/async gaps; actual browser export through Maven context apply and saved-input reassessment; passive annotations with the agent skipped. |
+
+Neither job uploads enriched reports. The configured jobs are acceptance gates, not evidence that
+hosted CI has already run for an unpublished local branch.
+
 ### Tiers
 
 - **gate**: a failure fails the CI run and is a bug to fix. Branch protection requires the
@@ -78,9 +94,19 @@ Every JDK job runs `./mvnw -B -ntp verify` with that JDK as the build JDK, so ev
 | `AgentIT` | the shaded agent in a child JVM: every instrumented entry point, verdicts, call-site attribution, a loopback TLS 1.3 handshake, post-quantum algorithms (JDK 24+), health counters at zero, **every fixed target instrumented with no gaps**, `-Dnet.bytebuddy.experimental` reaching the shaded Byte Buddy. On Semeru: OpenJCEPlus provider frames are not mistaken for the caller. On a JDK newer than Byte Buddy supports: the agent reports errors and gaps by default and works with `experimental=true` |
 | `ApmCoexistenceIT` | the same workload with the OpenTelemetry Java agent loaded before and after Crypto Census: the application runs, the CBOM is complete and healthy, expected assets are present and attributed to the application |
 | `TomcatIT` | embedded Tomcat serving HTTPS with crypto in a servlet, with and without the OpenTelemetry agent: servlet crypto attributed to `doGet`, server-side TLS sessions attributed to Tomcat's connector via JSSE |
+| `AlternativeProviderIT` | real BCJSSE TLS 1.3 sockets complete with core-only and enriched agents; the application marker remains recorded, no SunJSSE handshake joins are invented, and `tls-other-providers` remains unavailable |
 | Maven Invoker ITs (`census-maven-plugin/src/it`) | `prepare-agent`/`check` in real Maven builds on that JDK, including the merged `cryptocensus:targets` |
 | `census-demo` | the plugin on itself |
 | Static analysis (JDK 21+ rows) | Spotless, Checkstyle, Error Prone, `javac -Werror`, PMD, CPD, SpotBugs/FindSecBugs, JaCoCo floors, Enforcer |
+
+The alternative-provider fixture uses test-only `bctls-jdk18on` 1.86.1 and
+`bcprov-jdk18on`/`bcutil-jdk18on` 1.86, pinned in the root POM. It establishes
+unsupported-correlation behavior, not a verified BCJSSE adapter or migration
+readiness. The fixture uses a generated test keystore and loopback sockets; no
+external TLS service is involved. The artifacts are published by
+[Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/);
+the TLS artifact was published on Maven Central on September 15, 2026, before
+the repository's two-week dependency-age cutoff for this change.
 
 The `App servers` job runs `./mvnw -B -ntp -P app-servers -pl census-app-servers -am verify`.
 `AppServerIT` deploys a WAR with a crypto servlet into each server container, enables the agent the
@@ -89,8 +115,9 @@ the container gracefully so shutdown hooks run, and asserts on the CBOM copied o
 container: zero health counters, no instrumentation gaps, servlet call-site attribution. Without
 Docker the test class is skipped locally, and without `-P app-servers` the module is not built at
 all, so local builds never need Docker. CI passes `-Dcensus.requireDocker=true`, which turns missing
-Docker into a failure, and then checks the Failsafe report: the gate fails unless both app-server
-tests ran and none was skipped.
+Docker into a failure, and then checks the Failsafe report: the gate fails unless the baseline and annotated tests ran for both servers (four cases total)
+and none was skipped. The annotated cases additionally verify per-deployment flow ownership,
+nested paths and post-exit unscoped counts.
 
 The early-access job runs `./mvnw -B -ntp verify -P '!quality'`: the static analyzers lag behind
 new JDKs and say nothing about whether the agent works.

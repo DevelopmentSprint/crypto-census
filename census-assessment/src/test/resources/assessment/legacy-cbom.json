@@ -1,0 +1,136 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "crypto:cipher:AES::GCM:NoPadding:256:encrypt@Synthetic",
+      "cryptoProperties": {
+        "algorithmProperties": {
+          "cryptoFunctions": [
+            "encrypt"
+          ],
+          "mode": "gcm",
+          "nistQuantumSecurityLevel": 5,
+          "padding": "raw",
+          "parameterSetIdentifier": "256",
+          "primitive": "ae"
+        },
+        "assetType": "algorithm"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "additionalContext": "count=1",
+            "line": 1,
+            "location": "example.Legacy",
+            "symbol": "encrypt"
+          }
+        ]
+      },
+      "name": "AES-256-GCM",
+      "properties": [
+        {
+          "name": "cryptocensus:risk",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "cryptocensus:reason",
+          "value": "AES-GCM with a 256-bit key (CNSA 2.0)"
+        },
+        {
+          "name": "cryptocensus:cnsa2",
+          "value": "true"
+        },
+        {
+          "name": "cryptocensus:count",
+          "value": "1"
+        },
+        {
+          "name": "cryptocensus:primitive",
+          "value": "CIPHER"
+        },
+        {
+          "name": "cryptocensus:algorithm",
+          "value": "AES"
+        },
+        {
+          "name": "cryptocensus:mode",
+          "value": "GCM"
+        },
+        {
+          "name": "cryptocensus:padding",
+          "value": "NoPadding"
+        },
+        {
+          "name": "cryptocensus:keySize",
+          "value": "256"
+        },
+        {
+          "name": "cryptocensus:provider",
+          "value": "Synthetic"
+        },
+        {
+          "name": "cryptocensus:operation",
+          "value": "ENCRYPT"
+        }
+      ],
+      "type": "cryptographic-asset"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "Synthetic contract fixture",
+      "type": "application"
+    },
+    "properties": [
+      {
+        "name": "cryptocensus:policy",
+        "value": "cryptocensus-default/6"
+      },
+      {
+        "name": "cryptocensus:drainTimedOut",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:dropped",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:overflowedSites",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:recordingFailures",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:runId",
+        "value": "22345678-1234-1234-1234-123456789abc"
+      },
+      {
+        "name": "cryptocensus:schema",
+        "value": "census-agent/1"
+      },
+      {
+        "name": "cryptocensus:transformErrors",
+        "value": "0"
+      },
+      {
+        "name": "cryptocensus:untrackedTypes",
+        "value": "0"
+      }
+    ],
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "name": "crypto-census",
+          "type": "application",
+          "version": "0.1.0"
+        }
+      ]
+    }
+  },
+  "serialNumber": "urn:uuid:22345678-1234-1234-1234-123456789abc",
+  "specVersion": "1.6",
+  "version": 1
+}

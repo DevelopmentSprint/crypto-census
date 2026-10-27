@@ -87,6 +87,11 @@ public final class Installer {
   // The class-file locator stays open for the JVM's lifetime: advice is resolved lazily on class
   // load.
   @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.CloseResource"})
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
+      justification =
+          "Byte Buddy 1.18.14 reset removes the supplied transformer and retransforms classes;"
+              + " verified by decorated-reset regression")
   public static void install(String args, Instrumentation inst, File agentJar) throws IOException {
     if (!INSTALLED.compareAndSet(false, true)) {
       System.err.println(
@@ -222,6 +227,33 @@ public final class Installer {
       return;
     }
 
+    if (config.enrichment) {
+      try {
+        AgentEnrichment.configure(config);
+        FlowInstrumentation.install(inst, locator);
+        Recorder.enableEnrichment();
+        if (config.tlsCorrelation) {
+          try {
+            TlsCollector.configure(AgentEnrichment::context, AgentEnrichment::diagnostic);
+            TlsInstrumentation.install(inst, locator);
+          } catch (Throwable failed) {
+            AgentEnrichment.diagnostic(
+                com.developmentsprint.cryptocensus.core.EvidenceDocument.Counter.TRANSFORM_ERRORS);
+            System.getLogger(Installer.class.getName())
+                .log(
+                    System.Logger.Level.WARNING,
+                    "Optional TLS correlation unavailable; core inventory remains enabled");
+          }
+        }
+      } catch (Throwable failure) {
+        AgentEnrichment.diagnostic(
+            com.developmentsprint.cryptocensus.core.EvidenceDocument.Counter.ANNOTATION_ERRORS);
+        System.getLogger(Installer.class.getName())
+            .log(
+                System.Logger.Level.WARNING,
+                "Optional annotation enrichment unavailable; core inventory remains enabled");
+      }
+    }
     Recorder.enable();
     Runtime.getRuntime()
         .addShutdownHook(new Thread(() -> shutdown(config, inst), "crypto-census-shutdown"));
@@ -325,6 +357,9 @@ public final class Installer {
       Thread.onSpinWait();
     }
     int stillRunning = Recorder.inFlight();
+    if (config.enrichment) {
+      AgentEnrichment.stop(stillRunning);
+    }
     Map<String, Targets.Status> targets = targetStatuses(config, inst);
     try {
       Inventory inventory = Recorder.inventory();
@@ -354,9 +389,24 @@ public final class Installer {
           String.valueOf(Boolean.getBoolean(OpenedClassReader.EXPERIMENTAL_PROPERTY)));
       props.put("cryptocensus:maxAssets", String.valueOf(config.maxAssets));
       props.put("cryptocensus:maxSites", String.valueOf(config.maxSites));
+      if (config.enrichment && AgentEnrichment.runId() != null) {
+        props.put(
+            com.developmentsprint.cryptocensus.core.EvidenceDocument.RUN_PROPERTY,
+            AgentEnrichment.runId());
+      }
       Cbom.Metadata metadata = new Cbom.Metadata(config.app, props);
       List<Inventory.Entry> snapshot = Cbom.boundedEntries(collected, dropped, metadata);
       Cbom.write(snapshot, dropped, metadata, config.output);
+      if (config.enrichment) {
+        try {
+          AgentEnrichment.publish(snapshot, 500);
+        } catch (Throwable failed) {
+          System.getLogger(Installer.class.getName())
+              .log(
+                  System.Logger.Level.WARNING,
+                  "Optional evidence publication unavailable; core CBOM was written");
+        }
+      }
       if (config.summary) {
         System.err.print(Report.text(snapshot, dropped));
         System.err.println(PREFIX + "CBOM written to " + config.output.toAbsolutePath());

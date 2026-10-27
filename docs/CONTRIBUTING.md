@@ -10,12 +10,14 @@ Modules:
   output is validated against the official CycloneDX 1.6 schema in tests.
 - `census-agent`: the `-javaagent` (shaded jar), with integration tests that run real JVMs, including
   the conformance tests with the OpenTelemetry Java agent and embedded Tomcat.
+- `census-annotations`: passive Java flow and protection declarations.
+- `census-assessment`: canonical context reconciliation, advisory policy and offline report assets.
 - `census-delivery`: evidence validation, SBOM preparation, delivery profiles and adapters, shared
   HTTPS transport, and private delivery receipts. It depends on core and stays outside the agent.
   Test fixtures generate temporary TLS identities.
 - `census-cli`: standalone executable delivery JAR using the shared engine.
 - `census-maven-plugin`: `prepare-agent` and `check` lifecycle integration; explicit `report` and
-  `enforce` goals for sealed CI evidence; explicit `publish` and profile-based `delivery` goals.
+  `enforce` goals for sealed CI evidence; explicit `publish` and profile-based `delivery` goals; saved-input `assess` and managed `context-apply` goals.
   Maven Invoker tests exercise argument composition, odd paths, missing data, and failure modes.
 - `census-demo`: a toy payments service that runs the plugin on itself.
 - `census-app-servers`: Open Liberty and WildFly in containers; only with `-P app-servers` (needs
@@ -95,3 +97,7 @@ This command requests a full CI run on the current `develop` source. Successful 
 Update the policy version whenever verdicts change and document the behavior in [CHANGELOG.md](../CHANGELOG.md). Keep Maven parameter documentation aligned with the plugin descriptor, and keep the marked README quickstart aligned with its executable Invoker fixture. Add focused regression coverage for behavior changes without weakening existing coverage floors or [conformance gates](CONFORMANCE.md#the-ratchet-rule).
 
 Report ordinary bugs through repository issues with a minimal reproduction, JDK/vendor, Census version, command and sanitized error output. Use [SECURITY.md](../SECURITY.md) for vulnerabilities. Do not attach an unreviewed CBOM or credentials to public issues.
+
+The self-contained report also has [real-browser checks](../census-assessment/src/test/browser/README.md).
+Use synthetic fixtures for UI and contract work. Preserve shared Java policy/revision logic;
+browser controls propose edits, never authoritative findings or hashes.

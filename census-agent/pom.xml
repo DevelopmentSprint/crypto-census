@@ -32,6 +32,11 @@
     <dependencies>
         <dependency>
             <groupId>com.developmentsprint</groupId>
+            <artifactId>census-assessment</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
             <artifactId>census-core</artifactId>
         </dependency>
         <dependency>
@@ -39,6 +44,11 @@
             <artifactId>byte-buddy</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.developmentsprint</groupId>
+            <artifactId>census-annotations</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -54,6 +64,24 @@
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
             <version>${tomcat.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bctls-jdk18on</artifactId>
+            <version>${bouncycastle.tls.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcutil-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -236,6 +264,10 @@
                                         <exclude>**/Installer$*.class</exclude>
                                         <exclude>**/Advices.class</exclude>
                                         <exclude>**/Advices$*.class</exclude>
+                                        <!-- Inlined TLS hooks are measured by the shaded child-JVM gate. -->
+                                        <exclude>**/FlowInstrumentation*.class</exclude>
+                                        <exclude>**/TlsInstrumentation*.class</exclude>
+                                        <exclude>**/TlsAdvices*.class</exclude>
                                     </excludes>
                                 </configuration>
                             </execution>
