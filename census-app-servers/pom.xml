@@ -26,6 +26,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.developmentsprint</groupId>
+            <artifactId>census-annotations</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <!-- built first in the reactor; copied to target/it-agents, never on the test class path -->
             <groupId>com.developmentsprint</groupId>
             <artifactId>census-agent</artifactId>

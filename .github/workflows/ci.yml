@@ -132,15 +132,17 @@ jobs:
           cache: maven
       - name: Conformance in Open Liberty and WildFly
         run: ./mvnw -B -ntp -P app-servers -pl census-app-servers -am verify -Dcensus.requireDocker=true
-      # A gate must not pass by not running: both app-server tests executed, none skipped.
+      # All baseline and annotated app-server cases must execute without skips or failures.
       - name: Require that every app-server test ran
         run: |
-          report=census-app-servers/target/failsafe-reports/TEST-com.developmentsprint.cryptocensus.appservers.AppServerIT.xml
-          if ! grep -q 'tests="2"' "$report" || ! grep -q 'skipped="0"' "$report"; then
-            echo "::error::AppServerIT did not run both app-server tests"
-            head -3 "$report" || true
-            exit 1
-          fi
+          for suite in AppServerIT AnnotatedAppServerIT; do
+            report="census-app-servers/target/failsafe-reports/TEST-com.developmentsprint.cryptocensus.appservers.${suite}.xml"
+            if ! grep -q 'tests="2"' "$report" || ! grep -q 'skipped="0"' "$report" || ! grep -q 'failures="0"' "$report" || ! grep -q 'errors="0"' "$report"; then
+              echo "::error::${suite} did not pass both required app-server tests"
+              head -3 "$report" || true
+              exit 1
+            fi
+          done
 
   # Early warning, not a gate: the next JDK's early-access build. Expected to fail when it moves
   # past the class file version the bundled Byte Buddy knows (AgentIT then also checks that the
