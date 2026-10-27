@@ -151,10 +151,19 @@ public final class TlsProbeWorkload {
 
   private static void engineConnection(
       SSLContext context, ExecutorService tasks, CountDownLatch ready) throws Exception {
-    SSLEngine client = context.createSSLEngine("localhost", 443);
+    engineConnection(context, context, tasks, ready);
+  }
+
+  static void engineConnection(
+      SSLContext serverContext,
+      SSLContext clientContext,
+      ExecutorService tasks,
+      CountDownLatch ready)
+      throws Exception {
+    SSLEngine client = clientContext.createSSLEngine("localhost", 443);
     client.setUseClientMode(true);
     client.setEnabledProtocols(new String[] {protocol()});
-    SSLEngine server = context.createSSLEngine();
+    SSLEngine server = serverContext.createSSLEngine();
     server.setUseClientMode(false);
     server.setEnabledProtocols(new String[] {protocol()});
     final ByteBuffer toServer = ByteBuffer.allocate(65_536);
