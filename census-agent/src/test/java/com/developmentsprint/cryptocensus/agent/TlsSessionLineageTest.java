@@ -2,6 +2,7 @@ package com.developmentsprint.cryptocensus.agent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.ref.Reference;
 import org.junit.jupiter.api.Test;
 
 class TlsSessionLineageTest {
@@ -30,10 +31,16 @@ class TlsSessionLineageTest {
     TlsSessionLineage<String> lineage = new TlsSessionLineage<>(2);
     Object first = new Object();
     Object second = new Object();
-    assertThat(lineage.derived(first, second)).isTrue();
-    assertThat(lineage.derived(second, first)).isTrue();
-    assertThat(lineage.origin(first)).isNull();
-    assertThat(lineage.completed(new Object(), "overflow")).isFalse();
-    assertThat(lineage.origin(new Object())).isNull();
+    try {
+      assertThat(lineage.derived(first, second)).isTrue();
+      assertThat(lineage.derived(second, first)).isTrue();
+      assertThat(lineage.origin(first)).isNull();
+      assertThat(lineage.completed(new Object(), "overflow")).isFalse();
+      assertThat(lineage.origin(new Object())).isNull();
+    } finally {
+      // Capacity is defined by live keys; retain both occupied slots through the assertions.
+      Reference.reachabilityFence(first);
+      Reference.reachabilityFence(second);
+    }
   }
 }

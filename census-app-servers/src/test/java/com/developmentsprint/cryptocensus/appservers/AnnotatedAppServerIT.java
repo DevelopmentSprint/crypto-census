@@ -122,6 +122,12 @@ class AnnotatedAppServerIT {
   private static EvidenceDocument exercise(GenericContainer<?> server, int port, String name)
       throws Exception {
     server.start();
+    // Deployment logs can precede HTTP readiness; probe the root without exercising crypto.
+    Wait.forHttp("/")
+        .forPort(port)
+        .forStatusCodeMatching(status -> status == 200 || status == 404)
+        .withStartupTimeout(Duration.ofMinutes(3))
+        .waitUntilReady(server);
     for (String app : APPS) {
       HttpResponse<String> response =
           HttpClient.newHttpClient()
