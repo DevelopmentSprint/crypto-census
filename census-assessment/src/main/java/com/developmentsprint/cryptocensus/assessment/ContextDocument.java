@@ -131,7 +131,11 @@ public record ContextDocument(
       }
       reviewer = ContextModel.text(reviewer, "reviewer", 256, false);
       reviewedAt = ContextModel.text(reviewedAt, "review time", 64, false);
-      Instant.parse(reviewedAt);
+      try {
+        Instant.parse(reviewedAt);
+      } catch (java.time.DateTimeException invalid) {
+        throw new IllegalArgumentException("Invalid resolution review timestamp", invalid);
+      }
     }
   }
 

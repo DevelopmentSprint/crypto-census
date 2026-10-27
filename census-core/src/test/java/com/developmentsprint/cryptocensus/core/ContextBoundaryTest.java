@@ -14,6 +14,21 @@ import org.junit.jupiter.api.io.TempDir;
 
 class ContextBoundaryTest {
   @Test
+  void invalidReviewTimeUsesTheValidationExceptionContract() {
+    assertThatThrownBy(
+            () ->
+                new ContextModel.Source(
+                    ContextModel.SourceKind.USER,
+                    "review",
+                    "a".repeat(64),
+                    "reviewer",
+                    "2026-10-27"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Invalid source review timestamp")
+        .hasCauseInstanceOf(java.time.DateTimeException.class);
+  }
+
+  @Test
   void canonicalJsonIsDeterministicAndStrict() {
     Map<String, Object> input = new java.util.LinkedHashMap<>();
     input.put("z", List.of((byte) 1, (short) 2, 3, 4L, "emoji 😀", true));

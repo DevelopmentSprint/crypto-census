@@ -38,6 +38,71 @@ class ContextWorkflowTest {
   }
 
   @Test
+  void unrelatedDefaultsDoNotInvalidateSpecificReviewButDecidingDefaultsDo() {
+    var field = ContextModel.Field.CLASSIFICATION;
+    var user = declaration(SUBJECT, field, "sensitive", "a");
+    var annotation =
+        new ContextModel.Declaration(
+            SUBJECT,
+            field,
+            "restricted",
+            source(ContextModel.SourceKind.ANNOTATION, "method", "b"));
+    var originalDefault = declaration(DEFAULT, field, "public", "c");
+    var changedDefault = declaration(DEFAULT, field, "internal", "d");
+    var review =
+        new ContextDocument.Resolution(
+            SUBJECT,
+            field,
+            "restricted",
+            List.of(ContextDocument.SourceRef.of(user), ContextDocument.SourceRef.of(annotation)),
+            "reviewer",
+            DATE);
+    for (List<ContextModel.Declaration> saved :
+        List.of(List.of(user), List.of(user, originalDefault), List.of(user, changedDefault))) {
+      var context = new ContextDocument(1, List.of(), saved, List.of(review), List.of());
+      var result = Reconciliation.resolve(SUBJECT, field, List.of(annotation), context);
+      assertThat(result.status()).isEqualTo(Reconciliation.Status.REVIEWED);
+      assertThat(result.value()).isEqualTo("restricted");
+      assertThat(result.sources()).containsAll(saved).contains(annotation);
+    }
+    var assumedReview =
+        new ContextDocument.Resolution(
+            SUBJECT,
+            field,
+            "public",
+            List.of(ContextDocument.SourceRef.of(originalDefault)),
+            "reviewer",
+            DATE);
+    var original =
+        new ContextDocument(
+            1, List.of(), List.of(originalDefault), List.of(assumedReview), List.of());
+    var changed =
+        new ContextDocument(
+            1, List.of(), List.of(changedDefault), List.of(assumedReview), List.of());
+    assertThat(Reconciliation.resolve(SUBJECT, field, List.of(), original).status())
+        .isEqualTo(Reconciliation.Status.APPLICATION_DEFAULT);
+    assertThat(Reconciliation.resolve(SUBJECT, field, List.of(), changed).status())
+        .isEqualTo(Reconciliation.Status.STALE_RESOLUTION);
+  }
+
+  @Test
+  void malformedResolutionTimestampFailsValidation() {
+    var declaration = declaration(SUBJECT, ContextModel.Field.CLASSIFICATION, "public", "a");
+    assertThatThrownBy(
+            () ->
+                new ContextDocument.Resolution(
+                    SUBJECT,
+                    declaration.field(),
+                    "public",
+                    List.of(ContextDocument.SourceRef.of(declaration)),
+                    "reviewer",
+                    "2026-10-27"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Invalid resolution review timestamp")
+        .hasCauseInstanceOf(java.time.DateTimeException.class);
+  }
+
+  @Test
   void identicalSavedAndObservedDeclarationsConsumeOneCombinedBudget() {
     List<ContextModel.Declaration> declarations =
         java.util.stream.IntStream.range(0, ContextModel.MAX_DECLARATIONS / 2 + 1)

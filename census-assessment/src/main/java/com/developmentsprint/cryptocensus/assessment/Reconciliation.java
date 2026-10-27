@@ -124,7 +124,7 @@ public final class Reconciliation {
             .orElse(null);
     if (resolution != null) {
       Set<ContextDocument.SourceRef> current = new HashSet<>();
-      applicable.forEach(value -> current.add(ContextDocument.SourceRef.of(value)));
+      candidates.forEach(value -> current.add(ContextDocument.SourceRef.of(value)));
       if (!new HashSet<>(resolution.sources()).containsAll(current)) {
         return new Result(subject, field, Status.STALE_RESOLUTION, "", applicable);
       }
