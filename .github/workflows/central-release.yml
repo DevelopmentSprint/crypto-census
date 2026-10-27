@@ -78,7 +78,7 @@ jobs:
           python3 scripts/release/central.py preflight \
             --expected-sha "$EXPECTED_SHA" --ci-run "$CI_RUN" \
             --dependency-run "$DEPENDENCY_RUN" --output "$RUNNER_TEMP/release-preflight.json"
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '25'
