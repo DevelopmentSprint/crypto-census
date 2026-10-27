@@ -46,6 +46,74 @@ class PriorityRulesTest {
             "RSA/ECB/OAEPWithSHA-256AndMGF1Padding", bits, "SunJCE", Operation.ENCRYPT));
   }
 
+  private static Reconciliation.Result purposeConflict(String... values) {
+    List<ContextModel.Declaration> declarations =
+        java.util.Arrays.stream(values)
+            .map(
+                value ->
+                    new ContextModel.Declaration(
+                        SUBJECT,
+                        ContextModel.Field.PURPOSE,
+                        value,
+                        new ContextModel.Source(
+                            ContextModel.SourceKind.ANNOTATION,
+                            "example.Flow#" + value,
+                            "a".repeat(64),
+                            "",
+                            "")))
+            .toList();
+    return new Reconciliation.Result(
+        SUBJECT, ContextModel.Field.PURPOSE, Reconciliation.Status.CONFLICT, "", declarations);
+  }
+
+  @Test
+  void compatiblePurposeConflictsPreserveUrgencyButContradictoryCandidatesRequireReview() {
+    Map<ContextModel.Field, Reconciliation.Result> context = new EnumMap<>(confidential());
+    context.put(ContextModel.Field.PURPOSE, purposeConflict("TRANSPORT", "STORAGE"));
+    PriorityRules.Decision compatible =
+        PriorityRules.evaluate(rsa(2048), context, true, true, PROFILE);
+    assertThat(compatible.businessPriority()).isEqualTo(PriorityRules.Priority.URGENT_PLANNING);
+    assertThat(compatible.incomplete()).isTrue();
+    assertThat(compatible.reasons()).contains("NON_APPLICABLE_DECLARATION_REVIEW_REQUIRED");
+    context.put(ContextModel.Field.PURPOSE, purposeConflict("TRANSPORT", "SIGNING"));
+    PriorityRules.Decision contradiction =
+        PriorityRules.evaluate(rsa(2048), context, true, true, PROFILE);
+    assertThat(contradiction.businessPriority()).isEqualTo(PriorityRules.Priority.NEEDS_CONTEXT);
+    assertThat(contradiction.reasons())
+        .contains("LONG_LIVED_SENSITIVE_CONFIDENTIALITY", "POSITIVE_FINDING_UNRESOLVED");
+    TechnicalFacts signature =
+        POLICY.facts(
+            CryptoAsset.of(Primitive.SIGNATURE, "SHA256withRSA", 2048, "provider", Operation.SIGN));
+    context = new EnumMap<>(fields(Map.of(ContextModel.Field.IMPACT, "high")));
+    context.put(ContextModel.Field.PURPOSE, purposeConflict("SIGNING", "VERIFICATION"));
+    assertThat(PriorityRules.evaluate(signature, context, true, true, PROFILE).businessPriority())
+        .isEqualTo(PriorityRules.Priority.URGENT_PLANNING);
+  }
+
+  @Test
+  void applicableConflictPreservesIndependentlyEstablishedUrgencyAsUnresolved() {
+    TechnicalFacts signature =
+        POLICY.facts(
+            CryptoAsset.of(Primitive.SIGNATURE, "SHA256withRSA", 2048, "provider", Operation.SIGN));
+    Map<ContextModel.Field, Reconciliation.Result> context =
+        new EnumMap<>(fields(Map.of(ContextModel.Field.IMPACT, "high")));
+    context.put(
+        ContextModel.Field.AUTHENTICITY_YEARS,
+        new Reconciliation.Result(
+            SUBJECT,
+            ContextModel.Field.AUTHENTICITY_YEARS,
+            Reconciliation.Status.CONFLICT,
+            "",
+            List.of()));
+    PriorityRules.Decision result = PriorityRules.evaluate(signature, context, true, true, PROFILE);
+    assertThat(result.businessPriority()).isEqualTo(PriorityRules.Priority.NEEDS_CONTEXT);
+    assertThat(result.reasons())
+        .contains("LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY", "POSITIVE_FINDING_UNRESOLVED");
+    context.remove(ContextModel.Field.IMPACT);
+    assertThat(PriorityRules.evaluate(signature, context, true, true, PROFILE).reasons())
+        .doesNotContain("LONG_LIVED_OR_HIGH_IMPACT_AUTHENTICITY", "POSITIVE_FINDING_UNRESOLVED");
+  }
+
   @Test
   void unrelatedConflictsRetainUrgencyAndRemainIncomplete() {
     for (ContextModel.Field field :
