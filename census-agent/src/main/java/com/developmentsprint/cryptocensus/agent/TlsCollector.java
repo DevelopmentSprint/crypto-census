@@ -49,7 +49,7 @@ public final class TlsCollector {
   private static Supplier<ScopeContext> contexts;
   private static Consumer<Counter> counters;
   private static LongSupplier clock = System::nanoTime;
-  private static boolean enabled;
+  private static volatile boolean enabled;
   private static long nextConnection;
   private static long recordingFailures;
 
@@ -466,6 +466,11 @@ public final class TlsCollector {
     } finally {
       LOCK.unlock();
     }
+  }
+
+  /** Stops new callbacks without acquiring collector locks or delaying the core CBOM writer. */
+  public static void stopAdmission() {
+    enabled = false;
   }
 
   /** Stops admission and finalizes unfinished attempts without waiting for application threads. */

@@ -278,6 +278,44 @@ class TlsCollectorTest {
     assertThat(TlsCollector.recordingFailures()).isEqualTo(1);
   }
 
+  @Test
+  void admissionCanStopWhileAnAlreadyAdmittedCaptureHoldsTheCollectorLock() throws Exception {
+    java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(1);
+    java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+    java.util.concurrent.ExecutorService workers =
+        java.util.concurrent.Executors.newFixedThreadPool(2);
+    TlsCollector.configure(
+        () -> {
+          entered.countDown();
+          try {
+            if (!release.await(5, TimeUnit.SECONDS)) {
+              throw new IllegalStateException("capture release timeout");
+            }
+          } catch (InterruptedException failure) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(failure);
+          }
+          return context.get();
+        },
+        counter -> health.merge(counter, 1L, Long::sum));
+    TlsCollector.enable();
+    FakeHandshake pending = handshake();
+    try {
+      final var capture = workers.submit(() -> TlsCollector.created(pending));
+      assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
+      workers.submit(TlsCollector::stopAdmission).get(1, TimeUnit.SECONDS);
+      release.countDown();
+      capture.get(5, TimeUnit.SECONDS);
+      TlsCollector.created(handshake());
+      assertThat(TlsCollector.enter(pending)).isNull();
+      TlsCollector.close();
+      assertThat(TlsCollector.snapshot()).hasSize(1);
+    } finally {
+      release.countDown();
+      workers.shutdownNow();
+    }
+  }
+
   private static FakeHandshake handshake() {
     FakeHandshake handshake = new FakeHandshake();
     handshake.conContext.handshakeContext = handshake;
