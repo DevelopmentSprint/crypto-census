@@ -146,9 +146,38 @@ class AssessmentInputsTest {
             () ->
                 AssessmentInputs.load(
                     List.of(
-                        new AssessmentInputs.Input(first, null, "a", "a"),
+                        new AssessmentInputs.Input(
+                            first, "bad".getBytes(StandardCharsets.UTF_8), "a", "a"),
                         new AssessmentInputs.Input(first, evidence(first), "b", "b"))))
         .hasMessageContaining("Conflicting documents");
+  }
+
+  @Test
+  void pairedAndMissingCopiesDeduplicateWithoutLosingTrustedEvidenceOrReadFailures() {
+    byte[] bytes = cbom(NONCE, true);
+    byte[] sidecar = evidence(bytes);
+    var paired = new AssessmentInputs.Input(bytes, sidecar, "paired", "test");
+    var missing = new AssessmentInputs.Input(bytes, null, "copy", "staging");
+    var first = AssessmentInputs.load(List.of(paired, missing));
+    assertThat(first).isEqualTo(AssessmentInputs.load(List.of(missing, paired)));
+    assertThat(first).hasSize(1);
+    assertThat(first.get(0).evidence()).isNotNull();
+    assertThat(first.get(0).evidenceHash()).isEqualTo(CanonicalJson.hash(sidecar));
+    assertThat(first.get(0).gaps()).isEmpty();
+    assertThat(first.get(0).workloads()).containsExactly("copy", "paired");
+    var unreadable = AssessmentInputs.unreadableEvidence(bytes, "unreadable", "test");
+    var withFailure = AssessmentInputs.load(List.of(missing, paired, unreadable));
+    assertThat(withFailure).isEqualTo(AssessmentInputs.load(List.of(unreadable, paired, missing)));
+    assertThat(withFailure.get(0).gaps()).containsExactly("SIDECAR_UNREADABLE");
+    assertThat(withFailure.get(0).evidence()).isNotNull();
+    var invalid =
+        new AssessmentInputs.Input(
+            bytes, "invalid".getBytes(StandardCharsets.UTF_8), "bad", "test");
+    var noValid = AssessmentInputs.load(List.of(missing, invalid));
+    assertThat(noValid).isEqualTo(AssessmentInputs.load(List.of(invalid, missing)));
+    assertThat(noValid.get(0).evidence()).isNull();
+    assertThat(noValid.get(0).gaps())
+        .contains("INVALID_OR_MISMATCHED_SIDECAR", "EXPECTED_SIDECAR_MISSING");
   }
 
   @Test

@@ -39,18 +39,19 @@ public final class GuidedReportFixture {
       }
       context = merged.document();
     }
-    AssessmentReport report =
-        AssessmentEngine.assess(
-            List.of(
+    List<AssessmentInputs.Input> inputs =
+        args.length > 2 && args[2].equals("revision-conflict")
+            ? List.of(
+                input(false, false, false, false, "a"), input(false, false, false, false, "b"))
+            : List.of(
                 input(
                     args.length > 2 && args[2].equals("unresolved"),
                     args.length > 2 && args[2].equals("lost"),
                     args.length > 2
                         && (args[2].equals("ambiguous-deployment")
                             || args[2].equals("mixed-deployment")),
-                    args.length > 2 && args[2].equals("mixed-deployment"))),
-            context,
-            PolicyProfile.defaults());
+                    args.length > 2 && args[2].equals("mixed-deployment")));
+    AssessmentReport report = AssessmentEngine.assess(inputs, context, PolicyProfile.defaults());
     report.write(directory.resolve("assessment.json"));
     GuidedReport.write(report, directory.resolve("assessment.html"));
     DocumentFiles.write(directory.resolve("context.json"), ContextCodec.encode(context));
@@ -77,6 +78,12 @@ public final class GuidedReportFixture {
 
   private static AssessmentInputs.Input input(
       boolean unresolved, boolean lost, boolean ambiguous, boolean explicitPeer) {
+    return input(unresolved, lost, ambiguous, explicitPeer, "a");
+  }
+
+  private static AssessmentInputs.Input input(
+      boolean unresolved, boolean lost, boolean ambiguous, boolean explicitPeer, String revision) {
+    String nonce = revision.equals("a") ? NONCE : "22345678-1234-1234-1234-123456789abc";
     CryptoAsset asset =
         CryptoAsset.cipher(
             "RSA/ECB/OAEPWithSHA-256AndMGF1Padding", 2048, "SunJCE", Operation.ENCRYPT);
@@ -87,7 +94,7 @@ public final class GuidedReportFixture {
     Inventory inventory = new Inventory();
     inventory.add(asset, site, 3);
     Map<String, String> properties = new TreeMap<>();
-    properties.put(EvidenceDocument.RUN_PROPERTY, NONCE);
+    properties.put(EvidenceDocument.RUN_PROPERTY, nonce);
     properties.put(Cbom.SCHEMA_PROPERTY, Cbom.AGENT_SCHEMA);
     Cbom.HEALTH_PROPERTIES.forEach(key -> properties.put(key, "0"));
     byte[] cbom =
@@ -95,7 +102,7 @@ public final class GuidedReportFixture {
             .getBytes(StandardCharsets.UTF_8);
     Map<String, Object> deterministic =
         new TreeMap<>(CanonicalJson.object(CanonicalJson.decode(cbom)));
-    deterministic.put("serialNumber", "urn:uuid:" + NONCE);
+    deterministic.put("serialNumber", "urn:uuid:" + nonce);
     Map<String, Object> metadata =
         new TreeMap<>(CanonicalJson.object(deterministic.get("metadata")));
     metadata.put("timestamp", "2026-10-26T00:00:00Z");
@@ -103,14 +110,21 @@ public final class GuidedReportFixture {
     cbom = CanonicalJson.encode(deterministic);
     ContextModel.Source source =
         new ContextModel.Source(
-            ContextModel.SourceKind.ANNOTATION, "example.Annotated#save", "a".repeat(64), "", "");
+            ContextModel.SourceKind.ANNOTATION,
+            "example.Annotated#save",
+            revision.repeat(64),
+            "",
+            "");
     ContextModel.FlowDefinition flow =
         new ContextModel.FlowDefinition(
             SUBJECT,
             HOSTILE,
             List.of(
                 new ContextModel.Declaration(
-                    SUBJECT, ContextModel.Field.CONFIDENTIALITY_YEARS, "20", source),
+                    SUBJECT,
+                    ContextModel.Field.CONFIDENTIALITY_YEARS,
+                    revision.equals("a") ? "20" : "30",
+                    source),
                 new ContextModel.Declaration(
                     SUBJECT, ContextModel.Field.CLASSIFICATION, "sensitive", source)),
             List.of());
@@ -167,7 +181,7 @@ public final class GuidedReportFixture {
     EvidenceDocument evidence =
         new EvidenceDocument(
             1,
-            NONCE,
+            nonce,
             CanonicalJson.hash(cbom),
             unresolved ? List.of() : List.of(new EvidenceDocument.DiscoveredFlow("identity", flow)),
             observations,

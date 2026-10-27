@@ -115,8 +115,23 @@ public final class AssessmentInputs {
         runs.put(run.id(), run);
       } else {
         if (!previous.cbomHash().equals(run.cbomHash())
-            || !previous.evidenceHash().equals(run.evidenceHash())) {
+            || (!previous.evidenceHash().isEmpty()
+                && !run.evidenceHash().isEmpty()
+                && !previous.evidenceHash().equals(run.evidenceHash()))) {
           throw new IllegalArgumentException("Conflicting documents reuse a run identity");
+        }
+        Run preferred = previous.evidenceHash().isEmpty() ? run : previous;
+        List<String> mergedGaps = union(previous.gaps(), run.gaps());
+        if (preferred.evidence() != null) {
+          // A validated duplicate supplies the missing relationship evidence. Preserve other
+          // discovery failures (for example unreadable copies), but not a contradictory absence.
+          mergedGaps =
+              mergedGaps.stream()
+                  .filter(
+                      gap ->
+                          !"EXPECTED_SIDECAR_MISSING".equals(gap)
+                              && !"NO_FLOW_OR_CORRELATION_EVIDENCE".equals(gap))
+                  .toList();
         }
         runs.put(
             run.id(),
@@ -124,12 +139,12 @@ public final class AssessmentInputs {
                 run.id(),
                 run.nonce(),
                 run.cbomHash(),
-                run.evidenceHash(),
-                run.entries(),
-                run.metadata(),
-                run.coreHealth(),
-                run.evidence(),
-                union(previous.gaps(), run.gaps()),
+                preferred.evidenceHash(),
+                preferred.entries(),
+                preferred.metadata(),
+                preferred.coreHealth(),
+                preferred.evidence(),
+                mergedGaps,
                 union(previous.workloads(), run.workloads()),
                 union(previous.environments(), run.environments())));
       }

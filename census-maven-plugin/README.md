@@ -82,3 +82,17 @@ missing-context findings; explicitly naming a missing or malformed context file 
 of silently ignoring it. Both output targets are checked before publication and cannot replace an existing context,
 policy, or explicitly selected evidence input, including aliases. Each output is atomically
 replaced; a publication error fails the goal and the two files are not a cross-file transaction.
+
+### Assessment input budget
+
+Each assessment accepts at most **64 selected CBOM file paths**, with up to **64 MiB total
+CBOM plus sidecar bytes**. Sidecars do not count as separate CBOM inputs. Repeated selection
+of the same physical path is collapsed, but copied paths count against the file budget before
+logical run deduplication. The same limits apply to `check -Dcensus.assessment=true` and
+`assess`; a module with more than 64 reporting forks (for example `reuseForks=false`) can
+exceed the limit. An assessment failure fails the requested goal even when cryptographic gates
+pass; if gates also fail, their failure remains primary.
+
+Use bounded, explicitly selected workload groups for separate reports and retain their coverage
+labels. Do not silently omit forks or present a partial selection as complete. This limit does
+not change ordinary CBOM collection/check behavior when assessment is disabled.

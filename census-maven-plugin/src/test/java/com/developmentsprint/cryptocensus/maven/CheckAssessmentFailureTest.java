@@ -55,5 +55,36 @@ class CheckAssessmentFailureTest {
     assertThatThrownBy(mojo::execute)
         .isInstanceOf(MojoExecutionException.class)
         .hasMessageContaining("Could not generate");
+
+    Path invalidContext = directory.resolve("invalid-time.json");
+    Files.writeString(
+        invalidContext,
+        """
+        {"schemaVersion":1,"flows":[],"resolutions":[],"readiness":[],"declarations":[{
+          "subject":{"applicationId":"test","flowId":"archive"},"field":"OWNER","value":"team",
+          "source":{"kind":"USER","id":"review","revision":"%s","reviewer":"reviewer","reviewedAt":"2026-10-27"}
+        }]}
+        """
+            .formatted("a".repeat(64)));
+    ContextApplyMojoTest.set(mojo, "contextFile", invalidContext.toFile());
+    ContextApplyMojoTest.set(mojo, "failOn", "broken");
+    assertThatThrownBy(mojo::execute)
+        .isInstanceOf(MojoFailureException.class)
+        .hasMessageContaining("MD5")
+        .hasMessageContaining("Could not generate")
+        .satisfies(
+            failure ->
+                org.assertj.core.api.Assertions.assertThat(failure.getSuppressed())
+                    .singleElement()
+                    .isInstanceOf(MojoExecutionException.class)
+                    .satisfies(
+                        reportFailure ->
+                            org.assertj.core.api.Assertions.assertThat(reportFailure.getCause())
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("review timestamp")));
+    ContextApplyMojoTest.set(mojo, "failOn", "none");
+    assertThatThrownBy(mojo::execute)
+        .isInstanceOf(MojoExecutionException.class)
+        .hasCauseInstanceOf(IllegalArgumentException.class);
   }
 }

@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.developmentsprint.cryptocensus.assessment.AssessmentInputs;
+import com.developmentsprint.cryptocensus.core.CanonicalJson;
 import com.developmentsprint.cryptocensus.core.Cbom;
+import com.developmentsprint.cryptocensus.core.EvidenceCodec;
+import com.developmentsprint.cryptocensus.core.EvidenceDocument;
 import com.developmentsprint.cryptocensus.core.Inventory;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,13 +31,63 @@ class ReportInputsTest {
     Files.writeString(temporary.resolve("cbom-first.evidence.json"), "{}");
     var changed = ReportInputs.read(List.of(temporary), "unit", "local");
     assertThat(changed).hasSize(2);
-    // Identical run identity with two distinct sidecars is rejected by the canonical loader.
-    assertThatThrownBy(() -> AssessmentInputs.load(changed))
+    // A missing duplicate cannot erase an invalid sidecar diagnostic.
+    assertThat(AssessmentInputs.load(changed))
+        .singleElement()
+        .satisfies(run -> assertThat(run.gaps()).contains("INVALID_OR_MISMATCHED_SIDECAR"));
+    Files.writeString(temporary.resolve("cbom-second.evidence.json"), "{different}");
+    assertThatThrownBy(
+            () -> AssessmentInputs.load(ReportInputs.read(List.of(temporary), "unit", "local")))
         .hasMessageContaining("Conflicting documents");
     Files.delete(temporary.resolve("cbom-second.json"));
     assertThat(AssessmentInputs.load(ReportInputs.read(List.of(temporary), "unit", "local")))
         .singleElement()
         .satisfies(run -> assertThat(run.gaps()).contains("INVALID_OR_MISMATCHED_SIDECAR"));
+  }
+
+  @Test
+  void copiedCbomWithoutSidecarRetainsOriginalValidatedPairInEitherDirectoryOrder()
+      throws Exception {
+    String nonce = "12345678-1234-1234-1234-123456789abc";
+    var properties = new java.util.TreeMap<String, String>();
+    properties.put(EvidenceDocument.RUN_PROPERTY, nonce);
+    properties.put(Cbom.SCHEMA_PROPERTY, Cbom.AGENT_SCHEMA);
+    Cbom.HEALTH_PROPERTIES.forEach(property -> properties.put(property, "0"));
+    byte[] cbom =
+        Cbom.toJson(new Inventory(), new Cbom.Metadata("test", properties))
+            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    byte[] sidecar =
+        EvidenceCodec.encode(
+            new EvidenceDocument(
+                1,
+                nonce,
+                CanonicalJson.hash(cbom),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                EvidenceDocument.zeroHealth()));
+    Path original = Files.createDirectory(temporary.resolve("original"));
+    Path copy = Files.createDirectory(temporary.resolve("copy"));
+    Files.write(original.resolve("cbom-one.json"), cbom);
+    Files.write(original.resolve("cbom-one.evidence.json"), sidecar);
+    Files.write(copy.resolve("cbom-one.json"), cbom);
+    var runs = AssessmentInputs.load(ReportInputs.read(List.of(original, copy), "unit", "local"));
+    assertThat(runs)
+        .isEqualTo(
+            AssessmentInputs.load(ReportInputs.read(List.of(copy, original), "unit", "local")));
+    assertThat(runs)
+        .singleElement()
+        .satisfies(
+            run -> {
+              assertThat(run.evidence()).isNotNull();
+              assertThat(run.evidenceHash()).isEqualTo(CanonicalJson.hash(sidecar));
+              assertThat(run.gaps()).isEmpty();
+            });
+    assertThat(Files.readAllBytes(original.resolve("cbom-one.json"))).isEqualTo(cbom);
+    assertThat(Files.readAllBytes(original.resolve("cbom-one.evidence.json"))).isEqualTo(sidecar);
+    assertThat(Files.readAllBytes(copy.resolve("cbom-one.json"))).isEqualTo(cbom);
   }
 
   @Test

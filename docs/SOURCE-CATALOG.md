@@ -22,11 +22,21 @@ selectors, not stable deployment identifiers; the separate declared
       "artifactId": "example:orders:1",
       "applicationId": "orders",
       "origin": "MAIN",
-      "deploymentId": "orders-production"
+      "deploymentId": "orders-production",
+      "qualification": "EXPLICIT_DEPLOYMENT"
     }
   ]
 }
 ```
+
+For a standalone agent, set `qualification` to `EXPLICIT_DEPLOYMENT` when the operator
+has established that deployment mapping. Merely naming `deploymentId` does not qualify
+ownership: an omitted qualification decodes as `UNSPECIFIED`, preserving compatibility
+without inventing authority. `GENERATED_BUILD` identifies build-produced artifact labels,
+which do not distinguish runtime deployments. Multiple eligible loaders for one application
+can therefore remain ambiguous until explicitly mapped. Maven treats entries supplied through its operator override catalog as explicit deployment
+mappings. Standalone catalog loading does not perform that upgrade: a standalone
+`GENERATED_BUILD` entry remains generated, not an operator qualification.
 
 Exact named-loader entries take precedence over wildcard entries. Within that
 choice, the longest matching location wins. A location ending in `/` is a

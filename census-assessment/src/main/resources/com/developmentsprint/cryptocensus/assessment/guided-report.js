@@ -239,14 +239,28 @@
     for (const conflict of conflicts) {
       const box = el('div', undefined, 'notice');
       append(box, el('h4', 'Review conflicting ' + conflict.field.toLowerCase().replaceAll('_', ' ')));
-      detail(box, 'Preserved sources and revisions', conflict);
+      const contexts = flow ? [
+        {context: 'Saved business context', fields: flow.savedContextFields},
+        ...flow.instances.map(instance => ({context: 'Observed context', runId: instance.runId, identityId: instance.identityId, fields: instance.fields}))
+      ] : [{context: 'Current context', fields: values}];
+      const participating = contexts.map(context => ({...context, field: context.fields.find(field => field.field === conflict.field)}))
+        .filter(context => context.field && context.field.sourceRefs.length)
+        .map(({fields, ...context}) => context);
+      const references = new Map();
+      participating.forEach(context => context.field.sourceRefs.forEach(reference => references.set(
+        JSON.stringify([reference.kind, reference.id, reference.revision, reference.declarationHash]), reference)));
+      const sourceRefs = Array.from(references.entries()).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, value]) => value);
+      box.append(el('p', `One reviewed value applies to all ${flow ? flow.instances.length : 0} observed contexts and saved context listed below, not only the selected instance.`));
+      detail(box, 'All participating contexts, sources and revisions', participating);
+      box.lastChild.open = true;
       const value = input(box, prefix + '-resolve-' + conflict.field, 'Reviewed value');
       box.append(button('Propose reviewed resolution', () => {
         const reviewer = document.getElementById('reviewer').value.trim();
+        if (!sourceRefs.length || sourceRefs.length > 256) { status('Review requires between 1 and 256 distinct source revisions; this source set cannot be exported as one resolution.'); return; }
         if (!reviewer || !value.value.trim()) { status('A reviewed value and reviewer are required.'); return; }
         propose('RESOLUTIONS', {subject: clone(subject), field: conflict.field, value: value.value.trim(),
-          sources: clone(conflict.sourceRefs), reviewer, reviewedAt: new Date().toISOString()});
-        clearControls([value.id]); status('Resolution proposed for these exact source revisions. Different deployment revisions may still require review.');
+          sources: clone(sourceRefs), reviewer, reviewedAt: new Date().toISOString()});
+        clearControls([value.id]); status('Resolution proposed for the listed source revisions across all observed contexts and saved context.');
       })); panel.append(box);
     }
     detail(panel, 'Effective values and all contributing sources', values);

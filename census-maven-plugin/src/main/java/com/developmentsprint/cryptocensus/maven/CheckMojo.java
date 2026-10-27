@@ -319,7 +319,7 @@ public class CheckMojo extends AbstractMojo {
             assessmentOutputDirectory.toPath(),
             workload,
             environment);
-      } catch (IOException | IllegalArgumentException e) {
+      } catch (IOException | IllegalArgumentException | java.time.DateTimeException e) {
         assessmentFailure =
             new MojoExecutionException(
                 "Could not generate the requested business-context assessment", e);

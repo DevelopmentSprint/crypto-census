@@ -143,3 +143,15 @@ broad upload globs; [operations guidance](OPERATIONS.md) describes retention and
 See the [exploratory measurements](ENRICHMENT-MEASUREMENTS.md) before interpreting runtime cost.
 They show substantial synthetic enrichment overhead and a full-capacity sidecar publication
 limit; these results support further testing and optimization, not production-suitability claims.
+
+## Input and output limits during reassessment
+
+An assessment accepts at most 64 selected CBOM file paths and 64 MiB of combined CBOM/sidecar
+input, before logical run deduplication. A module with more than 64 reporting JVM forks can
+therefore fail optional assessment even when its cryptographic gates pass. For larger workloads,
+assess explicitly selected bounded groups separately and preserve their coverage labels; never
+silently omit observations. See the [input budget](../census-maven-plugin/README.md#assessment-input-budget).
+
+A failed goal can leave the last successful output files in place. Consult the failure and rerun
+successfully before treating existing files as the latest assessment. JSON and HTML writes are
+individually atomic, not a transaction across the pair; their embedded assessment data must agree.

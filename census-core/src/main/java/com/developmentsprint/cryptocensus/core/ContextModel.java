@@ -121,7 +121,11 @@ public final class ContextModel {
       reviewer = text(reviewer, "reviewer", 256, true);
       reviewedAt = text(reviewedAt, "reviewedAt", 64, true);
       if (!reviewedAt.isEmpty()) {
-        Instant.parse(reviewedAt);
+        try {
+          Instant.parse(reviewedAt);
+        } catch (java.time.DateTimeException invalid) {
+          throw new IllegalArgumentException("Invalid source review timestamp", invalid);
+        }
       }
     }
   }

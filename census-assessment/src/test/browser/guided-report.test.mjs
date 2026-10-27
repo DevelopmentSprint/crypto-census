@@ -395,3 +395,30 @@ test('an explicitly mapped peer remains bindable beside ambiguous deployment own
   assert.ok(unresolved.every(finding => finding.gaps.includes('AMBIGUOUS_DEPLOYMENT_OWNERSHIP')));
   assert.deepEqual(after.runs.map(run => [run.cbomHash, run.evidenceHash]), report.runs.map(run => [run.cbomHash, run.evidenceHash]));
 });
+
+
+test('one visible review resolves all observed deployment revisions and saved context', async t => {
+  const {page, directory} = await fixture(t, 'revision-conflict');
+  const report = JSON.parse(await readFile(resolve(directory, 'assessment.json'), 'utf8'));
+  const flow = report.flows.find(flow => flow.subject.flowId === 'annotated');
+  assert.equal(flow.instances.length, 2);
+  assert.ok(flow.instances.every(instance => instance.fields.find(field => field.field === 'CONFIDENTIALITY_YEARS').status === 'CONFLICT'));
+  assert.match(await page.locator('#selection').textContent(), /all 2 observed contexts and saved context/);
+  const sourceDetails = page.getByText('All participating contexts, sources and revisions', {exact:true});
+  assert.equal(await sourceDetails.evaluate(node => node.parentElement.open), true);
+  for (const instance of flow.instances) assert.match(await sourceDetails.evaluate(node => node.parentElement.textContent), new RegExp(instance.runId));
+  await page.locator('#reviewer').fill('Synthetic reviewer');
+  await page.locator('#field-resolve-CONFIDENTIALITY_YEARS').fill('20');
+  await page.getByRole('button', {name:'Propose reviewed resolution', exact:true}).click();
+  const {path, value} = await exportChanges(page, directory);
+  assert.equal(value.edits[0].proposed.sources.length, 3, 'both annotation revisions plus shared user source, deduplicated');
+  generate(resolve(directory, 'resolved-all'), path, 'revision-conflict');
+  const after = JSON.parse(await readFile(resolve(directory, 'resolved-all/assessment.json'), 'utf8'));
+  const reviewed = after.flows.find(flow => flow.subject.flowId === 'annotated');
+  assert.ok(reviewed.instances.every(instance => {
+    const field = instance.fields.find(field => field.field === 'CONFIDENTIALITY_YEARS');
+    return field.status === 'REVIEWED' && field.value === '20';
+  }));
+  assert.equal(reviewed.savedContextFields.find(field => field.field === 'CONFIDENTIALITY_YEARS').status, 'REVIEWED');
+  assert.deepEqual(after.runs.map(run => [run.cbomHash, run.evidenceHash]), report.runs.map(run => [run.cbomHash, run.evidenceHash]));
+});
