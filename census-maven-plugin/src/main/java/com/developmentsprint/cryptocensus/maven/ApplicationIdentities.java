@@ -23,10 +23,19 @@ final class ApplicationIdentities {
   static Map<String, String> resolve(List<MavenProject> reactor, MavenSession session) {
     Map<String, String> result = new LinkedHashMap<>();
     for (MavenProject module : reactor) {
-      String artifact = module.getGroupId() + ":" + module.getArtifactId();
+      final String artifact = module.getGroupId() + ":" + module.getArtifactId();
       MavenSession isolated = session.clone();
       isolated.setCurrentProject(module);
       Plugin plugin = module.getPlugin("com.developmentsprint:census-maven-plugin");
+      if (plugin == null && module.getPluginManagement() != null) {
+        plugin =
+            module.getPluginManagement().getPlugins().stream()
+                .filter(
+                    candidate ->
+                        "com.developmentsprint:census-maven-plugin".equals(candidate.getKey()))
+                .findFirst()
+                .orElse(null);
+      }
       if (plugin == null) {
         plugin = new Plugin();
         plugin.setGroupId("com.developmentsprint");

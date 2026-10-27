@@ -64,6 +64,39 @@ class ApplicationIdentitiesTest {
         .hasMessageContaining("Unresolved application identity");
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // Maven 3 exposes only deprecated session constructors.
+  void managedOnlyConfigurationResolvesWithoutReplacingActivePlugin(@TempDir Path path) {
+    var library = SourceCatalogsTest.project("library", path.resolve("library"));
+    library.getProperties().setProperty("product.id", "managed-product");
+    var managed = new Plugin();
+    managed.setGroupId("com.developmentsprint");
+    managed.setArtifactId("census-maven-plugin");
+    managed.setConfiguration(configuration("${product.id}"));
+    var management = new org.apache.maven.model.PluginManagement();
+    management.addPlugin(managed);
+    library.getBuild().setPluginManagement(management);
+    var session =
+        new MavenSession(
+            null,
+            (org.eclipse.aether.RepositorySystemSession) null,
+            new DefaultMavenExecutionRequest(),
+            new DefaultMavenExecutionResult());
+    var reactor = List.of(library);
+    assertThat(library.getPlugin("com.developmentsprint:census-maven-plugin")).isNull();
+    assertThat(ApplicationIdentities.resolve(reactor, session))
+        .containsEntry("acme:library", "managed-product");
+    assertThat(library.getPlugin("com.developmentsprint:census-maven-plugin")).isNull();
+    var active = managed.clone();
+    active.setConfiguration(configuration("active-product"));
+    library.getBuild().addPlugin(active);
+    library.getBuild().flushPluginMap();
+    assertThat(ApplicationIdentities.resolve(reactor, session))
+        .containsEntry("acme:library", "active-product");
+    assertThat(((Xpp3Dom) managed.getConfiguration()).getChild("applicationId").getValue())
+        .isEqualTo("${product.id}");
+  }
+
   private static Xpp3Dom configuration(String value) {
     Xpp3Dom configuration = new Xpp3Dom("configuration");
     Xpp3Dom application = new Xpp3Dom("applicationId");
