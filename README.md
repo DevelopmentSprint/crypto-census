@@ -82,3 +82,5 @@ Production overhead benchmarks and sampling; periodic/on-demand flushing; additi
 ## License
 
 Copyright 2026 Development Sprint, LLC. [Apache License 2.0](LICENSE).
+
+Explicit artifact and deployment mappings, including named-loader selectors and local application-server URLs, are described in [source catalogs](docs/SOURCE-CATALOG.md).
