@@ -34,6 +34,12 @@ class AssessMojoTest {
     ContextApplyMojoTest.set(mojo, "environment", "local");
     mojo.execute();
     byte[] first = Files.readAllBytes(output.resolve("assessment.json"));
+    String html = Files.readString(output.resolve("assessment.html"));
+    String marker = "<script id=\"report-data\" type=\"application/json\">";
+    int start = html.indexOf(marker) + marker.length();
+    String embedded = html.substring(start, html.indexOf("</script>", start));
+    assertThat(CanonicalJson.decode(embedded.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+        .isEqualTo(CanonicalJson.decode(first));
     mojo.execute();
     assertThat(Files.readAllBytes(output.resolve("assessment.json"))).isEqualTo(first);
     assertThat(Files.getLastModifiedTime(cbom)).isEqualTo(before);
@@ -67,6 +73,43 @@ class AssessMojoTest {
                     List.of(), List.of(colliding), null, null, temporary, "tests", "local"))
         .hasMessageContaining("must not replace");
     assertThat(Files.readAllBytes(colliding)).isEqualTo(before);
+  }
+
+  @Test
+  @org.junit.jupiter.api.condition.EnabledOnOs({
+    org.junit.jupiter.api.condition.OS.LINUX,
+    org.junit.jupiter.api.condition.OS.MAC
+  })
+  void validatesBothOutputAliasesBeforePublishingEitherArtifact() throws Exception {
+    Path cbom = temporary.resolve("cbom-one.json");
+    Files.writeString(cbom, Cbom.toJson(new Inventory(), new Cbom.Metadata("test", Map.of())));
+    for (String kind : List.of("context", "policy", "evidence")) {
+      for (String suffix : List.of("json", "html")) {
+        Path directory = Files.createDirectory(temporary.resolve(kind + suffix));
+        Path alias =
+            Files.createSymbolicLink(temporary.resolve(kind + suffix + "-alias"), directory);
+        Path input = directory.resolve("assessment." + suffix);
+        byte[] bytes =
+            switch (kind) {
+              case "context" -> ContextCodec.encode(ContextDocument.empty());
+              case "policy" -> PolicyProfile.defaults().encode();
+              default -> Files.readAllBytes(cbom);
+            };
+        Files.write(input, bytes);
+        Path other = directory.resolve("assessment." + ("json".equals(suffix) ? "html" : "json"));
+        Files.writeString(other, "previous output");
+        java.io.File context = "context".equals(kind) ? input.toFile() : null;
+        java.io.File policy = "policy".equals(kind) ? input.toFile() : null;
+        List<Path> files = "evidence".equals(kind) ? List.of(input) : List.of(cbom);
+        assertThatThrownBy(
+                () ->
+                    ReportWorkflow.write(
+                        List.of(), files, context, policy, alias, "tests", "local"))
+            .hasMessageContaining("must not replace");
+        assertThat(Files.readAllBytes(input)).isEqualTo(bytes);
+        assertThat(Files.readString(other)).isEqualTo("previous output");
+      }
+    }
   }
 
   @Test
