@@ -1,0 +1,849 @@
+{
+  "capabilities": [
+    {
+      "detail": "synthetic",
+      "feature": "annotation-scopes",
+      "status": "SUPPORTED"
+    },
+    {
+      "detail": "synthetic",
+      "feature": "tls-sunjsse-1.3-correlation",
+      "status": "SUPPORTED"
+    }
+  ],
+  "cbomHash": "0428680441aa1422d90e6ce04c0936227e727a039120f390f0b4758ea26d43fc",
+  "flows": [
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "archive",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [
+          {
+            "field": "AUTHENTICITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:archive:AUTHENTICITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "ead90e8959809776ba142ca566cab08c8333dbd15bb0aeb665cc8b48046f97f0"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            },
+            "value": "10"
+          },
+          {
+            "field": "CLASSIFICATION",
+            "source": {
+              "id": "ANNOTATION:archive:CLASSIFICATION",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "26a31e9b1afabeeec0fadbec42248a7c629d1c880e2fe0dd5776988ed066f64f"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            },
+            "value": "sensitive"
+          },
+          {
+            "field": "CONFIDENTIALITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:archive:CONFIDENTIALITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "6a8e95316a68968ef0ff274b1e51af77e1b702dad473df3499994a38fbc526d9"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            },
+            "value": "20"
+          },
+          {
+            "field": "IMPACT",
+            "source": {
+              "id": "ANNOTATION:archive:IMPACT",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "ae2fbf1a676076d2d4ac967eab35e137e9e450dbfc317ddfefcc8b30edf8f00f"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            },
+            "value": "high"
+          }
+        ],
+        "label": "archive",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "archive"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    },
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "broad",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [],
+        "label": "broad",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "broad"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    },
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "conflict",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [
+          {
+            "field": "AUTHENTICITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:conflict:AUTHENTICITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "6632bd6abd7b9929f62f2304aa5bbef42e46b91aed90bdc93517a884e0ead34b"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "conflict"
+            },
+            "value": "10"
+          },
+          {
+            "field": "CLASSIFICATION",
+            "source": {
+              "id": "ANNOTATION:conflict:CLASSIFICATION",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "104a9e852eee967cfc1879372e40db2e7bbf5d935238d07e52bb555d5a36abea"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "conflict"
+            },
+            "value": "sensitive"
+          },
+          {
+            "field": "CONFIDENTIALITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:conflict:CONFIDENTIALITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "431ff55288ccb6b48cfca5e6ae306676d57a97205fad71ef73c2102d9d33c76d"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "conflict"
+            },
+            "value": "20"
+          },
+          {
+            "field": "IMPACT",
+            "source": {
+              "id": "ANNOTATION:conflict:IMPACT",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "cd800c62bcdd24d205cbd2c2a77a1924caa6bcf1319700bd37357c037cc4dd45"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "conflict"
+            },
+            "value": "high"
+          }
+        ],
+        "label": "conflict",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "conflict"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    },
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "dormant",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [
+          {
+            "field": "AUTHENTICITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:dormant:AUTHENTICITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "22a2cdfa4864c327a1eec2f3a5af896c1f1824901f6b52d9697641e408428799"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "dormant"
+            },
+            "value": "10"
+          },
+          {
+            "field": "CLASSIFICATION",
+            "source": {
+              "id": "ANNOTATION:dormant:CLASSIFICATION",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "064b32cece1dee88115aab123b0d0d6957e483862691c9e491fc6ae9aa4ca55a"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "dormant"
+            },
+            "value": "sensitive"
+          },
+          {
+            "field": "CONFIDENTIALITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:dormant:CONFIDENTIALITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "8ec33912d37013c08d0d4b35977d66c9a751e14f523f6118e3f66138442e8e18"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "dormant"
+            },
+            "value": "20"
+          },
+          {
+            "field": "IMPACT",
+            "source": {
+              "id": "ANNOTATION:dormant:IMPACT",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "85250cbeb95ca41bac3bd9ec02cf035f6402789512888214a6de3acc83a8d05d"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "dormant"
+            },
+            "value": "high"
+          }
+        ],
+        "label": "dormant",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "dormant"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    },
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "gateway",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [
+          {
+            "field": "CLASSIFICATION",
+            "source": {
+              "id": "ANNOTATION:gateway:CLASSIFICATION",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "c807388fb5b488ef8c52caf1cab1f8e6cd399f452d57ed3ef4f64ceb91c5c173"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "gateway"
+            },
+            "value": "internal"
+          },
+          {
+            "field": "CONFIDENTIALITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:gateway:CONFIDENTIALITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "e9a561518b9fe173a3621a5d010cb92a3cb42d5f87d93ee3b655d24131def85e"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "gateway"
+            },
+            "value": "1"
+          }
+        ],
+        "label": "gateway",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "gateway"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    },
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "helper",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [
+          {
+            "field": "CLASSIFICATION",
+            "source": {
+              "id": "ANNOTATION:helper:CLASSIFICATION",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "48803d5db4d6a69055d650eb56691933aa4f034dc48cc2b013dc341db8660d54"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "helper"
+            },
+            "value": "internal"
+          },
+          {
+            "field": "CONFIDENTIALITY_YEARS",
+            "source": {
+              "id": "ANNOTATION:helper:CONFIDENTIALITY_YEARS",
+              "kind": "ANNOTATION",
+              "reviewedAt": "",
+              "reviewer": "",
+              "revision": "2827afe90c79ef80125a80881e21693693f62221d393086bcca998f8a2ce22d0"
+            },
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "helper"
+            },
+            "value": "1"
+          }
+        ],
+        "label": "helper",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "helper"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    },
+    {
+      "definition": {
+        "bindings": [
+          {
+            "className": "example.Workload",
+            "descriptor": "()V",
+            "method": "imported",
+            "origin": "MAIN",
+            "sourceArtifact": "example:workload"
+          }
+        ],
+        "declarations": [],
+        "label": "imported",
+        "subject": {
+          "applicationId": "example:records",
+          "flowId": "imported"
+        }
+      },
+      "identityId": "synthetic-deployment"
+    }
+  ],
+  "handshakes": [
+    {
+      "adapter": "synthetic-adapter",
+      "attempt": 1,
+      "connectionId": "classical",
+      "diagnostics": [],
+      "initiation": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          }
+        ]
+      },
+      "negotiation": {
+        "cipherSuite": "TLS_AES_256_GCM_SHA384",
+        "localSignatureScheme": "",
+        "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+        "protocol": "TLSv1.3",
+        "selectedGroupId": 29,
+        "selectedGroupName": "x25519"
+      },
+      "outcome": "COMPLETED",
+      "relatedAssetRefs": [],
+      "resumption": {
+        "freshKeyExchange": "YES",
+        "pskOrigin": null,
+        "resumed": "NO"
+      },
+      "role": "CLIENT",
+      "transport": "SOCKET"
+    },
+    {
+      "adapter": "synthetic-adapter",
+      "attempt": 1,
+      "connectionId": "hybrid",
+      "diagnostics": [],
+      "initiation": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          }
+        ]
+      },
+      "negotiation": {
+        "cipherSuite": "TLS_AES_256_GCM_SHA384",
+        "localSignatureScheme": "",
+        "peerSignatureScheme": "ecdsa_secp256r1_sha256",
+        "protocol": "TLSv1.3",
+        "selectedGroupId": 4588,
+        "selectedGroupName": "X25519MLKEM768"
+      },
+      "outcome": "COMPLETED",
+      "relatedAssetRefs": [],
+      "resumption": {
+        "freshKeyExchange": "YES",
+        "pskOrigin": null,
+        "resumed": "NO"
+      },
+      "role": "CLIENT",
+      "transport": "SOCKET"
+    },
+    {
+      "adapter": "synthetic-adapter",
+      "attempt": 1,
+      "connectionId": "resumed",
+      "diagnostics": [],
+      "initiation": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          }
+        ]
+      },
+      "negotiation": {
+        "cipherSuite": "TLS_AES_256_GCM_SHA384",
+        "localSignatureScheme": "",
+        "peerSignatureScheme": "",
+        "protocol": "TLSv1.3",
+        "selectedGroupId": 4588,
+        "selectedGroupName": "X25519MLKEM768"
+      },
+      "outcome": "COMPLETED",
+      "relatedAssetRefs": [],
+      "resumption": {
+        "freshKeyExchange": "YES",
+        "pskOrigin": {
+          "attempt": 1,
+          "connectionId": "classical"
+        },
+        "resumed": "YES"
+      },
+      "role": "CLIENT",
+      "transport": "SOCKET"
+    }
+  ],
+  "health": {
+    "CONSERVATION_UNVERIFIED": 0,
+    "DRAIN_TIMEOUT": 0,
+    "DROPPED_BINDINGS": 0,
+    "DROPPED_FLOWS": 0,
+    "DROPPED_HANDSHAKES": 0,
+    "LOST_ATTRIBUTION": 0,
+    "OUTPUT_FAILURES": 0,
+    "RECORDING_FAILURES": 0,
+    "SATURATED_COUNTS": 0,
+    "SCOPE_INTEGRITY": 0,
+    "SCOPE_RESTORE_FAILURES": 0,
+    "TRANSFORM_ERRORS": 0
+  },
+  "identities": [
+    {
+      "applicationId": "example:records",
+      "deploymentId": "synthetic-release",
+      "id": "synthetic-deployment",
+      "loaderId": "loader-1",
+      "provenance": "source-catalog",
+      "sourceArtifact": "example:workload",
+      "status": "RESOLVED"
+    }
+  ],
+  "observations": [
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:1024:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          }
+        ]
+      },
+      "count": 2,
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "NO_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": []
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 30,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "NO_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": []
+      },
+      "count": 5,
+      "occurrence": {
+        "line": -1,
+        "location": "<overflow>",
+        "symbol": null,
+        "via": null
+      },
+      "projectFrame": {
+        "className": "<overflow>",
+        "descriptor": "",
+        "method": "unknown",
+        "origin": "UNKNOWN",
+        "sourceArtifact": ""
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          }
+        ]
+      },
+      "count": 3,
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          },
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "helper"
+            }
+          }
+        ]
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "archive"
+            }
+          },
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "helper"
+            }
+          }
+        ]
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 11,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "broad"
+            }
+          }
+        ]
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 20,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "conflict"
+            }
+          }
+        ]
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 20,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "gateway"
+            }
+          },
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "helper"
+            }
+          }
+        ]
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 10,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    },
+    {
+      "assetRef": "crypto:cipher:RSA::ECB:OAEPWithSHA-256AndMGF1Padding:2048:encrypt@Synthetic",
+      "context": {
+        "association": "SYNCHRONOUS_SCOPE",
+        "identityId": "synthetic-deployment",
+        "path": [
+          {
+            "identityId": "synthetic-deployment",
+            "subject": {
+              "applicationId": "example:records",
+              "flowId": "imported"
+            }
+          }
+        ]
+      },
+      "count": 1,
+      "occurrence": {
+        "line": 20,
+        "location": "example.Workload",
+        "symbol": "encrypt",
+        "via": null
+      },
+      "projectFrame": {
+        "className": "example.Workload",
+        "descriptor": "()V",
+        "method": "encrypt",
+        "origin": "MAIN",
+        "sourceArtifact": "example:workload"
+      }
+    }
+  ],
+  "runId": "12345678-1234-1234-1234-123456789abc",
+  "schemaVersion": 1
+}
