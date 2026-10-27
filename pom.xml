@@ -74,7 +74,7 @@
         <maven.plugin.tools.version>3.16.0</maven.plugin.tools.version>
 
         <!-- conformance tests (test scope only; see docs/CONFORMANCE.md) -->
-        <tomcat.version>11.0.26</tomcat.version>
+        <tomcat.version>11.0.27</tomcat.version>
         <bouncycastle.version>1.86</bouncycastle.version>
         <bouncycastle.tls.version>1.86.1</bouncycastle.tls.version>
         <opentelemetry-javaagent.version>2.31.1</opentelemetry-javaagent.version>
