@@ -26,3 +26,8 @@ assert new File(basedir, 'build.log').text.contains('merged from 2 JVMs')
 def report = new JsonSlurper().parse(new File(root, 'assessment/assessment.json'))
 assert report.runs.size() == 2
 assert report.runs.every { it.evidenceAccepted }
+
+def html = new File(root, 'assessment/assessment.html').text
+def embedded = html =~ /(?s)<script id="report-data" type="application\/json">(.*?)<\/script>/
+assert embedded.find()
+assert new JsonSlurper().parseText(embedded.group(1)) == report

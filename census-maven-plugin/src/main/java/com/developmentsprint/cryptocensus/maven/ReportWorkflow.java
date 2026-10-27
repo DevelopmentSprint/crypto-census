@@ -4,6 +4,7 @@ import com.developmentsprint.cryptocensus.assessment.AssessmentEngine;
 import com.developmentsprint.cryptocensus.assessment.AssessmentReport;
 import com.developmentsprint.cryptocensus.assessment.ContextCodec;
 import com.developmentsprint.cryptocensus.assessment.ContextDocument;
+import com.developmentsprint.cryptocensus.assessment.GuidedReport;
 import com.developmentsprint.cryptocensus.assessment.PolicyProfile;
 import com.developmentsprint.cryptocensus.core.DocumentFiles;
 import java.io.File;
@@ -46,12 +47,16 @@ final class ReportWorkflow {
         AssessmentEngine.assess(
             ReportInputs.read(inputs, files, workload, environment), contextDocument, profile);
     Path json = output.resolve("assessment.json");
-    protect(json, context);
-    protect(json, policy);
-    for (Path file : files) {
-      protect(json, file.toFile());
+    Path html = output.resolve("assessment.html");
+    for (Path target : List.of(json, html)) {
+      protect(target, context);
+      protect(target, policy);
+      for (Path file : files) {
+        protect(target, file.toFile());
+      }
     }
     report.write(json);
+    GuidedReport.write(report, html);
     return report;
   }
 

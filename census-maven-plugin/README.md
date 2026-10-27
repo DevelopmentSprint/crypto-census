@@ -44,7 +44,9 @@ assessment before findings reflect the change.
 ## Assess saved evidence
 
 Use `-Dcensus.assessment=true` with the existing `check` execution to generate
-`target/cryptocensus/assessment/assessment.json` for that build's exact run. This is independent
+`target/cryptocensus/assessment/assessment.json` and `assessment.html` for that build's exact run.
+The self-contained HTML embeds the same canonical result, works offline without external
+resources, and exports review proposals for `context-apply`; draft edits do not recompute risk. This is independent
 of enabling enrichment: old CBOM-only runs still yield technical findings with explicit context
 and collection gaps.
 
@@ -74,4 +76,6 @@ Optional parameters are `census.policyFile`, `census.workload`, `census.environm
 stable product identities. Policy files use the versioned Java policy-profile schema; omitting
 a profile selects the documented product triage defaults. Omitting context produces honest
 missing-context findings; explicitly naming a missing or malformed context file fails instead
-of silently ignoring it. Assessment output cannot replace an existing context or policy input.
+of silently ignoring it. Both output targets are checked before publication and cannot replace an existing context,
+policy, or explicitly selected evidence input, including aliases. Each output is atomically
+replaced; a publication error fails the goal and the two files are not a cross-file transaction.
