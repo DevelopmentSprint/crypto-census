@@ -124,7 +124,10 @@ class AgentEnrichmentTest {
   @Test
   void unresolvedIdentityMissingCatalogAndCoreDropsRemainExplicit() throws Exception {
     final Path output =
-        configure("unresolved", false, ",sourcesFile=" + tmp.resolve("missing.json"));
+        configure(
+            "unresolved",
+            false,
+            ",applicationId=consumer,sourcesFile=" + tmp.resolve("missing.json"));
     AgentEnrichment.installed();
     assertThat(binding()).isZero();
     final long previous = FlowBridge.enter(0);

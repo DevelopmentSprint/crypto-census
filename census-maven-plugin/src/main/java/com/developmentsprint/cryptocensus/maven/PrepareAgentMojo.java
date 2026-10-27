@@ -211,7 +211,13 @@ public class PrepareAgentMojo extends AbstractMojo {
           sourcesFile == null
               ? new SourceCatalog(SourceCatalog.VERSION, List.of())
               : SourceCatalog.parse(DocumentFiles.read(sourcesFile.toPath()));
-      SourceCatalog catalog = SourceCatalogs.generate(reactor, dependencies, overrides);
+      Map<String, String> applications =
+          new java.util.LinkedHashMap<>(ApplicationIdentities.resolve(reactor, session));
+      if (applicationId != null && !applicationId.isBlank()) {
+        applications.put(project.getGroupId() + ":" + project.getArtifactId(), applicationId);
+      }
+      SourceCatalog catalog =
+          SourceCatalogs.generate(reactor, dependencies, overrides, applications);
       Path destination = runDir.toPath().resolve("sources.json");
       DocumentFiles.write(destination, catalog.encode());
       String options =

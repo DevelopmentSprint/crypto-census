@@ -15,6 +15,14 @@ final class SourceCatalogs {
 
   static SourceCatalog generate(
       List<MavenProject> reactor, List<SourceCatalog.Entry> dependencies, SourceCatalog overrides) {
+    return generate(reactor, dependencies, overrides, Map.of());
+  }
+
+  static SourceCatalog generate(
+      List<MavenProject> reactor,
+      List<SourceCatalog.Entry> dependencies,
+      SourceCatalog overrides,
+      Map<String, String> applications) {
     Map<List<String>, SourceCatalog.Entry> entries = new LinkedHashMap<>();
     for (MavenProject module : reactor) {
       String artifact = module.getGroupId() + ":" + module.getArtifactId();
@@ -79,6 +87,19 @@ final class SourceCatalogs {
       // A reactor artifact retains its declaring module's MAIN/TEST ownership in consumer tests.
       entries.putIfAbsent(key(dependency), dependency);
     }
+    entries.replaceAll(
+        (key, entry) ->
+            applications.containsKey(entry.artifactId())
+                    && (entry.origin() == ContextModel.Origin.MAIN
+                        || entry.origin() == ContextModel.Origin.TEST)
+                ? new SourceCatalog.Entry(
+                    entry.locationUri(),
+                    entry.artifactId(),
+                    applications.get(entry.artifactId()),
+                    entry.origin(),
+                    entry.deploymentId(),
+                    entry.loaderName())
+                : entry);
     for (SourceCatalog.Entry override : overrides.entries()) {
       entries.put(key(override), override);
     }

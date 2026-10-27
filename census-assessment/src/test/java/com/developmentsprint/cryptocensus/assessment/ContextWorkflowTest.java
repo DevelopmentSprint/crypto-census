@@ -361,6 +361,23 @@ class ContextWorkflowTest {
         Reconciliation.resolve(SUBJECT, user.field(), List.of(annotation), resolved);
     assertThat(effective.status()).isEqualTo(Reconciliation.Status.REVIEWED);
     assertThat(effective.value()).isEqualTo("20");
+    Reconciliation.Result subset =
+        Reconciliation.resolve(SUBJECT, user.field(), List.of(), resolved);
+    assertThat(subset.status()).isEqualTo(Reconciliation.Status.REVIEWED);
+    assertThat(subset.value()).isEqualTo("20");
+    assertThat(subset.sources()).containsExactly(user);
+    ContextDocument savedReviewOnly =
+        new ContextDocument(1, List.of(), List.of(), List.of(resolution), List.of());
+    Reconciliation.Result absent =
+        Reconciliation.resolve(SUBJECT, user.field(), List.of(), savedReviewOnly);
+    assertThat(absent.status()).isEqualTo(Reconciliation.Status.UNKNOWN);
+    assertThat(absent.value()).isEmpty();
+    assertThat(absent.sources()).isEmpty();
+    assertThat(savedReviewOnly.resolutions()).containsExactly(resolution);
+    Reconciliation.Result otherSubset =
+        Reconciliation.resolve(SUBJECT, user.field(), List.of(annotation), savedReviewOnly);
+    assertThat(otherSubset.status()).isEqualTo(Reconciliation.Status.REVIEWED);
+    assertThat(otherSubset.sources()).containsExactly(annotation);
     ContextModel.Declaration changed =
         new ContextModel.Declaration(
             SUBJECT,

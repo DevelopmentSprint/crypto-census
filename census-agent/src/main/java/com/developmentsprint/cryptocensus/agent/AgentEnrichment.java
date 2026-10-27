@@ -281,7 +281,10 @@ final class AgentEnrichment {
       }
       identities =
           new FlowIdentities(
-              sources, config.applicationId, health::increment, ContextModel.MAX_FLOWS);
+              sources,
+              config.sourcesFile == null ? config.applicationId : null,
+              health::increment,
+              ContextModel.MAX_FLOWS);
     }
 
     void publish(List<Inventory.Entry> written, long deadline) throws IOException {
