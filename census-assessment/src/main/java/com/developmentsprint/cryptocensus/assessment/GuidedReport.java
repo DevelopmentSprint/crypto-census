@@ -1,5 +1,6 @@
 package com.developmentsprint.cryptocensus.assessment;
 
+import com.developmentsprint.cryptocensus.core.CanonicalJson;
 import com.developmentsprint.cryptocensus.core.DocumentFiles;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +17,16 @@ public final class GuidedReport {
 
   /** Publishes HTML with restrictive content policy and no external resources. */
   public static void write(AssessmentReport report, Path destination) throws IOException {
-    DocumentFiles.write(destination, html(report).getBytes(StandardCharsets.UTF_8));
+    DocumentFiles.write(destination, bytes(report));
+  }
+
+  /** Renders and validates the publication budget before any output is replaced. */
+  public static byte[] bytes(AssessmentReport report) throws IOException {
+    byte[] output = html(report).getBytes(StandardCharsets.UTF_8);
+    if (output.length > CanonicalJson.MAX_BYTES) {
+      throw new IOException("HTML report exceeds output budget");
+    }
+    return output;
   }
 
   /** Renders untrusted report strings as embedded JSON, never as HTML markup. */

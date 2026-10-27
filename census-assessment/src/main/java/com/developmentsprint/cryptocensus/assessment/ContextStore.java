@@ -54,10 +54,14 @@ public final class ContextStore {
           throw new IOException(
               "Context is locked by another Census apply; retry after it completes");
         }
-        ContextDocument current =
-            Files.exists(target, LinkOption.NOFOLLOW_LINKS)
-                ? ContextCodec.read(target)
-                : ContextDocument.empty();
+        boolean exists = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
+        if (!exists
+            && !changes.baseContextHash().equals(ContextCodec.revision(ContextDocument.empty()))) {
+          throw new IOException(
+              "Context destination is missing but these changes were based on existing context;"
+                  + " choose the original context file or restore it before applying");
+        }
+        ContextDocument current = exists ? ContextCodec.read(target) : ContextDocument.empty();
         String revision = ContextCodec.revision(current);
         ContextChanges.Merge merged = ContextChanges.merge(current, changes);
         if (!merged.conflicts().isEmpty()) {

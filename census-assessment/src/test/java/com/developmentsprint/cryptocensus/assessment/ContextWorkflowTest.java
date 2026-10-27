@@ -410,6 +410,25 @@ class ContextWorkflowTest {
   }
 
   @Test
+  void missingDestinationCannotSilentlyDropUneditedBaseAnswers(@TempDir Path directory)
+      throws Exception {
+    ContextModel.Declaration owner = declaration(SUBJECT, ContextModel.Field.OWNER, "Team", "a");
+    ContextDocument base = document(owner);
+    ContextDocument proposed =
+        document(owner, declaration(SUBJECT, ContextModel.Field.CLASSIFICATION, "sensitive", "b"));
+    Path destination = directory.resolve("mistyped-context.json");
+    ContextChanges.ChangeSet changes = ContextChanges.between(base, proposed);
+    assertThatThrownBy(() -> ContextStore.apply(destination, changes))
+        .isInstanceOf(java.io.IOException.class)
+        .hasMessageContaining("destination is missing")
+        .hasMessageContaining("original context file");
+    assertThat(Files.exists(destination)).isFalse();
+    Files.write(destination, ContextCodec.encode(base));
+    assertThat(ContextStore.apply(destination, changes).written()).isTrue();
+    assertThat(Files.readAllBytes(destination)).isEqualTo(ContextCodec.encode(proposed));
+  }
+
+  @Test
   void lockContentionAndSymlinkInputsCannotChangeContext(@TempDir Path directory) throws Exception {
     Path destination = directory.resolve("context.json");
     Path lockPath = directory.resolve("context.json.census.lock");
