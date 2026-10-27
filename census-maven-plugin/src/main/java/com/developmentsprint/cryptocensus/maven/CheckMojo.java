@@ -65,6 +65,27 @@ public class CheckMojo extends AbstractMojo {
   @Parameter(property = "census.failOn", defaultValue = "broken")
   private String failOn;
 
+  /** Generate a canonical business-context assessment for this build's exact run. */
+  @Parameter(property = "census.assessment", defaultValue = "false")
+  private boolean assessment;
+
+  @Parameter(property = "census.contextFile")
+  private File contextFile;
+
+  @Parameter(property = "census.policyFile")
+  private File policyFile;
+
+  @Parameter(
+      property = "census.assessmentOutputDirectory",
+      defaultValue = "${project.build.directory}/cryptocensus/assessment")
+  private File assessmentOutputDirectory;
+
+  @Parameter(property = "census.workload", defaultValue = "unspecified")
+  private String workload;
+
+  @Parameter(property = "census.environment", defaultValue = "unspecified")
+  private String environment;
+
   /**
    * Also fail on assets the policy cannot judge (unrecognized algorithms, unobserved key strength).
    * On by default: an algorithm the policy cannot classify is not evidence that it is safe.
@@ -197,6 +218,21 @@ public class CheckMojo extends AbstractMojo {
       throw new MojoExecutionException("Could not write " + output, e);
     }
 
+    if (assessment) {
+      try {
+        ReportWorkflow.write(
+            List.of(Path.of(runDir)),
+            contextFile,
+            policyFile,
+            assessmentOutputDirectory.toPath(),
+            workload,
+            environment);
+      } catch (IOException | IllegalArgumentException e) {
+        throw new MojoExecutionException(
+            "Could not generate the requested business-context assessment", e);
+      }
+    }
+
     for (String line : Report.text(snapshot, dropped).lines().toList()) {
       getLog().info(line);
     }
@@ -301,6 +337,11 @@ public class CheckMojo extends AbstractMojo {
     long total = 0;
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "cbom-*.json")) {
       for (Path file : stream) {
+        if (java.util.Objects.requireNonNull(file.getFileName())
+            .toString()
+            .endsWith(".evidence.json")) {
+          continue;
+        }
         if (files.size() >= MAX_INPUT_FILES) {
           throw new MojoExecutionException("More than " + MAX_INPUT_FILES + " CBOMs in " + dir);
         }

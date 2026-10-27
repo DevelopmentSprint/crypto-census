@@ -1,16 +1,24 @@
 package com.developmentsprint.cryptocensus.maven;
 
+import com.developmentsprint.cryptocensus.core.ContextModel;
+import com.developmentsprint.cryptocensus.core.DocumentFiles;
 import com.developmentsprint.cryptocensus.core.Escapes;
 import com.developmentsprint.cryptocensus.core.Inventory;
+import com.developmentsprint.cryptocensus.core.SourceCatalog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
+import javax.inject.Inject;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -18,7 +26,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 
 /**
  * Sets a property (by default {@code argLine}, which Surefire and Failsafe pick up) so that test
@@ -71,6 +82,23 @@ public class PrepareAgentMojo extends AbstractMojo {
    */
   @Parameter(property = "census.propertyName", defaultValue = "argLine")
   private String propertyName;
+
+  @Inject private ProjectDependenciesResolver dependenciesResolver;
+
+  /** Collect business-context evidence independently of the core inventory. */
+  @Parameter(property = "census.enrichment", defaultValue = "false")
+  private boolean enrichment;
+
+  @Parameter(property = "census.tlsCorrelation", defaultValue = "false")
+  private boolean tlsCorrelation;
+
+  /** Explicit stable product identity; never inferred from the display name. */
+  @Parameter(property = "census.applicationId")
+  private String applicationId;
+
+  /** Optional explicit catalog entries override generated build ownership. */
+  @Parameter(property = "census.sourcesFile")
+  private File sourcesFile;
 
   /** Record negotiated TLS sessions. */
   @Parameter(property = "census.tls", defaultValue = "true")
@@ -128,7 +156,8 @@ public class PrepareAgentMojo extends AbstractMojo {
             + ",maxSites="
             + maxSites
             + ",debug="
-            + debug;
+            + debug
+            + enrichmentOptions(runDir);
     String option =
         jar.chars().anyMatch(Character::isWhitespace) ? "\"" + javaagent + "\"" : javaagent;
 
@@ -147,6 +176,58 @@ public class PrepareAgentMojo extends AbstractMojo {
     }
     // Deliberately not logging the property value: an inherited argLine can carry secrets.
     getLog().debug("CBOMs for this run: " + runDir);
+  }
+
+  private String enrichmentOptions(File runDir) throws MojoExecutionException {
+    if (!enrichment) {
+      return "";
+    }
+    try {
+      var request = new DefaultDependencyResolutionRequest(project, session.getRepositorySession());
+      var result = dependenciesResolver.resolve(request);
+      List<MavenProject> reactor = session.getAllProjects();
+      if (reactor == null || reactor.isEmpty()) {
+        reactor = List.of(project);
+      }
+      List<SourceCatalog.Entry> dependencies = new ArrayList<>();
+      for (var dependency : result.getResolvedDependencies()) {
+        var artifact = dependency.getArtifact();
+        if (artifact.getFile() != null) {
+          String id = artifact.getGroupId() + ":" + artifact.getArtifactId();
+          SourceCatalog.Entry entry =
+              SourceCatalogs.dependency(
+                  artifact.getFile(),
+                  id,
+                  artifact.getBaseVersion(),
+                  artifact.getExtension(),
+                  artifact.getClassifier(),
+                  reactor);
+          if (entry != null) {
+            dependencies.add(entry);
+          }
+        }
+      }
+      SourceCatalog overrides =
+          sourcesFile == null
+              ? new SourceCatalog(SourceCatalog.VERSION, List.of())
+              : SourceCatalog.parse(DocumentFiles.read(sourcesFile.toPath()));
+      SourceCatalog catalog = SourceCatalogs.generate(reactor, dependencies, overrides);
+      Path destination = runDir.toPath().resolve("sources.json");
+      DocumentFiles.write(destination, catalog.encode());
+      String options =
+          ",enrichment=true,tlsCorrelation="
+              + tlsCorrelation
+              + ",sourcesFile="
+              + Escapes.encode(destination.toAbsolutePath().toString());
+      if (applicationId != null && !applicationId.isBlank()) {
+        ContextModel.text(applicationId, "applicationId", 256, false);
+        options += ",applicationId=" + Escapes.encode(applicationId);
+      }
+      return options;
+    } catch (IOException | IllegalArgumentException | DependencyResolutionException e) {
+      throw new MojoExecutionException(
+          "Could not prepare explicit source ownership for enrichment", e);
+    }
   }
 
   /**
@@ -181,7 +262,7 @@ public class PrepareAgentMojo extends AbstractMojo {
           getLog().debug("Run directory " + candidate + " already exists; trying another name");
         }
       }
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       throw new MojoExecutionException("Could not create a run directory under " + destDir, e);
     }
     throw new MojoExecutionException("Could not allocate a unique run directory under " + destDir);
