@@ -2,7 +2,6 @@ package com.developmentsprint.cryptocensus.agent;
 
 import static net.bytebuddy.matcher.ElementMatchers.is;
 
-import com.developmentsprint.cryptocensus.core.EvidenceDocument;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,7 +38,8 @@ final class FlowInstrumentation {
                     JavaModule module,
                     boolean loaded,
                     Throwable failure) {
-                  AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+                  AgentEnrichment.annotationDiagnostic(
+                      AnnotationDiagnostics.Reason.TRANSFORM_FAILED, typeName, "", "");
                 }
               })
           .with(
@@ -60,7 +60,7 @@ final class FlowInstrumentation {
       AgentEnrichment.installed();
       return true;
     } catch (Throwable failure) {
-      AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+      AgentEnrichment.annotationDiagnostic(AnnotationDiagnostics.Reason.INSTALL_FAILED, "", "", "");
       FlowBridge.scopes().disable();
       ResettableClassFileTransformer transformer = registered.get();
       if (transformer != null) {
@@ -91,13 +91,15 @@ final class FlowInstrumentation {
       ProtectionDomain domain,
       ClassFileLocator locator) {
     if (!FlowVisibility.resolvesBridge(loader)) {
-      AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+      AgentEnrichment.annotationDiagnostic(
+          AnnotationDiagnostics.Reason.BRIDGE_UNAVAILABLE, type.getName(), "", "");
       return builder;
     }
     DynamicType.Builder<?> result = builder;
     var methods = FlowDescriptors.active();
     if (methods == null) {
-      AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+      AgentEnrichment.annotationDiagnostic(
+          AnnotationDiagnostics.Reason.DESCRIPTORS_UNAVAILABLE, type.getName(), "", "");
       return builder;
     }
     for (MethodDescription method : type.getDeclaredMethods()) {
@@ -106,7 +108,11 @@ final class FlowInstrumentation {
         try {
           binding = AgentEnrichment.binding(method, loader, domain);
         } catch (Throwable invalid) {
-          AgentEnrichment.diagnostic(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+          AgentEnrichment.annotationDiagnostic(
+              AnnotationDiagnostics.Reason.INVALID_OR_UNRESOLVED_DECLARATION,
+              type.getName(),
+              method.getName(),
+              method.getDescriptor());
         }
         result =
             result.visit(

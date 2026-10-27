@@ -87,6 +87,15 @@ final class AgentEnrichment {
     }
   }
 
+  static void annotationDiagnostic(
+      AnnotationDiagnostics.Reason reason, String className, String method, String descriptor) {
+    Run run = current;
+    if (run != null) {
+      run.health.increment(EvidenceDocument.Counter.TRANSFORM_ERRORS);
+      run.annotationDiagnostics.report(reason, className, method, descriptor);
+    }
+  }
+
   static Map<EvidenceDocument.Counter, Long> health() {
     Run run = current;
     return run == null ? EvidenceDocument.zeroHealth() : run.health.snapshot();
@@ -267,6 +276,7 @@ final class AgentEnrichment {
         new FlowEvidence(EvidenceDocument.MAX_OBSERVATIONS, health::increment);
     private volatile boolean accepting = true;
     private volatile boolean installed;
+    private final AnnotationDiagnostics annotationDiagnostics = new AnnotationDiagnostics();
 
     Run(AgentConfig config) {
       this.config = config;
