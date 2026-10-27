@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
@@ -37,7 +37,7 @@ public final class TlsCollector {
   private static final Map<AttemptRef, Attempt> PENDING = new LinkedHashMap<>();
   private static final Map<AttemptRef, Handshake> FINISHED = new LinkedHashMap<>();
   private static final ReentrantLock LOCK = new ReentrantLock();
-  private static final AtomicInteger OWNER_GENERATIONS = new AtomicInteger();
+  private static final AtomicLong OWNER_GENERATIONS = new AtomicLong();
   private static final List<Attempt> OWNED = new ArrayList<>();
   private static FlowScopes owners = new FlowScopes(32, OWNER_GENERATIONS);
   private static long ownerLosses;

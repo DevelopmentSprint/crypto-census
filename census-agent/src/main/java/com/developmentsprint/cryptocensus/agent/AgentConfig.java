@@ -31,6 +31,14 @@ import java.util.Set;
  *   <li>{@code maxAssets} - distinct assets kept before dropping (default 500)
  *   <li>{@code maxSites} - call sites kept per asset before folding into an overflow bucket
  *       (default 50)
+ *   <li>{@code enrichment} - collect optional execution-context evidence (default {@code false})
+ *   <li>{@code tlsCorrelation} - object-owned TLS attempt evidence, requires enrichment (default
+ *       false)
+ *   <li>{@code evidenceOutput} - evidence sidecar path (default beside the CBOM)
+ *   <li>{@code applicationId} - explicit stable application identity; never inferred from {@code
+ *       app}
+ *   <li>{@code sourcesFile} - bounded source-artifact ownership catalog
+ *   <li>{@code maxScopeDepth} - retained synchronous scope depth (default and maximum 32)
  *   <li>{@code debug} - log instrumentation errors (default {@code false})
  *   <li>{@code experimental} - let Byte Buddy parse class files newer than it officially supports
  *       (a JDK released after this agent); same as {@code -Dnet.bytebuddy.experimental=true}
@@ -52,7 +60,13 @@ final class AgentConfig {
           "maxAssets",
           "maxSites",
           "debug",
-          "experimental");
+          "experimental",
+          "enrichment",
+          "tlsCorrelation",
+          "evidenceOutput",
+          "applicationId",
+          "sourcesFile",
+          "maxScopeDepth");
 
   final Path output;
   final String app;
@@ -62,6 +76,12 @@ final class AgentConfig {
   final boolean experimental;
   final int maxAssets;
   final int maxSites;
+  final boolean enrichment;
+  final boolean tlsCorrelation;
+  final Path evidenceOutput;
+  final String applicationId;
+  final Path sourcesFile;
+  final int maxScopeDepth;
   final List<String> warnings;
 
   private AgentConfig(Map<String, String> options, List<String> warnings) {
@@ -73,6 +93,13 @@ final class AgentConfig {
     this.experimental = bool(options, "experimental", false, warnings);
     this.maxAssets = positiveInt(options, "maxAssets", 500, Inventory.MAX_ASSETS, warnings);
     this.maxSites = positiveInt(options, "maxSites", 50, Inventory.MAX_SITES, warnings);
+    this.enrichment = bool(options, "enrichment", false, warnings);
+    this.tlsCorrelation = bool(options, "tlsCorrelation", false, warnings) && enrichment;
+    this.evidenceOutput = evidencePath(options, output, warnings);
+    this.applicationId = options.get("applicationId");
+    this.sourcesFile = optionalPath(options.get("sourcesFile"), "sourcesFile", warnings);
+    this.maxScopeDepth =
+        positiveInt(options, "maxScopeDepth", FlowScopes.MAX_DEPTH, FlowScopes.MAX_DEPTH, warnings);
     this.warnings = Collections.unmodifiableList(warnings);
   }
 
@@ -97,6 +124,41 @@ final class AgentConfig {
       warnings.add("invalid output path (" + e.getMessage() + "); using cryptocensus-cbom.json");
       return Paths.get("cryptocensus-cbom.json");
     }
+  }
+
+  private static Path evidencePath(
+      Map<String, String> options, Path output, List<String> warnings) {
+    Path fileName = output.getFileName();
+    String name = fileName == null ? "cryptocensus-cbom.json" : fileName.toString();
+    String stem = name.endsWith(".json") ? name.substring(0, name.length() - 5) : name;
+    Path fallback = output.resolveSibling(stem + ".evidence.json");
+    Path requested = optionalPath(options.get("evidenceOutput"), "evidenceOutput", warnings);
+    if (requested == null) {
+      return fallback;
+    }
+    if (requested.toAbsolutePath().normalize().equals(output.toAbsolutePath().normalize())) {
+      warnings.add("evidenceOutput must differ from output; using the default sidecar path");
+      return fallback;
+    }
+    return requested;
+  }
+
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "PATH_TRAVERSAL_IN",
+      justification = "Evidence and source-catalog paths are explicit operator command-line inputs")
+  private static Path optionalPath(String value, String key, List<String> warnings) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      if (!value.isBlank()) {
+        return Paths.get(value);
+      }
+    } catch (InvalidPathException ignored) {
+      // Keep enrichment options independent of whether the ordinary inventory can start.
+    }
+    warnings.add("invalid path for '" + key + "'; ignoring this option");
+    return null;
   }
 
   static AgentConfig parse(String args) {

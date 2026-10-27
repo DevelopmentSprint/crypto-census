@@ -1,6 +1,6 @@
 package com.developmentsprint.cryptocensus.agent;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Primitive-only entry/exit bridge for advice in application classes.
@@ -9,13 +9,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Annotation instrumentation must verify that the defining loader resolves this bootstrap copy
  * before emitting calls. No agent-defined reference type enters application verifier frames.
  *
- * <p>The process-wide generation budget is 2,147,483,647 enabled entry attempts. Exhaustion
+ * <p>The process-wide generation budget is 281,474,976,710,655 enabled entry attempts. Exhaustion
  * disables trusted scope attribution with an integrity diagnostic; it never reuses old tokens.
  * Ordinary cryptographic inventory remains independent of this budget.
  */
 public final class FlowBridge {
   // Never reset token identity when a configured run replaces its thread-local state.
-  private static final AtomicInteger GENERATIONS = new AtomicInteger();
+  private static final AtomicLong GENERATIONS = new AtomicLong();
   private static volatile FlowScopes scopes = new FlowScopes(FlowScopes.MAX_DEPTH, GENERATIONS);
 
   private FlowBridge() {}

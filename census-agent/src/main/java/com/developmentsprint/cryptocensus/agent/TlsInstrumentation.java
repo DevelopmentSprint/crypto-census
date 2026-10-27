@@ -42,6 +42,11 @@ public final class TlsInstrumentation {
 
   /** Installs separately; failure disables only TLS enrichment. */
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
+      justification =
+          "Byte Buddy 1.18.14 reset removes the supplied transformer and retransforms classes;"
+              + " verified by decorated-reset regression")
   public static boolean install(Instrumentation instrumentation, ClassFileLocator locator) {
     AtomicReference<ResettableClassFileTransformer> registered = new AtomicReference<>();
     TARGETS.forEach(name -> HEALTH.put(name, "unavailable"));

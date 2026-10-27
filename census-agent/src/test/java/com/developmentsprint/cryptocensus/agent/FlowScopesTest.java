@@ -187,7 +187,7 @@ class FlowScopesTest {
     Object state = ((ThreadLocal<?>) localField.get(scopes)).get();
     Field depthField = state.getClass().getDeclaredField("depth");
     depthField.setAccessible(true);
-    depthField.setInt(state, Integer.MAX_VALUE);
+    depthField.setInt(state, FlowScopes.MAX_NESTING);
     assertThat(scopes.enter(1)).isZero();
     assertThat(scopes.hasThreadState()).isFalse();
     assertThat(scopes.unverified()).isTrue();
@@ -195,12 +195,12 @@ class FlowScopesTest {
     var generationsOverflow = enabled(1);
     Field generationsField = FlowScopes.class.getDeclaredField("generations");
     generationsField.setAccessible(true);
-    ((AtomicInteger) generationsField.get(generationsOverflow)).set(Integer.MAX_VALUE);
+    ((AtomicLong) generationsField.get(generationsOverflow)).set(FlowScopes.MAX_GENERATION);
     assertThat(generationsOverflow.enter(1)).isZero();
     assertThat(generationsOverflow.hasThreadState()).isFalse();
     assertThat(generationsOverflow.integrityFailures()).isEqualTo(1);
-    assertThat(((AtomicInteger) generationsField.get(generationsOverflow)).get())
-        .isEqualTo(Integer.MAX_VALUE);
+    assertThat(((AtomicLong) generationsField.get(generationsOverflow)).get())
+        .isEqualTo(FlowScopes.MAX_GENERATION);
   }
 
   @Test
@@ -280,6 +280,27 @@ class FlowScopesTest {
     scopes.exit(1);
     assertThat(scopes.integrityFailures()).isEqualTo(Long.MAX_VALUE);
     assertThat(scopes.unverified()).isTrue();
+  }
+
+  @Test
+  void negativeOpaqueValuesRemainValidUntilGenerationExhaustion() {
+    var generations = new AtomicLong((1L << 47) - 1);
+    var scopes = new FlowScopes(1, generations);
+    scopes.enable();
+    long negative = scopes.enter(1);
+    assertThat(negative).isNegative();
+    assertThat(scopes.current().bindings()).containsExactly(1);
+    scopes.exit(negative);
+    assertThat(scopes.unverified()).isFalse();
+    assertThat(scopes.hasThreadState()).isFalse();
+    generations.set(FlowScopes.MAX_GENERATION - 1);
+    long last = scopes.enter(2);
+    assertThat(last).isNegative();
+    scopes.exit(last);
+    assertThat(scopes.enter(3)).isZero();
+    assertThat(scopes.unverified()).isTrue();
+    assertThat(generations.get()).isEqualTo(FlowScopes.MAX_GENERATION);
+    assertThat(scopes.enter(4)).isZero();
   }
 
   private static FlowScopes enabled(int maxDepth) {

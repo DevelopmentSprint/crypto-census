@@ -40,6 +40,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.developmentsprint</groupId>
+            <artifactId>census-annotations</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
@@ -235,6 +240,8 @@
                                         <exclude>**/Installer$*.class</exclude>
                                         <exclude>**/Advices.class</exclude>
                                         <exclude>**/Advices$*.class</exclude>
+                                        <!-- Inlined TLS hooks are measured by the shaded child-JVM gate. -->
+                                        <exclude>**/FlowInstrumentation*.class</exclude>
                                         <exclude>**/TlsInstrumentation*.class</exclude>
                                         <exclude>**/TlsAdvices*.class</exclude>
                                     </excludes>

@@ -2,13 +2,14 @@ package com.developmentsprint.cryptocensus.agent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Bounded synchronous execution scopes, independent of the cryptographic recorder's health. */
 final class FlowScopes {
   static final int MAX_DEPTH = 32;
   static final int MAX_BINDINGS = 8192;
+  static final int MAX_NESTING = 0xffff;
+  static final long MAX_GENERATION = (1L << 48) - 1;
 
   private static final Snapshot NO_SCOPE = new Snapshot(Status.NO_SCOPE, List.of());
   private static final Snapshot LOST = new Snapshot(Status.SCOPE_LOST, List.of());
@@ -18,7 +19,7 @@ final class FlowScopes {
   @SuppressWarnings("ThreadLocalUsage")
   private final ThreadLocal<State> local = new ThreadLocal<>();
 
-  private final AtomicInteger generations;
+  private final AtomicLong generations;
   private final AtomicLong overflowed = new AtomicLong();
   private final AtomicLong integrityFailures = new AtomicLong();
   private final AtomicLong entryFailures = new AtomicLong();
@@ -31,10 +32,10 @@ final class FlowScopes {
   private volatile boolean unverified;
 
   FlowScopes(int maxDepth) {
-    this(maxDepth, new AtomicInteger());
+    this(maxDepth, new AtomicLong());
   }
 
-  FlowScopes(int maxDepth, AtomicInteger generations) {
+  FlowScopes(int maxDepth, AtomicLong generations) {
     this(maxDepth, generations, null, null, null);
   }
 
@@ -42,12 +43,12 @@ final class FlowScopes {
    * Fault hooks are null in production and are run only at explicitly tested transaction points.
    */
   FlowScopes(int maxDepth, Runnable beforeEntry, Runnable beforeRestore, Runnable afterRestore) {
-    this(maxDepth, new AtomicInteger(), beforeEntry, beforeRestore, afterRestore);
+    this(maxDepth, new AtomicLong(), beforeEntry, beforeRestore, afterRestore);
   }
 
   private FlowScopes(
       int maxDepth,
-      AtomicInteger generations,
+      AtomicLong generations,
       Runnable beforeEntry,
       Runnable beforeRestore,
       Runnable afterRestore) {
@@ -85,17 +86,17 @@ final class FlowScopes {
         state = new State(maxDepth);
         local.set(state);
       }
-      if (state.depth == Integer.MAX_VALUE) {
+      if (state.depth >= MAX_NESTING || state.depth < 0) {
         invalidate();
         return 0;
       }
-      int generation = nextGeneration();
+      long generation = nextGeneration();
       if (generation <= 0) {
         invalidate();
         return 0;
       }
       int depth = state.depth + 1;
-      final long token = ((long) generation << 32) | depth;
+      final long token = (generation << 16) | depth;
       boolean lost = binding <= 0 || binding > MAX_BINDINGS;
       boolean beyondCap = depth > maxDepth;
       if (beforeEntry != null) {
@@ -133,8 +134,8 @@ final class FlowScopes {
     }
     try {
       State state = local.get();
-      int depth = (int) token;
-      int generation = (int) (token >>> 32);
+      int depth = (int) (token & MAX_NESTING);
+      long generation = token >>> 16;
       if (state == null
           || depth <= 0
           || generation <= 0
@@ -208,11 +209,11 @@ final class FlowScopes {
     return restoreFailures.get();
   }
 
-  private int nextGeneration() {
-    int previous;
+  private long nextGeneration() {
+    long previous;
     do {
       previous = generations.get();
-      if (previous == Integer.MAX_VALUE) {
+      if (previous >= MAX_GENERATION || previous < 0) {
         return 0;
       }
     } while (!generations.compareAndSet(previous, previous + 1));
@@ -249,13 +250,13 @@ final class FlowScopes {
 
   private static final class State {
     final int[] bindings;
-    final int[] generations;
+    final long[] generations;
     int depth;
     boolean lost;
 
     State(int maxDepth) {
       bindings = new int[maxDepth];
-      generations = new int[maxDepth];
+      generations = new long[maxDepth];
     }
   }
 }
