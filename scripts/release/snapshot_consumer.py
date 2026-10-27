@@ -106,7 +106,8 @@ public class CryptoTest { @Test void usesCrypto() throws Exception { CryptoWorkl
         inspect_cbom(standalone / 'cbom.json')
         # Resolve the full published coordinate/classifier set independently of the reactor.
         artifacts = [('census-parent', 'pom', None)]
-        for module in ('census-core', 'census-agent', 'census-delivery', 'census-cli', 'census-maven-plugin'):
+        for module in ('census-annotations', 'census-core', 'census-assessment', 'census-agent',
+                       'census-delivery', 'census-cli', 'census-maven-plugin'):
             artifacts += [(module, kind, classifier) for kind, classifier in
                           (('pom', None), ('jar', None), ('jar', 'sources'), ('jar', 'javadoc'))]
         artifacts.append(('census-delivery', 'jar', 'tests'))

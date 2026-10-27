@@ -24,8 +24,11 @@ CI_JOBS = {
     "App servers (Open Liberty on Semeru, WildFly) / ubuntu-latest",
     "Classify changed paths",
     "Required CI",
+    "Private tracker boundary",
+    "Advisory demo outcomes",
+    "Offline guided report browser workflow",
 }
-MODULES = ("census-parent", "census-core", "census-agent", "census-delivery",
+MODULES = ("census-parent", "census-annotations", "census-core", "census-assessment", "census-agent", "census-delivery",
            "census-cli", "census-maven-plugin")
 PRIVATE_PARTS = {".beads", ".beadroad", ".dolt", "dolt", "embeddeddolt",
                  "proxieddb", ".beads-credential-key"}
