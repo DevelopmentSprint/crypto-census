@@ -15,9 +15,9 @@
     "docs:build:single": "npm run docs:prepare && vitepress build docs && python3 scripts/docs/check_links.py"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.0",
+    "@playwright/test": "1.64.1",
     "mermaid": "12.2.0",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vitepress": "1.6.4",
     "vue": "3.5.44",
     "vue-tsc": "3.3.13"
