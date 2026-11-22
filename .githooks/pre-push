@@ -18,6 +18,11 @@ elif [ "$mode" != docs-only ] && [ "$mode" != full ]; then
   echo "pre-push: invalid classification result; requiring the full Maven build." >&2
   mode=full
 fi
+# Git exports the pushing repository (GIT_DIR and friends) to hooks. Test suites create scratch
+# repositories with plain git calls; inheriting these variables would commit into and reconfigure
+# this repository instead. The guards above needed them; nothing below does.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
 if [ "$mode" = docs-only ]; then
   echo "pre-push: documentation-only outgoing history; validating the documentation site..."
   npm ci
