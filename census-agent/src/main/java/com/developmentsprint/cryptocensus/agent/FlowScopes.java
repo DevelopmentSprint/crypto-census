@@ -209,6 +209,20 @@ final class FlowScopes {
     return restoreFailures.get();
   }
 
+  /**
+   * One when the run is invalidated but no failure was counted. Each handler marks the run
+   * unverified before counting, so stack exhaustion can stop it in between; publication runs on a
+   * healthy stack and must never report an invalidated run as intact.
+   */
+  long unaccountedInvalidations() {
+    return unverified
+            && integrityFailures.get() == 0
+            && entryFailures.get() == 0
+            && restoreFailures.get() == 0
+        ? 1
+        : 0;
+  }
+
   private long nextGeneration() {
     long previous;
     do {

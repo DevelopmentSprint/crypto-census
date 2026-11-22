@@ -106,12 +106,17 @@ class FlowEnrichmentIT {
     Path cbom = run("stack", true, true, "", List.of("stack"));
     var evidence = EvidenceCodec.read(sidecar("stack"));
     EvidenceCodec.validatePair(evidence, Cbom.readBytes(cbom));
+    // Where the overflow lands varies by JIT and platform; health explains any failure.
+    String health = "health=" + evidence.health();
     assertThat(evidence.observations())
+        .as(health)
         .anySatisfy(
             observation ->
                 assertThat(observation.context().association())
                     .isEqualTo(EvidenceDocument.Association.SCOPE_LOST));
-    assertThat(evidence.health().get(EvidenceDocument.Counter.SCOPE_INTEGRITY)).isPositive();
+    assertThat(evidence.health().get(EvidenceDocument.Counter.SCOPE_INTEGRITY))
+        .as(health)
+        .isPositive();
   }
 
   @Test

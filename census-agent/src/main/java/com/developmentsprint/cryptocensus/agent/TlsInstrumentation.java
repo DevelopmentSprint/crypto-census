@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -27,8 +28,10 @@ import net.bytebuddy.utility.JavaModule;
 
 /** Optional TLS transformer with health and rollback independent of the core inventory agent. */
 public final class TlsInstrumentation {
+  private static final System.Logger LOG = System.getLogger(TlsInstrumentation.class.getName());
   private static final String JSSE = TlsSunJsse.PREFIX;
   private static final Map<String, String> HEALTH = new ConcurrentHashMap<>();
+  private static final Map<String, String> TRANSFORM_ERRORS = new ConcurrentHashMap<>();
   private static final Set<String> TARGETS =
       Set.of(
           JSSE + "TransportContext",
@@ -50,6 +53,8 @@ public final class TlsInstrumentation {
   public static boolean install(Instrumentation instrumentation, ClassFileLocator locator) {
     AtomicReference<ResettableClassFileTransformer> registered = new AtomicReference<>();
     TARGETS.forEach(name -> HEALTH.put(name, "unavailable"));
+    TRANSFORM_ERRORS.clear();
+    String stage = "module";
     try {
       instrumentation.redefineModule(
           Object.class.getModule(),
@@ -58,7 +63,9 @@ public final class TlsInstrumentation {
           Map.of("sun.security.ssl", Set.of(TlsSunJsse.class.getModule())),
           Set.of(),
           Map.of());
+      stage = "shape";
       checkShape();
+      stage = "install";
       new AgentBuilder.Default()
           .disableClassFormatChanges()
           .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -141,12 +148,23 @@ public final class TlsInstrumentation {
                               .and(takesArgument(1, named(JSSE + "SessionId"))))))
           .assureReadEdgeTo(instrumentation, TlsCollector.class)
           .installOn(instrumentation);
+      stage = "verify";
       if (HEALTH.values().stream().anyMatch(value -> !"supported".equals(value))) {
         throw new IllegalStateException("TLS hook unavailable");
       }
       TlsCollector.enable();
       return true;
     } catch (Throwable failure) {
+      // Rollback reports every target as unavailable; record why before that detail is replaced.
+      LOG.log(
+          System.Logger.Level.WARNING,
+          "TLS instrumentation unavailable stage={0} error.type={1} cause.type={2} targets={3}"
+              + " transformErrors={4}",
+          stage,
+          failure.getClass().getName(),
+          failure.getCause() == null ? "" : failure.getCause().getClass().getName(),
+          new TreeMap<>(HEALTH),
+          new TreeMap<>(TRANSFORM_ERRORS));
       TlsCollector.installationFailed();
       ResettableClassFileTransformer transformer = registered.get();
       if (transformer != null) {
@@ -285,6 +303,7 @@ public final class TlsInstrumentation {
         String name, ClassLoader loader, JavaModule module, boolean loaded, Throwable error) {
       if (TARGETS.contains(name)) {
         HEALTH.put(name, "transform-error");
+        TRANSFORM_ERRORS.put(name, error.getClass().getName());
       }
     }
   }
