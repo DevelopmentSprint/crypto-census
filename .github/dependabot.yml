@@ -17,6 +17,11 @@ updates:
           - "com.github.spotbugs:*"
           - "com.h3xstream.findsecbugs:*"
           - "com.google.errorprone:*"
+    ignore:
+      # 3.x validates Jackson 3 (tools.jackson) nodes; this project is on Jackson 2.
+      # Adopting it is a Jackson migration decision, not a routine bump (census-9w2).
+      - dependency-name: "com.networknt:json-schema-validator"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
