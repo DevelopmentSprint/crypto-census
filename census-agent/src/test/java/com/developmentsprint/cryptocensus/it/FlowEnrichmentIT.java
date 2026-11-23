@@ -106,17 +106,41 @@ class FlowEnrichmentIT {
     Path cbom = run("stack", true, true, "", List.of("stack"));
     var evidence = EvidenceCodec.read(sidecar("stack"));
     EvidenceCodec.validatePair(evidence, Cbom.readBytes(cbom));
-    // Where the overflow lands varies by JIT and platform; health explains any failure.
+    // Where the overflow lands varies by JVM, JIT tier and platform: in application frames the
+    // scope stack stays intact; in scope advice the run is invalidated. Both are valid outcomes.
     String health = "health=" + evidence.health();
+    // The window before the enclosing exit never makes a validated scope claim.
     assertThat(evidence.observations())
         .as(health)
         .anySatisfy(
             observation ->
                 assertThat(observation.context().association())
                     .isEqualTo(EvidenceDocument.Association.SCOPE_LOST));
-    assertThat(evidence.health().get(EvidenceDocument.Counter.SCOPE_INTEGRITY))
-        .as(health)
-        .isPositive();
+    long detected =
+        evidence.health().get(EvidenceDocument.Counter.SCOPE_INTEGRITY)
+            + evidence.health().get(EvidenceDocument.Counter.SCOPE_RESTORE_FAILURES);
+    boolean invalidated =
+        evidence.observations().stream()
+            .allMatch(
+                observation ->
+                    observation.context().association() == EvidenceDocument.Association.SCOPE_LOST);
+    if (invalidated) {
+      // A detected failure downgrades every record and must be explained by a counter.
+      assertThat(detected).as(health).isPositive();
+    } else {
+      // An intact run reports no failure and keeps attributing the scopes it validated.
+      assertThat(detected).as(health).isZero();
+      assertThat(evidence.observations())
+          .as(health)
+          .anySatisfy(
+              observation -> {
+                assertThat(observation.context().association())
+                    .isEqualTo(EvidenceDocument.Association.SYNCHRONOUS_SCOPE);
+                assertThat(observation.context().path())
+                    .extracting(scope -> scope.subject().flowId())
+                    .containsExactly("archive", "transport");
+              });
+    }
   }
 
   @Test
