@@ -283,6 +283,32 @@ class FlowScopesTest {
   }
 
   @Test
+  void invalidationWhoseCounterWasLostIsStillReported() throws ReflectiveOperationException {
+    // Stack exhaustion can strike a failure handler after it marks the run unverified but before
+    // it counts the failure. Publication runs later on a healthy stack and must still explain why
+    // every observation was downgraded.
+    var scopes = enabled(1);
+    assertThat(scopes.unaccountedInvalidations()).isZero();
+    Field flag = FlowScopes.class.getDeclaredField("unverified");
+    flag.setAccessible(true);
+    flag.setBoolean(scopes, true);
+    assertThat(scopes.integrityFailures()).isZero();
+    assertThat(scopes.entryFailures()).isZero();
+    assertThat(scopes.restoreFailures()).isZero();
+    assertThat(scopes.unaccountedInvalidations()).isEqualTo(1);
+    assertThat(scopes.current().status()).isEqualTo(FlowScopes.Status.SCOPE_LOST);
+  }
+
+  @Test
+  void countedInvalidationsAreNotReportedTwice() {
+    var scopes = enabled(1);
+    scopes.exit(1);
+    assertThat(scopes.unverified()).isTrue();
+    assertThat(scopes.integrityFailures()).isEqualTo(1);
+    assertThat(scopes.unaccountedInvalidations()).isZero();
+  }
+
+  @Test
   void negativeOpaqueValuesRemainValidUntilGenerationExhaustion() {
     var generations = new AtomicLong((1L << 47) - 1);
     var scopes = new FlowScopes(1, generations);

@@ -89,6 +89,14 @@ public final class TlsProbeWorkload {
                     if (!failureExpected) {
                       throw new IllegalStateException(expected);
                     }
+                  } catch (java.net.SocketException rejected) {
+                    // A rejecting client closes with the rest of the server flight unread, so the
+                    // close is a reset. Windows discards the buffered fatal alert on reset and
+                    // reports an aborted connection instead of the alert; either way the handshake
+                    // did not complete, which is the only server-side outcome under test here.
+                    if (!failureExpected) {
+                      throw new IllegalStateException(rejected);
+                    }
                   } catch (java.io.IOException error) {
                     throw new IllegalStateException(error);
                   }
