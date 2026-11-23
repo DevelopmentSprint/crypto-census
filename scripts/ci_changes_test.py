@@ -9,12 +9,14 @@ import sys
 import tempfile
 import unittest
 import ci_changes as changes
+from git_test_env import isolate_git_for_test
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ChangesTest(unittest.TestCase):
     def setUp(self):
+        isolate_git_for_test(self)
         self.tmp = tempfile.TemporaryDirectory(prefix='census-ci-changes-')
         self.addCleanup(self.tmp.cleanup)
         self.repo = Path(self.tmp.name)

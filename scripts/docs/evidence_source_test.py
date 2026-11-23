@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import unittest
 import evidence_source as source
+from git_test_env import isolate_git_for_test
 
 SHA = 'a' * 40
 OLDER = 'b' * 40
@@ -141,6 +142,7 @@ class ProducerTest(unittest.TestCase):
 
 class EquivalenceTest(unittest.TestCase):
     def setUp(self):
+        isolate_git_for_test(self)
         self.temp = tempfile.TemporaryDirectory(prefix='census-evidence-source-')
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name)
